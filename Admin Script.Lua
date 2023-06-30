@@ -17,7 +17,7 @@ LPlayer.Chatted:Connect(function(msg)
 			wait(0.001)
 			local event = game:GetService("Workspace").load.RemoteEvent
 			event:FireServer()
-			wait (0.19)
+			wait (0.17)
 			for i, v in pairs(Player.Backpack:GetChildren()) do
 				v.Parent = Player.Character
 			end
@@ -35,11 +35,14 @@ LPlayer.Chatted:Connect(function(msg)
 	else
 		if msg:match(";cmds") then
 			wait(1)
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/Sinlove38/Own1/main/Admin%20Commands.lua?token=GHSAT0AAAAAACEPLUKJOO6S3CBDOBC3ZY4WZE5NPMA",true))()
+      local A_1 = "[Admin Commands Are listed in our server please go check.]"-----message here
+local A_2 = "All"
+local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
+Event:FireServer(A_1, A_2)
 		else
 			if msg:match(";credits") then
 				wait(1)
-				local A_1 = "[This, this script was developed by Solex Community]"-----message here
+				local A_1 = "[This, this script was developed by Solex Community.]"-----message here
 				local A_2 = "All"
 				local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
 				Event:FireServer(A_1, A_2)
@@ -154,7 +157,7 @@ if toggle == true then
 			  
 			if msg:match(";help") then
 				wait(1)
-				local A_1 = "[DM developer or a moderator of Solex if you need help with the Commands.]"-----message here
+				local A_1 = "[If you need further information please join our server Solex Community, and contact the moderator or developer.]"-----message here
 				local A_2 = "All"
 				local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
 				Event:FireServer(A_1, A_2)
@@ -162,12 +165,12 @@ if toggle == true then
 
 			if msg:match(";utg") then
 				-- Codeey get's no bitchs
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/UTG.lua",true))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/UTG.lua",true))()
 			else
 			
                    if msg:match(";Neptune") then
 				-- Neptune Sword Script
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Neptune.lua",true))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/Neptune.lua",true))()
 			else
 
 			if msg:match(";re") then
@@ -187,7 +190,7 @@ if toggle == true then
 			
 			if msg:match(";fly") then
 				-- Fly Script...
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Fly.Lua",true))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/Fly.Lua",true))()
 			else
 
 			if msg:match(";speed me 100") then
@@ -199,11 +202,11 @@ if toggle == true then
 			else
 			
             if msg:match(";kill all") then
-				loadstring(game:HttpGet(("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Kill%20Aura%20Paid.lua"), true))()
+				loadstring(game:HttpGet(("https://raw.githubusercontent.com/Cold2004/Own1/main/Kill%20Aura%20Paid.lua"), true))()
 			else
 				
 			if msg:match(";fling") then
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Fling%20DLL.lua",true))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/Fling%20DLL.lua",true))()
 			else	
 			
 			if msg:match(";kick") then
@@ -212,8 +215,91 @@ if toggle == true then
 
             if msg:match(";Discord") then
 			loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Discord/.lua",true))()
+			else
+
+                        if msg:match(";Noclip") then
+			nam = game.Players.LocalPlayer.Name
+
+game:GetService('RunService').Stepped:connect(function()
+for a, b in pairs(game.Workspace:GetChildren()) do
+if b.Name == nam then
+for i, v in pairs(game.Workspace[nam]:GetChildren()) do
+if v:IsA("BasePart") then
+v.CanCollide = false
+
+end
+end
+end
+end
+end)
 			else	
 	
+                        if msg:match(";Red Sword") then
+			local number = 1
+for i = 1, 100 do
+ local Player = game.Players.LocalPlayer
+for i = 1, 40 do
+local v1 = 'Red'
+ local event = game:GetService("Workspace").eff.RemoteEvent
+event:FireServer(v1)
+local event = game:GetService("Workspace").eff.RemoteEvent
+event:FireServer(v1)
+wait(0.001)
+local event = game:GetService("Workspace").load.RemoteEvent
+event:FireServer()
+wait(0.17)
+ for i, v in pairs(Player.Backpack:GetChildren()) do
+v.Parent = Player.Character
+end
+for i, v in pairs(Player.Character:GetChildren()) do
+if v:IsA('Tool') then
+v.Parent = workspace
+ex = Instance.new('Script')
+ex.Parent = v
+ex.Name = 'Mine'
+end
+end
+local Player = game.Players.LocalPlayer
+local number = 5
+end
+end
+-- end of the script
+			else
+
+                        if msg:match(";Black Sword") then
+			local number = 1
+for i = 1, 100 do
+ local Player = game.Players.LocalPlayer
+for i = 1, 40 do
+local v1 = 'Black'
+ local event = game:GetService("Workspace").eff.RemoteEvent
+event:FireServer(v1)
+local event = game:GetService("Workspace").eff.RemoteEvent
+event:FireServer(v1)
+wait(0.001)
+local event = game:GetService("Workspace").load.RemoteEvent
+event:FireServer()
+wait(0.17)
+ for i, v in pairs(Player.Backpack:GetChildren()) do
+v.Parent = Player.Character
+end
+for i, v in pairs(Player.Character:GetChildren()) do
+if v:IsA('Tool') then
+v.Parent = workspace
+ex = Instance.new('Script')
+ex.Parent = v
+ex.Name = 'Mine'
+end
+end
+local Player = game.Players.LocalPlayer
+local number = 5
+end
+end
+-- end of the script
+			else	
+
+
+
 			if msg:match(";crasher") then
 				local e = 0
 	for i = 1, 44100 do
@@ -291,6 +377,9 @@ if toggle == true then
 		    end
 	    end
 	end
+end
+end
+end
 end
 end
 end
