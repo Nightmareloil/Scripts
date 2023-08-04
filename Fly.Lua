@@ -1,111 +1,76 @@
--- Press X to fly
+-- Flying
+_G.FLYING = false
+local LP = game:service('Players').LocalPlayer
+local T = LP.Character.UpperTorso
+local CONTROL = {F = 0, B = 0, L = 0, R = 0}
+local lCONTROL = {F = 0, B = 0, L = 0, R = 0}
+local SPEED = 5
+local MOUSE = LP:GetMouse()
 
-local plr = game.Players.LocalPlayer
-	local mouse = plr:GetMouse()
 
-	localplayer = plr
+local function FLY()
+    _G.FLYING = true
+    local BG = Instance.new('BodyGyro', T)
+    local BV = Instance.new('BodyVelocity', T)
+    BG.P = 9e4
+    BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    BG.cframe = T.CFrame
+    BV.velocity = Vector3.new(0, 0.1, 0)
+    BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
 
-	if workspace:FindFirstChild("Core") then
-		workspace.Core:Destroy()
-	end
 
-	local Core = Instance.new("Part")
-	Core.Name = "Core"
-	Core.Size = Vector3.new(0.05, 0.05, 0.05)
+    spawn(function()
+      repeat wait()
+        LP.Character.Humanoid.PlatformStand = true
+        if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 then
+          SPEED = 50
+        elseif not (CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0) and SPEED ~= 0 then
+          SPEED = 0
+        end
+        if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 then
+          BV.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B) * 0.2, 0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+          lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
+        elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and SPEED ~= 0 then
+          BV.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B) * 0.2, 0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+        else
+          BV.velocity = Vector3.new(0, 0.1, 0)
+        end
+        BG.cframe = game.Workspace.CurrentCamera.CoordinateFrame
+      until not _G.FLYING
+      CONTROL = {F = 0, B = 0, L = 0, R = 0}
+      lCONTROL = {F = 0, B = 0, L = 0, R = 0}
+      SPEED = 0
+      BG:destroy()
+      BV:destroy()
+      LP.Character.Humanoid.PlatformStand = false
+    end)
+  end
+  
+  MOUSE.KeyDown:connect(function(KEY)
+    if KEY:lower() == 'w' then
+      CONTROL.F = 1
+    elseif KEY:lower() == 's' then
+      CONTROL.B = -1
+    elseif KEY:lower() == 'a' then
+      CONTROL.L = -1 
+    elseif KEY:lower() == 'd' then 
+      CONTROL.R = 1
+    end
+  end)
+  
+  MOUSE.KeyUp:connect(function(KEY)
+    if KEY:lower() == 'w' then
+      CONTROL.F = 0
+    elseif KEY:lower() == 's' then
+      CONTROL.B = 0
+    elseif KEY:lower() == 'a' then
+      CONTROL.L = 0
+    elseif KEY:lower() == 'd' then
+      CONTROL.R = 0
+    end
+  end)
 
-	spawn(function()
-		Core.Parent = workspace
-		local Weld = Instance.new("Weld", Core)
-		Weld.Part0 = Core
-		Weld.Part1 = localplayer.Character.LowerTorso
-		Weld.C0 = CFrame.new(0, 0, 0)
-	end)
 
-	workspace:WaitForChild("Core")
 
-	local torso = workspace.Core
-	flying = true
-	local speed=10
-	local keys={a=false,d=false,w=false,s=false}
-	local e1
-	local e2
-	local function start()
-		local pos = Instance.new("BodyPosition",torso)
-		local gyro = Instance.new("BodyGyro",torso)
-		pos.Name="EPIXPOS"
-		pos.maxForce = Vector3.new(math.huge, math.huge, math.huge)
-		pos.position = torso.Position
-		gyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-		gyro.cframe = torso.CFrame
-		repeat
-			wait()
-			localplayer.Character.Humanoid.PlatformStand=true
-			local new=gyro.cframe - gyro.cframe.p + pos.position
-			if not keys.w and not keys.s and not keys.a and not keys.d then
-				speed=5
-			end
-			if keys.w then
-				new = new + workspace.CurrentCamera.CoordinateFrame.lookVector * speed
-				speed=speed+0
-			end
-			if keys.s then
-				new = new - workspace.CurrentCamera.CoordinateFrame.lookVector * speed
-				speed=speed+0
-			end
-			if keys.d then
-				new = new * CFrame.new(speed,0,0)
-				speed=speed+0
-			end
-			if keys.a then
-				new = new * CFrame.new(-speed,0,0)
-				speed=speed+0
-			end
-			if speed>10 then
-				speed=5
-			end
-			pos.position=new.p
-			if keys.w then
-				gyro.cframe = workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(-math.rad(speed*0),0,0)
-			elseif keys.s then
-				gyro.cframe = workspace.CurrentCamera.CoordinateFrame*CFrame.Angles(math.rad(speed*0),0,0)
-			else
-				gyro.cframe = workspace.CurrentCamera.CoordinateFrame
-			end
-		until flying == false
-		if gyro then gyro:Destroy() end
-		if pos then pos:Destroy() end
-		flying=false
-		localplayer.Character.Humanoid.PlatformStand=false
-		speed=10
-	end
-	e1=mouse.KeyDown:connect(function(key)
-		if not torso or not torso.Parent then flying=false e1:disconnect() e2:disconnect() return end
-		if key=="w" then
-			keys.w=true
-		elseif key=="s" then
-			keys.s=true
-		elseif key=="a" then
-			keys.a=true
-		elseif key=="d" then
-			keys.d=true
-		elseif key=="e" then
-			if flying==true then
-				flying=false
-			else
-				flying=true
-				start()
-			end
-		end
-	end)
-	e2=mouse.KeyUp:connect(function(key)
-		if key=="w" then
-			keys.w=false
-		elseif key=="s" then
-			keys.s=false
-		elseif key=="a" then
-			keys.a=false
-		elseif key=="d" then
-			keys.d=false
-		end
-	end)
-	start()
+
+  FLY()
