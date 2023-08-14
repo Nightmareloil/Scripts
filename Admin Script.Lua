@@ -1,3 +1,4 @@
+--// Fixed --//
 local A_1 = "[Loaded Solex Sword Simulator Admin Commands]"-----message here
 local A_2 = "All"
 local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
@@ -77,7 +78,7 @@ Event:FireServer(A_1, A_2)
 	end
 			else
 			 
-			 if msg:match(";Power") then
+			 if msg:match(";power view") then
 	-- Gui to Lua
 	-- Version: 3.2
 
@@ -134,27 +135,41 @@ Event:FireServer(A_1, A_2)
 			 
 if msg:match(";farm") then
 wait(1)
-if toggle == true then 
-		toggle = false 
-	else
-		toggle = true
-	end
-	if toggle == true then 
-		while true do
-			wait()
-			for i = 1, 40 do
-				if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
-					game.Players.LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
-				else
-					game.Players.LocalPlayer.Backpack.sword.Handle.up.RemoteEvent:FireServer()
+_G.farm = true
+
+		while wait() do
+			if _G.farm == true then
+				for i = 1,10 do
+					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
+						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
+					else
+						game:GetService("Players").LocalPlayer.Backpack.sword.Handle.up.RemoteEvent:FireServer()
+					end
 				end
 			end
 		end
-	end
 	
 			else
 			 
-			  
+
+if msg:match(";unfarm") then
+wait(1)
+_G.farm = false
+
+		while wait() do
+			if _G.farm == true then
+				for i = 1,10 do
+					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
+						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
+					else
+						game:GetService("Players").LocalPlayer.Backpack.sword.Handle.up.RemoteEvent:FireServer()
+					end
+				end
+			end
+		end
+	
+			else
+
 			if msg:match(";help") then
 				wait(1)
 				local A_1 = "[If you need further information please join our server Solex Community, and contact the moderator or developer.]"-----message here
@@ -217,7 +232,7 @@ if toggle == true then
 			loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Discord/.lua",true))()
 			else
 
-                        if msg:match(";Noclip") then
+                        if msg:match(";noclip") then
 			nam = game.Players.LocalPlayer.Name
 
 game:GetService('RunService').Stepped:connect(function()
@@ -377,6 +392,7 @@ end
 		    end
 	    end
 	end
+end
 end
 end
 end
