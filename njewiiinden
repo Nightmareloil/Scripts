@@ -1,6 +1,6 @@
 -- Demon Hub V3 --
 -- New Blacklist Settings --
-loadstring(game:HttpGet("https://avascripting.000webhostapp.com/txt.lua"))()
+loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklisted"))()
 -- Needed Code --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
