@@ -4,7 +4,7 @@ loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklisted"))()
 -- Needed Code --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon, Hub was was updated, at |10:58 PM 12/27/2023|");
+Text = ("Demon, Hub was was updated, at |11:00 PM 8/12/2023|");
  
 Color = Color3.new(196, 40, 28);
  
@@ -18,8 +18,8 @@ local s = Instance.new("Sound", workspace)
  s.SoundId = "rbxassetid://570433034"
  s.Looped  = False
  s:Play()
--- UI 
 local DiscordLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")()
+
 local win = DiscordLib:Window("Demon Hub 2023 | Latest Version")
 local serv = win:Server("Scripts", "")
 -- local Tabs
