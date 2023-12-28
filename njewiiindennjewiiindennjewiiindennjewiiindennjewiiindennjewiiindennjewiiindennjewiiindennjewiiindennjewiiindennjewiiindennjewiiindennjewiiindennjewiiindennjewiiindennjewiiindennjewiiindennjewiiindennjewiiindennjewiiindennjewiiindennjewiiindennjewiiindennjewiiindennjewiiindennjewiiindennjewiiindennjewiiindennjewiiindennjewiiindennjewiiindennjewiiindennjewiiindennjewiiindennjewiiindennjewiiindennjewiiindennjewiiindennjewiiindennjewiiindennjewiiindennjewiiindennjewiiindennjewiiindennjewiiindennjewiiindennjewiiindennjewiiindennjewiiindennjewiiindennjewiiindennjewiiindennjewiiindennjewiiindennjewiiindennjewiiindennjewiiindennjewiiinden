@@ -838,8 +838,8 @@ end
 end)
 
 -- Section 4
-other:Button("Kick Gui ("this is just a troll script I skidded.")", function()
- loadstring(game:HttpGet("https://pastebin.com/raw/JSEPd4jf"))()
+other:Button("Comeing Soon", function()
+-- No Script --
 end)
 
 other:Button("Cooqi Hub", function()
