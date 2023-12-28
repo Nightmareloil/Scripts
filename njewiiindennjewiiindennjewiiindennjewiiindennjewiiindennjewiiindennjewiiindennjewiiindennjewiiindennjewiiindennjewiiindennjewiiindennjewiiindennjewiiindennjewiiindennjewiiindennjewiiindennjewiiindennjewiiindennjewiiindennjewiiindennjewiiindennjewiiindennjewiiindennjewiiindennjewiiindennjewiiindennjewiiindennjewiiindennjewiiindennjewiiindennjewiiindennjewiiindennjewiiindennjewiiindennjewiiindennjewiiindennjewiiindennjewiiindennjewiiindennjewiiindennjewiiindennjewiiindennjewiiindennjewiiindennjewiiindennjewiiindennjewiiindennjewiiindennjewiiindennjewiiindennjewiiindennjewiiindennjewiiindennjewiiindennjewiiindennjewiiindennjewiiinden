@@ -18,7 +18,7 @@ local s = Instance.new("Sound", workspace)
  s.SoundId = "rbxassetid://570433034"
  s.Looped  = False
  s:Play()
-loadstring(game:HttpGet('https://raw.githubusercontent.com/AlznX/Roblox-Scripts/main/source.lua'))()
+loadstring(game:HttpGet "https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/discord")()
 
 local win = DiscordLib:Window("Demon Hub 2023 | Latest Version")
 local serv = win:Server("Scripts", "")
