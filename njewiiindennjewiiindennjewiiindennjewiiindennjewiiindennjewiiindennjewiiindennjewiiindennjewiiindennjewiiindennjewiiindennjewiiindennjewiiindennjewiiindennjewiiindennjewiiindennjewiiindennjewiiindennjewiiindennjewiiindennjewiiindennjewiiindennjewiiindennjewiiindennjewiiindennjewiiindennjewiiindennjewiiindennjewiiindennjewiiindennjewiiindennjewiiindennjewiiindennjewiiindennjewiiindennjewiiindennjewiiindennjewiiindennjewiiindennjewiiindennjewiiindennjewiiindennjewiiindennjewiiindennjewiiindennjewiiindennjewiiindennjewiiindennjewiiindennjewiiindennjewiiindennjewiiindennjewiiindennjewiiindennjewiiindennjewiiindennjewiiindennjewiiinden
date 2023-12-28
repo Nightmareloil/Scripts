@@ -1,6 +1,6 @@
 -- Demon Hub V3 --
 -- New Blacklist Settings --
-loadstring(game:HttpGet("https://avascripting.000webhostapp.com/blacklisted"))()
+loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklisted"))()
 -- Needed Code --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
@@ -835,11 +835,6 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 		vt.MineYesMine:Destroy()
 	end
 end
-end)
-
--- Section 4
-other:Button("Comeing Soon", function()
--- No Script --
 end)
 
 other:Button("Cooqi Hub", function()
