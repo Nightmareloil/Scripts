@@ -1,6 +1,35 @@
 -- Demon Hub V3 --
 -- New Blacklist Settings --
-loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklisted"))()
+
+-- Blacklisted People
+local w = {5415001406}
+local u = {1619050424}
+local userid = game.Players.LocalPlayer.UserId
+
+local function checkUserId()
+    if game.Players.LocalPlayer.UserId ~= userid then
+        game.Players.LocalPlayer.UserId = userid
+      game.Players.LocalPlayer:Destroy()
+    end
+end
+game:GetService("RunService").Heartbeat:Connect(checkUserId)
+
+for i, c in pairs(w) do
+    if game.Players.LocalPlayer.UserId == c then
+local A_1 = game.Players.LocalPlayer.name.." [You have been blacklisted, Blacklist ui will now load...]"-----message here
+local A_2 = "All"
+local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
+Event:FireServer(A_1, A_2)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/main/Blacklisted.txt"))()
+
+        wait(30)
+        game.Players.LocalPlayer:Kick("You have been blacklisted, from Demon Hub, Reason: Unknown Access (id: 3971446929.)")
+    game.Players.LocalPlayer:Destroy()
+    end
+end
+
+-- Next--
 -- Needed Code --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
