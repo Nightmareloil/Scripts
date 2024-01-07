@@ -4,7 +4,7 @@ loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklisted"))()
 -- Needed Code --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon, Hub was was updated, at |11:00 PM 8/12/2023|");
+Text = ("Demon, Hub was was updated, at |1:12 PM 1/7/2024|");
  
 Color = Color3.new(196, 40, 28);
  
@@ -20,7 +20,7 @@ local s = Instance.new("Sound", workspace)
  s:Play()
 local DiscordLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")()
 
-local win = DiscordLib:Window("Demon Hub 2023 | Latest Version")
+local win = DiscordLib:Window("Demon Hub 2024 | Latest Version")
 local serv = win:Server("Scripts", "")
 -- local Tabs
 local main = serv:Channel("Main")
@@ -1177,10 +1177,10 @@ for _,v in pairs(LocalPlayer.Backpack:GetDescendants()) do
 end
 end)
 
-tgls:Toggle("Kill all",false, function(bool)
+tgls:Toggle("Kill all loop |Click F to stop|",false, function(bool)
 local plr = game.Players.LocalPlayer
 
-while wait(0.000) do
+while wait(0.001) do
     for i,v in pairs(game.Players:GetChildren())do
     if v~=plr then
         if v.Character:FindFirstChild("Humanoid") then
@@ -1196,6 +1196,21 @@ while wait(0.000) do
         end
     end
 end
+
+Player = game.Players.LocalPlayer
+Mouse = Player:GetMouse()
+
+function PressedE(key)
+    Key = key:lower() --I'm just used to doing this..I don't think you have to
+    if Key == "F" then
+    for i=1, 100 do
+game.ReplicatedStorage.Events.DropBagItem:FireServer("God Bag") -- CHANGE ITEM HERE
+end
+end
+end
+Mouse.KeyDown:connect(PressedE)
+
+-- Credit Filter & Pain Exist
 end)
 
 tgls:Toggle("Grab All Tools",false, function(bool)
