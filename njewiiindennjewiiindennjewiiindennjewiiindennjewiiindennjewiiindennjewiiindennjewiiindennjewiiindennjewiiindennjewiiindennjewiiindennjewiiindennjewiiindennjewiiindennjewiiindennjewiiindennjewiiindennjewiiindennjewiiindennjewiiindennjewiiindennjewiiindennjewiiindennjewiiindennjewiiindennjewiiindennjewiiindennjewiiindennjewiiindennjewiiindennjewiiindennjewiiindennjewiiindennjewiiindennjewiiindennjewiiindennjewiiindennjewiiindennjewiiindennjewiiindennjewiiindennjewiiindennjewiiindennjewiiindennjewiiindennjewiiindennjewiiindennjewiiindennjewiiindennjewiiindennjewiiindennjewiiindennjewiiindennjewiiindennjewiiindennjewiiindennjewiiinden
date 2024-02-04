@@ -1,7 +1,7 @@
--- Demon Hub V5 --
+-- Demon Hub V3 --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon, Hub was updated, at |12:15 PM 2/4/2024|");
+Text = ("Demon, Hub was updated, at |3:00 PM 2/4/2024|");
  
 Color = Color3.new(196, 40, 28);
  
@@ -11,25 +11,29 @@ FontSize = Enum.FontSize.Size24;
 ----------------------------------------------------------------------
 -- Notification Sound
 local s = Instance.new("Sound", workspace)
- s.Volume  = 8
+ s.Volume  = 10
  s.SoundId = "rbxassetid://570433034"
  s.Looped  = False
  s:Play()
--- Ui Library --
-local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
-local Main = library:CreateWindow("Demon Hub | V5","Crimson")
-local tab = Main:CreateTab("Main")
-local tab2 = Main:CreateTab("Character")
-local tab3 = Main:CreateTab("Effects")
-local tab4 = Main:CreateTab("Other Stuff")
-local tab5 = Main:CreateTab("Solex")
-local tab6 = Main:CreateTab("Toggles")
-local tab7 = Main:CreateTab("UI")
-local tab8 = Main:CreateTab("Teleports")
-local tab9 = Main:CreateTab("Discord")
-local tab10 = Main:CreateTab("Worlds")
+local DiscordLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")()
+
+local win = DiscordLib:Window("Demon Hub 2024 | Latest Version")
+local serv = win:Server("Scripts", "")
+-- local Tabs
+local main = serv:Channel("Main")
+local sldrs = serv:Channel("Character")
+local effects = serv:Channel("Effects")
+local other = serv:Channel("Other Stuff")
+local stardust = serv:Channel("Stardust")
+local tgls = serv:Channel("Toggles")
+local uitab = serv:Channel("UI")
+local tp = serv:Channel("Teleports")
+local discord = serv:Channel("Discord")
+local worlds = serv:Channel("Worlds")
+
+
 -- Section 1
-tab:CreateButton("Slow Farm",function()
+main:Button("Slow Farm", function()
 _G.farm = true
 
 		while wait() do
@@ -45,8 +49,8 @@ _G.farm = true
 		end
 end)
 
-tab:CreateToggle("Unslow Farm",function(a)
-_G.farm = false
+main:Button("Unslow Farm", function()
+ _G.farm = false
 
 		while wait() do
 			if _G.farm == true then
@@ -61,8 +65,7 @@ _G.farm = false
 		end
 end)
 
-
-tab:CreateButton("Fast Farm",function()
+main:Button("Afk Farm", function()
 _G.active = true
 
 		game:GetService("RunService").Stepped:Connect(function()
@@ -78,7 +81,7 @@ _G.active = true
 		end)
 end)
 
-tab:CreateButton("UnFast Farm",function()
+main:Button("Unafk Farm", function()
 _G.active = false
 
 		game:GetService("RunService").Stepped:Connect(function()
@@ -94,7 +97,7 @@ _G.active = false
 		end)
 end)
 
-tab:CreateButton("Kill Aura - Outdated",function()
+main:Button("Kill Aura - Old", function()
   --// Setting \\--
 local range = 40
 
@@ -121,8 +124,10 @@ game:GetService("RunService").RenderStepped:Connect(function()
 end)   
 end)
 
-tab:CreateButton("Sword Damage Script",function()
- local player = game.Players.LocalPlayer
+
+
+main:Button("Sword Damage Script", function()
+local player = game.Players.LocalPlayer
 local character = player.Character
 local backpack = player.Backpack
 local swords = {}
@@ -149,17 +154,28 @@ for i, v in pairs(swords)do
     end)
 end
 end)
+main:Button("INFINITE YIELD", function()
+-- INFINITE YIELD TURE SCRIPT --
+loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end)
+
 
 -- Section 2
-tab2:CreateSlider("Walkspeed",30,1000,function(s)
+local sldr = sldrs:Slider("Walkspeed", 0, 1000, 16, function(s)
 game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s 
 end)
-
-tab2:CreateSlider("Walkspeed",30,1000,function(j)
-game.Players.LocalPlayer.Character.Humanoid.JumpPower = j 
+sldrs:Button("Default", function()
+sldr:Change(40)
 end)
 
-tab2:CreateButton("God Mode",function()
+local sldr = sldrs:Slider("Jumppower", 0, 1000, 16, function(j)
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = j 
+end)
+sldrs:Button("Default", function()
+sldr:Change(50)
+end)
+
+sldrs:Button("God Mode", function()
 if game.Players.LocalPlayer.Backpack:FindFirstChild("sword") then
 		if game.Players.LocalPlayer.Backpack:FindFirstChild("sword") then
 			game.Players.LocalPlayer.Backpack.sword.Handle.dmg.RemoteEvent:FireServer(game.Players.LocalPlayer.Character.Humanoid, - math.huge)
@@ -179,7 +195,7 @@ if game.Players.LocalPlayer.Backpack:FindFirstChild("sword") then
 end)
 
 
-tab2:CreateButton("Permagod",function()
+sldrs:Button("Permagod", function()
 local plr = game.Players.LocalPlayer
 	while wait() do
 		spawn(function()
@@ -199,7 +215,8 @@ local plr = game.Players.LocalPlayer
 	end 
 end)
 
-tab2:CreateButton("Respawn",function()
+
+sldrs:Button("Respawn", function()
 local plr = game.Players.LocalPlayer
 	local pos = plr.Character.HumanoidRootPart.CFrame
 	local Humanoid = plr.Character.Humanoid:Clone()
@@ -212,8 +229,8 @@ local plr = game.Players.LocalPlayer
 end)
 
 -- Section 3
-tab3:CreateButton("Red And Blue Flames",function()
-local SumPValues = 0
+effects:Button("Red And Blue Flames", function()
+  local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 20
     do 
@@ -267,7 +284,7 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Black And Blue Flames",function()
+effects:Button("Black And Blue Flames", function()
  local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 20
@@ -322,8 +339,8 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Black And Red Flames",function()
-local SumPValues = 0
+effects:Button("Black And Red Flames", function()
+ local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 20
     do 
@@ -377,8 +394,8 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Purple And Black Flames",function()
-local SumPValues = 0
+effects:Button("Purple And Black Flames", function()
+  local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 20
     do 
@@ -432,8 +449,8 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Purple And Blue Flames",function()
-local SumPValues = 0
+effects:Button("Purple And Blue Flames", function()
+  local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 20
     do 
@@ -487,7 +504,7 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Black and blue Flames",function()
+effects:Button("Black and blue Flames", function()
  local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 20
@@ -542,9 +559,8 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-
-tab3:CreateButton("Rainbow Sword Flames",function()
-local SumPValues = 0
+effects:Button("Rainbow Sword Flames", function()
+ local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 40
     do 
@@ -606,7 +622,7 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Red Sword Flames",function()
+effects:Button("Red Sword Flames", function()
 local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 50
@@ -659,7 +675,7 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Blue Sword Flames",function()
+effects:Button("Blue Sword Flames", function()
 local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 50
@@ -712,7 +728,7 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Black Sword Flames",function()
+effects:Button("Black Sword Flames", function()
 local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 50
@@ -765,8 +781,8 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-tab3:CreateButton("Purple Sword Flames",function()
-local SumPValues = 0
+effects:Button("Purple Sword Flames", function()
+ local SumPValues = 0
 local amountPlayerCount = 0
 for i = 1, 50
     do 
@@ -818,32 +834,30 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
--- Section 4
-tab4:CreateButton("Cooqi Hub",function()
+other:Button("Cooqi Hub", function()
  loadstring(game:HttpGet(('https://pastebin.com/raw/1C2130dL'),true))()
 end)
 
-tab4:CreateButton("Sword Simulator 2.5",function()
-loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/SS2'),true))()
+other:Button("Sword Simulator 2.5", function()
+ loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/SS2'),true))()
 end)
 
-tab4:CreateButton("Project Synergy v1 |Project/Wux2JFpax238X|",function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/a69killer/PS.V1.0.1/main/Project-Synergy.V.1.0.1"))()
+other:Button("Project Synergy v1 |Project/Wux2JFpax238X|", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/a69killer/PS.V1.0.1/main/Project-Synergy.V.1.0.1"))()
 end)
 
-tab4:CreateButton("2take1.tk",function()
-local A_1 = game.Players.LocalPlayer.name.." [Loaded 2take1.tk Hub Paid Version]"-----message here
+other:Button("2tak1.tk", function()
+    local A_1 = game.Players.LocalPlayer.name.." [Loaded alzn-x.tk Hub Paid Version]"-----message here
 local A_2 = "All"
 local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
 Event:FireServer(A_1, A_2)
 loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/2take1%20main'),true))() -- KEY Alzn
 end)
-
-tab4:CreateButton("Chat Spy",function()
+other:Button("Chat Spy", function()
 loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/spy.txt'),true))()
 end)
 
-tab4:CreateButton("Sword Spin",function()
+other:Button("Sword Spin", function()
 while true do
 local player = game.Players.LocalPlayer
 local character = player.Character
@@ -876,8 +890,8 @@ end
 end  
 end)
 
-tab4:CreateButton("Sword Ring",function()
-    local player = game.Players.LocalPlayer
+other:Button('Sword ring', function()
+           local player = game.Players.LocalPlayer
 local distance = 50
 local speed = 1
 local mouse = player:GetMouse()
@@ -930,8 +944,8 @@ end
 end)
 end)
 
-tab4:CreateButton("Sword Form",function()
-local player = game.Players.LocalPlayer
+other:Button("Sword Form", function()
+ local player = game.Players.LocalPlayer
 local character = player.Character
 local backpack = player.Backpack
 local swords = {}
@@ -984,8 +998,8 @@ look(character)
     end  
 end)
 
-tab4:CreateButton("Sword Shoulder",function()
----------------Non Fe By Alzn---------------
+other:Button("Sword Shoulder", function()
+ ---------------Non Fe By Alzn---------------
 
 --YOU NEED 19 OR MORE SWORDS FOR THIS TO WORK!
 
@@ -1063,41 +1077,50 @@ k:Play()
 k:AdjustSpeed(1)
 end)
 
-tab4:CreateButton("Sword Simulator Hub 2021",function()
+
+other:Button("Sword Simulator Hub 2021", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Sword-Simulator-2take1.tk/main/Sword%20Simulator%20Hub",true))()  
 end)
 
-tab4:CreateButton("Blade World Slow Farm",function()
+other:Button("Blade World Slow Farm", function()
 --// Blades World Auto Farm --//
 loadstring(game:HttpGet("https://pastebin.com/raw/ujUSed1C"))()
 end)
 
-tab4:CreateButton("Blade World Farm V2 (|Faster|)",function()
-loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Ws2",true))()
+other:Button("Blade World Farm V2 (|Faster|)", function()
+loadstring(game:HttpGet("https://pastebin.com/raw/fz9fhmpU"))()
 end)
 
-tab4:CreateButton("Liquids Gui",function()
+other:Button("Weapon Simulator 2", function()
+ loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Ws2",true))()
+end)
+
+other:Button("Psychos Sword Simulator GUI", function()
+ loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Psycho.txt",true))()  
+end)
+
+other:Button("Liquids Gui", function()
 loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Lol.txt",true))()
 end)
 
-tab4:CreateButton("Auratus X Hub",function()
- loadstring(game:HttpGet("https://pastebin.com/raw/1J8jdMBk",true))() 
+other:Button("Auratus X Hub", function()
+   loadstring(game:HttpGet("https://pastebin.com/raw/1J8jdMBk",true))() 
 end)
 
-tab4:CreateButton("Replication UI",function()
+other:Button("Replication UI", function()
 loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Replication%20UI",true))()
 end)
 
-tab4:CreateButton("Emperor Wings",function()
+other:Button("Emperor Wings", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/Emperor%20Wings.lua",true))()  
 end)
 
-tab4:CreateButton("Ghost Hub",function()
+other:Button("Ghost Hub", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Sword-Simulator-Scripts/main/Ghost_Hub",true))()
 end)
 
-tab4:CreateButton("Sword Style",function()
- local player = game.Players.LocalPlayer
+other:Button("Sword Style", function()
+   local player = game.Players.LocalPlayer
 local character = player.Character
 local backpack = player.Backpack
 local swords = {}
@@ -1129,19 +1152,18 @@ look(character)
     last.Parent = player.Character 
 end)
 
-tab4:CreateButton("NullWare",function()
+other:Button("NullWare", function()
 getgenv().Theme = "Blue" -- To change the UI Theme, set this to one of the following options: "Red", "Purple", "Blue", "Green", "Yellow"
 	loadstring(game:HttpGet("https://gist.githubusercontent.com/M6HqVBcddw2qaN4s/2d722888a388017c18028cd434c43a25/raw/dcccf1027fe4b90780e47767aaf584389c9d7771/EULma3fU90PUOKUn?identifier=".. (function()local a=""for b=1,256 do local c=math.random(1,3)a=a..string.char(c==1 and math.random(48,57)or c==2 and math.random(97,122)or c==3 and math.random(65,90))end;return a end)()))() 
 end)
-
 -- Section 5
-tab5:CreateButton("Solex Premium | V4",function()
+stardust:Button("Lost Cyvex | Revived", function()
    loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/lmqml')))()
 end)
 
 -- Section 6
-tab6:CreateToggle("Drop Tools - Unequip your sword first",function(tools)
-local LocalPlayer = game:GetService("Players").LocalPlayer
+tgls:Toggle("Drop Tools - Unequip your sword first",false, function(bool)
+ local LocalPlayer = game:GetService("Players").LocalPlayer
 
 for _,v in pairs(LocalPlayer.Backpack:GetDescendants()) do
     if v:IsA("Tool") then
@@ -1152,7 +1174,7 @@ for _,v in pairs(LocalPlayer.Backpack:GetDescendants()) do
 end
 end)
 
-tab6:CreateToggle("Kill all loop |Click F to stop|",function(boots)
+tgls:Toggle("Kill all loop |Click F to stop|",false, function(bool)
 local plr = game.Players.LocalPlayer
 
 while wait(0.001) do
@@ -1188,7 +1210,7 @@ Mouse.KeyDown:connect(PressedE)
 -- Credit Filter & Pain Exist
 end)
 
-tab6:CreateToggle("Kill all loop |Click F to stop|",function(boots)
+tgls:Toggle("Grab All Tools",false, function(bool)
 local toolName = "sword"
 local root = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart
 
@@ -1200,16 +1222,15 @@ end
 end
 end)
 
-tab6:CreateToggle("loopwalkspeed | 100",function(s)
+tgls:Toggle("loopwalkspeed | 100",false, function(s)
 while true do
 game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
 wait()
-end
+end	
 end)
 
 -- Section 7
-
-tab7:CreateButton("Destroy Effects Gui",function()
+uitab:Button("Destroy effects gui", function()
 for i,v in next, game.Players.LocalPlayer.PlayerGui:GetChildren() do
 if v:IsA'ScreenGui' then
 v:Destroy()
@@ -1218,77 +1239,73 @@ end
 end)
 
 -- Section 8
-tab8:CreateButton("Teleport To Arena",function()
+tp:Button("Teleport To Arena", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-18.3934994, 26.9782486, 9.00349426, 0.999929011, 5.575545e-08, 0.0119137615, -5.60647067e-08, 1, 2.56239687e-08, -0.0119137615, -2.62900919e-08, 0.999929011)
 end)
 
-tab8:CreateButton("Teleport To Tree",function()
+tp:Button("Teleport To Tree", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-143.155518, 82.4644165, -246.581848, 0.985673249, 2.07997655e-08, -0.168666065, -2.56829864e-08, 1, -2.67704596e-08, 0.168666065, 3.07187733e-08, 0.985673249)
-
 end)
 
-tab8:CreateButton("Teleport To Wall",function()
+tp:Button("Teleport To Wall", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-251.617264, 92.6898041, -335.042999, -0.794003367, 5.71983101e-08, -0.607913315, 7.40920072e-08, 1, -2.6829412e-09, 0.607913315, -4.71717847e-08, -0.794003367)
+
 end)
 
-tab8:CreateButton("Teleport On Gray Wall",function()
+tp:Button("Teleport On Gray Wall", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-266.61319, 119.881256, -347.056152, -0.698222816, 1.42967749e-09, -0.715880454, -6.97057612e-09, 1, 8.79573214e-09, 0.715880454, 1.11314806e-08, -0.698222816)
 end)
 
-tab8:CreateButton("Teleport outside",function()
+tp:Button("Teleport outside", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-295.778137, 25.5963211, -355.214905, -0.408980638, 8.96638852e-09, -0.912543058, 3.96705708e-08, 1, -7.95371502e-09, 0.912543058, -3.94540223e-08, -0.408980638)
 end)
 
-tab8:CreateButton("Teleport outside of gate",function()
+tp:Button("Teleport outside of gate", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-420.443237, 25.5963211, -9.64808655, -0.00459511625, 2.20150298e-08, -0.99998945, 2.40020501e-08, 1, 2.19049685e-08, 0.99998945, -2.39011406e-08, -0.00459511625)
 end)
 
-tab8:CreateButton("Hello",function()
-print("clicked")
-end)
-
-tab8:CreateButton("Teleport inside rock",function()
+tp:Button("Teleport inside rock", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-341.301697, 25.5963211, 47.3047905, 0.342858613, -2.5034975e-08, 0.939387023, 7.45443245e-08, 1, -5.56946933e-10, -0.939387023, 7.02169274e-08, 0.342858613)
 end)
-
-tab8:CreateButton("Teleport On Pillar",function()
+tp:Button("Teleport On Pillar", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-88.6465683, 70.1966324, 92.6180038, 0.952379525, -1.35618299e-08, -0.3049151, 3.69969122e-08, 1, 7.10796968e-08, 0.3049151, -7.89757664e-08, 0.952379525)
 end)
 
-tab8:CreateButton("Teleport inside Rock2",function()
+tp:Button("Teleport inside Rock2", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(283.552979, 25.5963211, 184.6745, -0.423626035, -8.85137723e-08, 0.905837178, -8.27824209e-08, 1, 5.90006515e-08, -0.905837178, -4.99931794e-08, -0.423626035)
 end)
 
-tab8:CreateButton("Teleport inside rock3",function()
+tp:Button("Teleport inside rock3", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(43.3107376, 25.4995861, -168.157898, 0.16866222, 9.760263e-08, -0.985673904, 1.7134056e-08, 1, 1.01953091e-07, 0.985673904, -3.4084227e-08, 0.16866222)
 end)
 
-tab8:CreateButton("Teleport to gate",function()
+tp:Button("Teleport to gate", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(5.18123674, 25.4995861, 419.47052, 0.985069573, 5.02285182e-08, 0.172156855, -4.74715378e-08, 1, -2.01313544e-08, -0.172156855, 1.16582335e-08, 0.985069573)
 end)
 
-tab8:CreateButton("Teleport on Pillar2",function()
+tp:Button("Teleport on Pillar2", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(88.7349243, 70.0998993, -84.3232117, -0.347119093, 5.96187775e-08, 0.93782109, 6.7094696e-08, 1, -3.87375891e-08, -0.93782109, 4.94762631e-08, -0.347119093)
 end)
 
-tab8:CreateButton("Teleport under rock",function()
+tp:Button("Teleport under rock", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(45.7791939, 21.8124046, -185.381424, -0.863430142, -0.496804118, -0.0876014605, -4.4007793e-09, 0.17365104, -0.984807253, 0.504468381, -0.850312293, -0.149935558)
 end)
 
-tab9:CreateButton("Discord Link",function()
+-- Section 9
+discord:Button("Discord Link", function()
 game.StarterGui:SetCore("SendNotification", {
 Title = "Successful:"; 
 Text = "The discord link has been copied to your clipboard."; 
@@ -1301,49 +1318,44 @@ Duration = 10;
 -- Copy link
 wait(3)
 setclipboard("https://discord.com/invite/G2pcbmpnQW")
-toclipboard("https://discord.com/invite/G2pcbmpnQW") 
+toclipboard("https://discord.com/invite/G2pcbmpnQW")  
 end)
 
-tab9:CreateButton("Game ID",function()
+-- Copy Link 2
+discord:Button("Game id", function()
 print("Game id has been copied!")
 setclipboard(tostring(game.PlaceId))
 end)
 
-tab9:CreateButton("Roblox Group (Currently not working.)",function()
+-- Copy Link 3
+discord:Button("Roblox Group", function()
 print("Roblox Solex Group link copied!")
 setclipboard("https://www.roblox.com/groups/14058176/Solex-Community#!/store")
 toclipboard("https://www.roblox.com/groups/14058176/Solex-Community#!/store")  
 end)
 
--- 10 --
-tab10:CreateButton("Coffee Shop",function()
+-- Section 10
+
+worlds:Button("Coffee Shop", function()
 loadstring(game:HttpGet(('https://pastebin.com/raw/Pvj5Ckc2'),true))()
 end)
 
-tab10:CreateButton("ClockworkArena",function()
+worlds:Button("ClockworkArena", function()
 loadstring(game:HttpGet(('https://pastebin.com/raw/NNp1NJKT'),true))()
 end)
 
-
-tab10:CreateButton("Shipment",function()
+worlds:Button("Shipment", function()
 loadstring(game:HttpGet(('https://pastebin.com/raw/J3Jk3NaC'),true))()
 end)
 
-tab10:CreateButton("PurpleBattlefields",function()
+worlds:Button("PurpleBattlefields", function()
 loadstring(game:HttpGet(('https://pastebin.com/raw/kdg5tmdg'),true))()
 end)
 
-tab10:CreateButton("Hello",function()
-print("clicked")
+worlds:Button("Smoke Grenade", function()
+	loadstring(game.HttpGet(('http://pastebin.com/raw/7w4e16r8'),true))()
 end)
 
-
-tab10:CreateButton("Smoke Grenade",function()
-loadstring(game.HttpGet(('http://pastebin.com/raw/7w4e16r8'),true))()
-end)
-
-
-tab10:CreateButton("Lock Shift",function()
+worlds:Button("Lock Shift", function()
 loadstring(game:HttpGet("https://pastebin.com/raw/uqAS6EfN"))()
 end)
-tab:Show()
