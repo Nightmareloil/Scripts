@@ -1,7 +1,7 @@
--- Demon Hub V3 --
+-- Demon Hub V4 --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon, Hub was updated, at |3:00 PM 2/4/2024|");
+Text = ("Demon, Hub was updated, at |2:07 AM 2/11/2024|");
  
 Color = Color3.new(196, 40, 28);
  
@@ -65,7 +65,7 @@ main:Button("Unslow Farm", function()
 		end
 end)
 
-main:Button("Afk Farm", function()
+main:Button("Fast Farm", function()
 _G.active = true
 
 		game:GetService("RunService").Stepped:Connect(function()
@@ -81,7 +81,7 @@ _G.active = true
 		end)
 end)
 
-main:Button("Unafk Farm", function()
+main:Button("Unfast Farm", function()
 _G.active = false
 
 		game:GetService("RunService").Stepped:Connect(function()
@@ -154,7 +154,7 @@ for i, v in pairs(swords)do
     end)
 end
 end)
-main:Button("INFINITE YIELD", function()
+main:Button("Infinite Yield", function()
 -- INFINITE YIELD TURE SCRIPT --
 loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
@@ -834,11 +834,7 @@ for it, vt in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
 end
 end)
 
-other:Button("Cooqi Hub", function()
- loadstring(game:HttpGet(('https://pastebin.com/raw/1C2130dL'),true))()
-end)
-
-other:Button("Sword Simulator 2.5", function()
+other:Button("Sword Simulator 2.5 |Use Sword 2|", function()
  loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/SS2'),true))()
 end)
 
@@ -846,8 +842,8 @@ other:Button("Project Synergy v1 |Project/Wux2JFpax238X|", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/a69killer/PS.V1.0.1/main/Project-Synergy.V.1.0.1"))()
 end)
 
-other:Button("2tak1.tk", function()
-    local A_1 = game.Players.LocalPlayer.name.." [Loaded alzn-x.tk Hub Paid Version]"-----message here
+other:Button("2take1.tk", function()
+    local A_1 = game.Players.LocalPlayer.name.." [Loaded 2take1.tk Hub Paid Version]"-----message here
 local A_2 = "All"
 local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
 Event:FireServer(A_1, A_2)
@@ -890,7 +886,7 @@ end
 end  
 end)
 
-other:Button('Sword ring', function()
+other:Button('Sword Ring', function()
            local player = game.Players.LocalPlayer
 local distance = 50
 local speed = 1
@@ -1157,12 +1153,12 @@ getgenv().Theme = "Blue" -- To change the UI Theme, set this to one of the follo
 	loadstring(game:HttpGet("https://gist.githubusercontent.com/M6HqVBcddw2qaN4s/2d722888a388017c18028cd434c43a25/raw/dcccf1027fe4b90780e47767aaf584389c9d7771/EULma3fU90PUOKUn?identifier=".. (function()local a=""for b=1,256 do local c=math.random(1,3)a=a..string.char(c==1 and math.random(48,57)or c==2 and math.random(97,122)or c==3 and math.random(65,90))end;return a end)()))() 
 end)
 -- Section 5
-stardust:Button("Lost Cyvex | Revived", function()
+stardust:Button("Solex Premium V4", function()
    loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/lmqml')))()
 end)
 
 -- Section 6
-tgls:Toggle("Drop Tools - Unequip your sword first",false, function(bool)
+tgls:Toggle("Drop Tools - Unequip Your Sword First",false, function(bool)
  local LocalPlayer = game:GetService("Players").LocalPlayer
 
 for _,v in pairs(LocalPlayer.Backpack:GetDescendants()) do
@@ -1174,7 +1170,7 @@ for _,v in pairs(LocalPlayer.Backpack:GetDescendants()) do
 end
 end)
 
-tgls:Toggle("Kill all loop |Click F to stop|",false, function(bool)
+tgls:Toggle("Kill all loop",false, function(bool)
 local plr = game.Players.LocalPlayer
 
 while wait(0.001) do
@@ -1274,7 +1270,7 @@ tp:Button("Teleport inside rock", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-341.301697, 25.5963211, 47.3047905, 0.342858613, -2.5034975e-08, 0.939387023, 7.45443245e-08, 1, -5.56946933e-10, -0.939387023, 7.02169274e-08, 0.342858613)
 end)
-tp:Button("Teleport On Pillar", function()
+tp:Button("Teleport To Pillar", function()
 -- Please teleporter
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-88.6465683, 70.1966324, 92.6180038, 0.952379525, -1.35618299e-08, -0.3049151, 3.69969122e-08, 1, 7.10796968e-08, 0.3049151, -7.89757664e-08, 0.952379525)
 end)
@@ -1353,7 +1349,7 @@ loadstring(game:HttpGet(('https://pastebin.com/raw/kdg5tmdg'),true))()
 end)
 
 worlds:Button("Smoke Grenade", function()
-	loadstring(game.HttpGet(('http://pastebin.com/raw/7w4e16r8'),true))()
+	loadstring(game.HttpGet(('https://pastebin.com/raw/01RWCXgX'),true))()
 end)
 
 worlds:Button("Lock Shift", function()
