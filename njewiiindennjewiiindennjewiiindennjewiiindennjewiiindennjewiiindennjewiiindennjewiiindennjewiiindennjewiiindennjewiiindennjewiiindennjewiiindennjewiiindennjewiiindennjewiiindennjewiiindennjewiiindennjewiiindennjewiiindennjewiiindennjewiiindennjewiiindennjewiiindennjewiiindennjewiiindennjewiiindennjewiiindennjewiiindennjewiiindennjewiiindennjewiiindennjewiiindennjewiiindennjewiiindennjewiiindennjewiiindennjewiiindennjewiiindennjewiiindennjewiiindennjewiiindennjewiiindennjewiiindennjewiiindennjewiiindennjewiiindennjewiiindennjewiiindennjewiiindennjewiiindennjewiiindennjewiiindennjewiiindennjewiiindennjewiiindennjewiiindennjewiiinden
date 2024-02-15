@@ -1,7 +1,7 @@
--- Demon Hub V4 --
+-- Demon Hub V2 --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon, Hub was updated, at |2:07 AM 2/11/2024|");
+Text = ("Demon Hub was updated, at |1:51 AM 2/15/2024|");
  
 Color = Color3.new(196, 40, 28);
  
@@ -9,7 +9,7 @@ FontSize = Enum.FontSize.Size24;
  
 })
 ----------------------------------------------------------------------
--- Notification Sound
+-- Notification Sound --
 local s = Instance.new("Sound", workspace)
  s.Volume  = 10
  s.SoundId = "rbxassetid://570433034"
