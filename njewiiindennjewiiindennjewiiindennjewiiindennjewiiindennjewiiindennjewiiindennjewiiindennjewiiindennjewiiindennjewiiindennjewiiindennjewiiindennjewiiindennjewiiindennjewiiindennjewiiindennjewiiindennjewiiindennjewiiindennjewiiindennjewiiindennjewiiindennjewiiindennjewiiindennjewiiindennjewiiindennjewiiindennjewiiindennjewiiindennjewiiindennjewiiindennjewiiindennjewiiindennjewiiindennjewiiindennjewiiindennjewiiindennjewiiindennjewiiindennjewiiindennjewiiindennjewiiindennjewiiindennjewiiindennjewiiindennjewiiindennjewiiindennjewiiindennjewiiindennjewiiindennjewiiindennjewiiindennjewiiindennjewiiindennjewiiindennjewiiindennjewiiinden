@@ -1,7 +1,7 @@
 -- Demon Hub V2 --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon Hub was updated, at |1:51 AM 2/15/2024|");
+Text = ("Demon Hub was updated, at |9:39 PM 2/17/2024|");
  
 Color = Color3.new(196, 40, 28);
  
@@ -9,16 +9,17 @@ FontSize = Enum.FontSize.Size24;
  
 })
 ----------------------------------------------------------------------
--- Notification Sound --
+----------------------------------------------------------------------
+Notification Sound --
 local s = Instance.new("Sound", workspace)
- s.Volume  = 10
- s.SoundId = "rbxassetid://570433034"
- s.Looped  = False
- s:Play()
+s.Volume  = 10
+s.SoundId = "rbxassetid://570433034"
+s.Looped  = False
+s:Play()
 local DiscordLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")()
-
 local win = DiscordLib:Window("Demon Hub 2024 | Latest Version")
 local serv = win:Server("Scripts", "")
+
 -- local Tabs
 local main = serv:Channel("Main")
 local sldrs = serv:Channel("Character")
@@ -38,7 +39,7 @@ _G.farm = true
 
 		while wait() do
 			if _G.farm == true then
-				for i = 1,10 do
+				for i = 1,4 do
 					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
 						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
 					else
@@ -54,7 +55,7 @@ main:Button("Unslow Farm", function()
 
 		while wait() do
 			if _G.farm == true then
-				for i = 1,10 do
+				for i = 1,4 do
 					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
 						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
 					else
@@ -70,7 +71,7 @@ _G.active = true
 
 		game:GetService("RunService").Stepped:Connect(function()
 			if _G.active == true then
-				for i = 1,10 do
+				for i = 1,12 do
 					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
 						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
 					else
@@ -86,7 +87,7 @@ _G.active = false
 
 		game:GetService("RunService").Stepped:Connect(function()
 			if _G.active == true then
-				for i = 1,10 do
+				for i = 1,12 do
 					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
 						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
 					else
@@ -97,7 +98,7 @@ _G.active = false
 		end)
 end)
 
-main:Button("Kill Aura - Old", function()
+main:Button("Kill Aura", function()
   --// Setting \\--
 local range = 40
 
@@ -940,7 +941,7 @@ end
 end)
 end)
 
-other:Button("Sword Form", function()
+other:Button("Sword Style", function()
  local player = game.Players.LocalPlayer
 local character = player.Character
 local backpack = player.Backpack
@@ -1115,7 +1116,7 @@ other:Button("Ghost Hub", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Sword-Simulator-Scripts/main/Ghost_Hub",true))()
 end)
 
-other:Button("Sword Style", function()
+other:Button("Sword Style2", function()
    local player = game.Players.LocalPlayer
 local character = player.Character
 local backpack = player.Backpack
@@ -1153,7 +1154,7 @@ getgenv().Theme = "Blue" -- To change the UI Theme, set this to one of the follo
 	loadstring(game:HttpGet("https://gist.githubusercontent.com/M6HqVBcddw2qaN4s/2d722888a388017c18028cd434c43a25/raw/dcccf1027fe4b90780e47767aaf584389c9d7771/EULma3fU90PUOKUn?identifier=".. (function()local a=""for b=1,256 do local c=math.random(1,3)a=a..string.char(c==1 and math.random(48,57)or c==2 and math.random(97,122)or c==3 and math.random(65,90))end;return a end)()))() 
 end)
 -- Section 5
-stardust:Button("Solex Premium V4", function()
+stardust:Button("Cyvex's World Divinity Edition", function()
    loadstring(game:HttpGet(('https://avascripting.000webhostapp.com/lmqml')))()
 end)
 
@@ -1170,10 +1171,10 @@ for _,v in pairs(LocalPlayer.Backpack:GetDescendants()) do
 end
 end)
 
-tgls:Toggle("Kill all loop",false, function(bool)
+tgls:Toggle("Kill All",false, function(bool)
 local plr = game.Players.LocalPlayer
 
-while wait(0.001) do
+while wait(0.005) do
     for i,v in pairs(game.Players:GetChildren())do
     if v~=plr then
         if v.Character:FindFirstChild("Humanoid") then
@@ -1226,7 +1227,7 @@ end
 end)
 
 -- Section 7
-uitab:Button("Destroy effects gui", function()
+uitab:Button("Destroy Effects Gui", function()
 for i,v in next, game.Players.LocalPlayer.PlayerGui:GetChildren() do
 if v:IsA'ScreenGui' then
 v:Destroy()
@@ -1346,10 +1347,6 @@ end)
 
 worlds:Button("PurpleBattlefields", function()
 loadstring(game:HttpGet(('https://pastebin.com/raw/kdg5tmdg'),true))()
-end)
-
-worlds:Button("Smoke Grenade", function()
-	loadstring(game.HttpGet(('https://pastebin.com/raw/01RWCXgX'),true))()
 end)
 
 worlds:Button("Lock Shift", function()
