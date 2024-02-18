@@ -16,7 +16,7 @@ s.Volume  = 10
 s.SoundId = "rbxassetid://570433034"
 s.Looped  = False
 s:Play()
-local DiscordLib = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")()
+local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt",true))()
 local win = DiscordLib:Window("Demon Hub 2024 | Latest Version")
 local serv = win:Server("Scripts", "")
 
