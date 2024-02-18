@@ -10,7 +10,7 @@ FontSize = Enum.FontSize.Size24;
 })
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
-Notification Sound --
+-- Notification Sound --
 local s = Instance.new("Sound", workspace)
 s.Volume  = 10
 s.SoundId = "rbxassetid://570433034"
