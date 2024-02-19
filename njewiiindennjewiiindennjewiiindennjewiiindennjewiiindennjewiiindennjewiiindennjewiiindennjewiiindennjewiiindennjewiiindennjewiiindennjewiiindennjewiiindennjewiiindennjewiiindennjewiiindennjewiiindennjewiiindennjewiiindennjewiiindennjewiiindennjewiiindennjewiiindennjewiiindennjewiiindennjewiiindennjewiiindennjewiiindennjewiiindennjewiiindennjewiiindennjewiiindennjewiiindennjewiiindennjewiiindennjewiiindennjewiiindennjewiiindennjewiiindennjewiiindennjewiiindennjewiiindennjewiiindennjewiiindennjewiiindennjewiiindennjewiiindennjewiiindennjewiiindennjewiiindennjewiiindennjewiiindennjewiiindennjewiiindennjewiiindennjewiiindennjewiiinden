@@ -1078,16 +1078,6 @@ end)
 other:Button("Sword Simulator Hub 2021", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Sword-Simulator-2take1.tk/main/Sword%20Simulator%20Hub",true))()  
 end)
-
-other:Button("Blade World Slow Farm", function()
---// Blades World Auto Farm --//
-loadstring(game:HttpGet("https://pastebin.com/raw/ujUSed1C"))()
-end)
-
-other:Button("Blade World Farm V2 (|Faster|)", function()
-loadstring(game:HttpGet("https://pastebin.com/raw/fz9fhmpU"))()
-end)
-
 other:Button("Weapon Simulator 2", function()
  loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Ws2",true))()
 end)
