@@ -1,7 +1,7 @@
 -- Demon Hub V2 --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon Hub was updated, at |2:50 PM 2/28/2024|");
+Text = ("Demon Hub has been updated as of |6:30 PM 3/3/2024|.");
  
 Color = Color3.new(196, 40, 28);
  
@@ -38,7 +38,7 @@ _G.farm = true
 
 		while wait() do
 			if _G.farm == true then
-				for i = 1,6 do
+				for i = 1,8 do
 					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
 						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
 					else
@@ -54,7 +54,7 @@ main:Button("Unslow Farm", function()
 
 		while wait() do
 			if _G.farm == true then
-				for i = 1,6 do
+				for i = 1,8 do
 					if game.Players.LocalPlayer.Character:FindFirstChild("sword") then
 						game:GetService("Players").LocalPlayer.Character.sword.Handle.up.RemoteEvent:FireServer()
 					else
