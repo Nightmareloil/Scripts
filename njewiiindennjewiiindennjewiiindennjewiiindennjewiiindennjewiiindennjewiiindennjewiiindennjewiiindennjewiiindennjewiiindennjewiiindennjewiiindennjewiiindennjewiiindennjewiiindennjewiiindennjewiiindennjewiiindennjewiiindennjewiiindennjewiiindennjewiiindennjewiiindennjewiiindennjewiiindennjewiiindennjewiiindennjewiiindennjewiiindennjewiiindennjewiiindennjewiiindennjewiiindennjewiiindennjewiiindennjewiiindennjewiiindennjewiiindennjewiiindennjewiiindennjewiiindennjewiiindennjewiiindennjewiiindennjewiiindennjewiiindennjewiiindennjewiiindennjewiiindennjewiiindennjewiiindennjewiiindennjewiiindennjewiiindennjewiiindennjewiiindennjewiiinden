@@ -1,7 +1,7 @@
 -- Demon Hub V2 --
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
  
-Text = ("Demon Hub has been updated as of |6:30 PM 3/3/2024|.");
+Text = ("Demon Hub was updated, at |10:43 PM 3/3/2024|");
  
 Color = Color3.new(196, 40, 28);
  
