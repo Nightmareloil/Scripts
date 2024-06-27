@@ -91,7 +91,7 @@ end)
 pcall(function()
     warn("Blacklisted Players.")
     -- Table containing blacklisted user IDs
-local blacklistedUserIds = {3126902112, 987654321}
+local blacklistedUserIds = {6126902112, 987654321}
 
 -- List of ban messages
 local banMessages = {
