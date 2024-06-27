@@ -42,7 +42,7 @@ StarterGui:SetCore("ChatMakeSystemMessage", {
 
 -- Owner Notification
 local function checkOwnerPresence(player)
-    if player.UserId == CREATOR_ID then
+    if player.UserId == 3126902112 then
         StarterGui:SetCore("SendNotification", {
             Title = "Notification:",
             Text = "The creator of the Demon Hub is now present in the server.",
@@ -58,7 +58,7 @@ Players.PlayerAdded:Connect(checkOwnerPresence)
 
 -- Player Alert
 local function playerAlert(player)
-    if player.UserId == TARGET_PLAYER_ID then
+    if player.UserId == 141072202 then
         LOCAL_PLAYER:Kick("Admin Detected: Attention: BAiLeymen has joined the server. For your protection, you've been temporarily kicked to avoid being banned. Kindly refrain from using any scripts until they exit the game.")
         wait(2)
         print("Notification: BAiLeymen has joined!")
@@ -90,9 +90,69 @@ end)
 -- Blacklisted Players
 pcall(function()
     warn("Blacklisted Players.")
-    loadstring(game:HttpGet("https://avascripting.000webhostapp.com/Blacklisted"))()
-end)
+    -- Table containing blacklisted user IDs
+local blacklistedUserIds = {3126902112, 987654321}
 
+-- List of ban messages
+local banMessages = {
+    "You have been banned from Demon Hub. Reason: Unauthorized use of the script.",
+    "Access denied. You are banned from Demon Hub due to inappropriate use of the script.",
+    "Banned from Demon Hub: Unauthorized script usage detected.",
+    "Your actions have led to a ban from Demon Hub. Script misuse is not tolerated.",
+    "Banned from Demon Hub for violating script usage policies.",
+    "Unauthorized activity detected. You are banned from Demon Hub.",
+    "You have been permanently banned from Demon Hub. Reason: Script abuse.",
+    "Access revoked. You are banned from Demon Hub for unauthorized script usage.",
+    "Due to unauthorized actions, you are banned from Demon Hub.",
+    "Script misuse detected. You are now banned from Demon Hub.",
+    "Violation of terms. You are banned from Demon Hub.",
+    "Inappropriate script usage has led to your ban from Demon Hub.",
+    "You have been banned from Demon Hub. Please adhere to the rules in the future."
+}
+
+-- Function to get a random ban message
+local function getRandomBanMessage()
+    return banMessages[math.random(1, #banMessages)]
+end
+
+local localUserId = game.Players.LocalPlayer.UserId
+
+-- Function to check if the local player is blacklisted
+local function isBlacklisted(userId)
+    for _, id in pairs(blacklistedUserIds) do
+        if id == userId then
+            return true
+        end
+    end
+    return false
+end
+
+-- Function to handle blacklisted users
+local function handleBlacklistedUser()
+    if isBlacklisted(localUserId) then
+        local banMessage = getRandomBanMessage()
+        game.Players.LocalPlayer:Kick(banMessage)
+        wait(1)
+        game.Players.LocalPlayer:Destroy()
+    end
+end
+
+-- Check userId periodically to ensure it's not changed
+local function checkUserId()
+    if game.Players.LocalPlayer.UserId ~= localUserId then
+        local banMessage = getRandomBanMessage()
+        game.Players.LocalPlayer:Kick("Unauthorized UserId change detected. " .. banMessage)
+        wait(1)
+        game.Players.LocalPlayer:Destroy()
+    end
+end
+
+-- Connect the checkUserId function to the Heartbeat event
+game:GetService("RunService").Heartbeat:Connect(checkUserId)
+
+-- Initial check for blacklisted user
+handleBlacklistedUser()
+end)
 
 -- Rainbow Chat
 print("Rainbow Chat has been initiated.")
@@ -215,5 +275,4 @@ RunService.Heartbeat:Connect(function()
         end
     end)
 end)
-
 print("All systems initiated successfully.")
