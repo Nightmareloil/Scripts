@@ -1,98 +1,115 @@
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
-local char = player.Character
-local hum = char.Humanoid
-
 local UIS = game:GetService("UserInputService")
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
 
 local focused = false
-UIS.TextBoxFocused:Connect(function()
-    focused = true
-end)
-UIS.TextBoxFocusReleased:Connect(function()
-    focused = false
-end)
+local animated = true
+local flying = false
+local sprinting = false
 
-function getSwords()
+local function handleFocus()
+    focused = true
+end
+
+local function handleBlur()
+    focused = false
+end
+
+UIS.TextBoxFocused:Connect(handleFocus)
+UIS.TextBoxFocusReleased:Connect(handleBlur)
+
+local function getSwords()
     local swords = {}
-    for i, sword in pairs(player.Character:GetChildren())do
-        if(sword:IsA("Tool"))then
-            table.insert(swords, sword)
+    -- Grab swords in the character and the backpack
+    for _, tool in pairs(player.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(swords, tool)
         end
     end
-    for i, sword in pairs(player.Backpack:GetChildren())do
-        if(sword:IsA("Tool"))then
-            table.insert(swords, sword)
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(swords, tool)
         end
     end
     return swords
 end
 
-local animated = true
-local flying = false
-local sprinting = false
-UIS.InputBegan:connect(function(k)
-    if not(focused)then
-        k = k.KeyCode
-        if(k==Enum.KeyCode.G)then
-            animated = false
-        elseif(k==Enum.KeyCode.F)then
-            if(animated)then animated = false else animated = true end
-        elseif(k==Enum.KeyCode.LeftShift and animated)then
-            if(sprinting)then
-                sprinting = false
-                hum.WalkSpeed = 8
-                applyData({angle = 0.5, value = 0.5})
-            else
-                sprinting = true
-                hum.WalkSpeed = 30
-                applyData({angle = 1.57, value = 0.7})
-            end
+-- Handles key input for toggling movement and animation
+local function handleKeyPress(input, gameProcessed)
+    if gameProcessed or focused then return end
+
+    local key = input.KeyCode
+    if key == Enum.KeyCode.G then
+        animated = false
+    elseif key == Enum.KeyCode.F then
+        animated = not animated
+        if animated then
+            applySwordData({angle = 0.5, value = 0.5})
+        end
+    elseif key == Enum.KeyCode.LeftShift and animated then
+        sprinting = not sprinting
+        if sprinting then
+            hum.WalkSpeed = 30
+            applySwordData({angle = 1.57, value = 0.7})
+        else
+            hum.WalkSpeed = 8
+            applySwordData({angle = 0.5, value = 0.5})
         end
     end
-end)
+end
 
-swords = getSwords()
-local half = math.floor(#swords/2)
+UIS.InputBegan:Connect(handleKeyPress)
 
-function applyData(wingData)
-    for i = 1, half do
-        sword = swords[i]
+local function applySwordData(wingData)
+    local swords = getSwords()
+    local half = math.floor(#swords / 2)
+    
+    -- Apply sword positions to create the wings
+    for i, sword in ipairs(swords) do
         sword.Parent = player.Backpack
-        sword.Grip = CFrame.new(-3.5,0,0)*CFrame.Angles(3.14,0,0)
-        sword.Grip = sword.Grip*CFrame.Angles(((wingData.angle/half)*i)+wingData.value,1.57,0)
-        sword.Grip = sword.Grip*CFrame.new(1.7,0,0)
-        sword.Parent = player.Character
-    end
-    for i = half+1, #swords do
-        sword = swords[i]
-        sword.Parent = player.Backpack
-        sword.Grip = CFrame.new(-3.5,0,0)*CFrame.Angles(3.14,0,0)
-        sword.Grip = sword.Grip*CFrame.Angles(-(((wingData.angle/half)*(i-half))+wingData.value),1.57,0)
-        sword.Grip = sword.Grip*CFrame.new(1.7,0,0)
+        sword.Grip = CFrame.new(-3.5, 0, 0) * CFrame.Angles(math.pi, 0, 0)
+        
+        local angleAdjustment = (wingData.angle / half) * i + wingData.value
+        if i > half then
+            angleAdjustment = -angleAdjustment
+        end
+
+        sword.Grip = sword.Grip * CFrame.Angles(angleAdjustment, math.pi / 2, 0)
+        sword.Grip = sword.Grip * CFrame.new(1.7, 0, 0)
         sword.Parent = player.Character
     end
 end
 
-applyData({angle = 0.5, value = 0.5})
+-- Initial application of sword positions when animation is on
+applySwordData({angle = 0.5, value = 0.5})
 
-char.Humanoid.StateChanged:Connect(function(old, new)
-    if(animated)then
-        if(new==Enum.HumanoidStateType.Freefall)then
-            flying = true
-            applyData({angle = 1.57, value = 0.7})
-            workspace.Gravity = 50
-            hum.WalkSpeed = 70
-        elseif(new==Enum.HumanoidStateType.Landed)then
-            flying = false
-            workspace.Gravity = 196.19999694824
-            if(sprinting)then
-                hum.WalkSpeed = 30
-            else
-                hum.WalkSpeed = 8
-                applyData({angle = 0.5, value = 0.5})
-            end
+-- Humanoid state changes: fly, land, and walking state management
+hum.StateChanged:Connect(function(_, newState)
+    if not animated then return end
+
+    if newState == Enum.HumanoidStateType.Freefall then
+        flying = true
+        applySwordData({angle = 1.57, value = 0.7})
+        workspace.Gravity = 50
+        hum.WalkSpeed = 70
+    elseif newState == Enum.HumanoidStateType.Landed then
+        flying = false
+        workspace.Gravity = 196.2
+        if sprinting then
+            hum.WalkSpeed = 30
+        else
+            hum.WalkSpeed = 8
+            applySwordData({angle = 0.5, value = 0.5})
         end
     end
 end)
+
+-- Listen for character respawn to reset animations and swords
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    hum = char:WaitForChild("Humanoid")
+    -- Reset any state-related behavior here
+    applySwordData({angle = 0.5, value = 0.5})
 end)
