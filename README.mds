@@ -1,1 +1,119 @@
-oioio
+-- Demon Hub 2025: Custom Welcome & Loading GUI with Animated Background and Rounded Box
+
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DemonHubWelcomeGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Create a centered Frame to host the welcome message and loader
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.6, 0, 0.5, 0)
+frame.Position = UDim2.new(0.2, 0, 0.25, 0)
+frame.BackgroundTransparency = 0.3
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+-- Add curved corners for a rounded, textured look
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 20)
+uiCorner.Parent = frame
+
+-- Add an animated gradient to the frame's background for extra texture
+local gradient = Instance.new("UIGradient")
+gradient.Parent = frame
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 40))
+})
+gradient.Rotation = 0
+
+-- Animate the gradient's rotation to create a subtle moving background effect.
+spawn(function()
+    while true do
+        local tween = TweenService:Create(gradient, TweenInfo.new(10, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Rotation = (gradient.Rotation + 180) % 360})
+        tween:Play()
+        tween.Completed:Wait()
+        wait()
+    end
+end)
+
+-- Welcome Message Label (big, red, scaled text)
+local welcomeLabel = Instance.new("TextLabel")
+welcomeLabel.Size = UDim2.new(1, 0, 0.6, 0)
+welcomeLabel.Position = UDim2.new(0, 0, 0, 0)
+welcomeLabel.BackgroundTransparency = 1
+welcomeLabel.TextColor3 = Color3.fromRGB(196, 40, 28)
+welcomeLabel.Font = Enum.Font.GothamBold
+welcomeLabel.TextScaled = true
+welcomeLabel.TextStrokeTransparency = 0.5
+welcomeLabel.Text = [[
+Welcome to Demon Hub Script 2025
+
+This script was thoughtfully designed and developed by ItzOver.
+
+Stay tuned for updates and enjoy your experience.
+Thank you for using Demon Hub!
+]]
+welcomeLabel.Parent = frame
+
+-- Spinner Image (rotating)
+local spinner = Instance.new("ImageLabel")
+spinner.Size = UDim2.new(0, 50, 0, 50)
+spinner.Position = UDim2.new(0.5, -25, 0.65, -25)
+spinner.BackgroundTransparency = 1
+-- Replace the asset id with your desired spinner image
+spinner.Image = "rbxassetid://6031075931"
+spinner.Parent = frame
+
+-- Animated Loading Text Label
+local loadingLabel = Instance.new("TextLabel")
+loadingLabel.Size = UDim2.new(1, 0, 0.2, 0)
+loadingLabel.Position = UDim2.new(0, 0, 0.8, 0)
+loadingLabel.BackgroundTransparency = 1
+loadingLabel.TextColor3 = Color3.fromRGB(196, 40, 28)
+loadingLabel.Font = Enum.Font.GothamBold
+loadingLabel.TextScaled = true
+loadingLabel.Text = "Loading"
+loadingLabel.Parent = frame
+
+-- Spinner Animation: continuously rotate the spinner
+local spinning = true
+spawn(function()
+    while spinning do
+        spinner.Rotation = spinner.Rotation + 5
+        wait(0.05)
+    end
+end)
+
+-- Animate the loading dots (cycles from none to "...")
+spawn(function()
+    local dotCount = 0
+    while spinning do
+        dotCount = (dotCount % 3) + 1
+        local dots = string.rep(".", dotCount)
+        loadingLabel.Text = "Loading" .. dots
+        wait(0.5)
+    end
+end)
+
+-- Simulate loading for 5 seconds, then fade out the GUI.
+delay(5, function()
+    spinning = false  -- Halt spinner and loading animation
+
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(frame, tweenInfo, {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0.6, 0, 0, 0)
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        screenGui:Destroy()
+    end)
+end)
