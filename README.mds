@@ -1,9 +1,14 @@
--- Demon Hub 2025: Custom Welcome & Loading GUI with Animated Background and Rounded Box
-
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
+
+-- Optional: Add a Blur effect for extra coolness during the GUI display
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = Lighting
+TweenService:Create(blur, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 24}):Play()
 
 -- Create the ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -11,21 +16,26 @@ screenGui.Name = "DemonHubWelcomeGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Create a centered Frame to host the welcome message and loader
+-- Frame parameters
+local frameWidthScale, frameHeightScale = 0.6, 0.5
+
+-- Create a centered Frame to host the welcome message and loader.
+-- Starting at 0 size to allow a pop-in animation.
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0.6, 0, 0.5, 0)
-frame.Position = UDim2.new(0.2, 0, 0.25, 0)
+frame.Size = UDim2.new(0, 0, 0, 0)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Position = UDim2.new(0.5, 0, 0.5, 0)
 frame.BackgroundTransparency = 0.3
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Add curved corners for a rounded, textured look
+-- Rounded corners on the frame
 local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 20)
 uiCorner.Parent = frame
 
--- Add an animated gradient to the frame's background for extra texture
+-- Animated gradient background on the frame for extra texture
 local gradient = Instance.new("UIGradient")
 gradient.Parent = frame
 gradient.Color = ColorSequence.new({
@@ -34,48 +44,49 @@ gradient.Color = ColorSequence.new({
 })
 gradient.Rotation = 0
 
--- Animate the gradient's rotation to create a subtle moving background effect.
-spawn(function()
+-- Animate the gradient's rotation in an endless loop
+task.spawn(function()
     while true do
-        local tween = TweenService:Create(gradient, TweenInfo.new(10, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Rotation = (gradient.Rotation + 180) % 360})
+        local newRotation = (gradient.Rotation + 180) % 360
+        local tween = TweenService:Create(gradient, TweenInfo.new(10, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Rotation = newRotation})
         tween:Play()
         tween.Completed:Wait()
-        wait()
+        task.wait()
     end
 end)
 
--- Welcome Message Label (big, red, scaled text)
+-- Animate the frame to pop into view
+local targetSize = UDim2.new(frameWidthScale, 0, frameHeightScale, 0)
+TweenService:Create(frame, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+
+-- Welcome Message Label – stylized, red, and centered text.
 local welcomeLabel = Instance.new("TextLabel")
-welcomeLabel.Size = UDim2.new(1, 0, 0.6, 0)
+welcomeLabel.Size = UDim2.new(1, 0, 0.55, 0)
 welcomeLabel.Position = UDim2.new(0, 0, 0, 0)
 welcomeLabel.BackgroundTransparency = 1
 welcomeLabel.TextColor3 = Color3.fromRGB(196, 40, 28)
 welcomeLabel.Font = Enum.Font.GothamBold
 welcomeLabel.TextScaled = true
 welcomeLabel.TextStrokeTransparency = 0.5
-welcomeLabel.Text = [[
-Welcome to Demon Hub Script 2025
-
-This script was thoughtfully designed and developed by ItzOver.
-
-Stay tuned for updates and enjoy your experience.
-Thank you for using Demon Hub!
-]]
+welcomeLabel.Text = "Welcome to Demon Hub Script 2025\n\nThis script was thoughtfully designed and developed by ItzOver.\n\nStay tuned for updates and enjoy your experience.\nThank you for using Demon Hub!"
 welcomeLabel.Parent = frame
 
--- Spinner Image (rotating)
+-- Fade in the welcome text once in view.
+welcomeLabel.TextTransparency = 1
+TweenService:Create(welcomeLabel, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+
+-- Spinner Image (rotating) – you can replace the asset id with your custom spinner
 local spinner = Instance.new("ImageLabel")
 spinner.Size = UDim2.new(0, 50, 0, 50)
-spinner.Position = UDim2.new(0.5, -25, 0.65, -25)
+spinner.Position = UDim2.new(0.5, -25, 0.7, -25)
 spinner.BackgroundTransparency = 1
--- Replace the asset id with your desired spinner image
 spinner.Image = "rbxassetid://6031075931"
 spinner.Parent = frame
 
 -- Animated Loading Text Label
 local loadingLabel = Instance.new("TextLabel")
-loadingLabel.Size = UDim2.new(1, 0, 0.2, 0)
-loadingLabel.Position = UDim2.new(0, 0, 0.8, 0)
+loadingLabel.Size = UDim2.new(1, 0, 0.15, 0)
+loadingLabel.Position = UDim2.new(0, 0, 0.85, 0)
 loadingLabel.BackgroundTransparency = 1
 loadingLabel.TextColor3 = Color3.fromRGB(196, 40, 28)
 loadingLabel.Font = Enum.Font.GothamBold
@@ -83,37 +94,78 @@ loadingLabel.TextScaled = true
 loadingLabel.Text = "Loading"
 loadingLabel.Parent = frame
 
+-- Progress Bar Background (below the welcome text)
+local progressBarBg = Instance.new("Frame")
+progressBarBg.Size = UDim2.new(0.8, 0, 0.05, 0)
+progressBarBg.Position = UDim2.new(0.1, 0, 0.78, 0)
+progressBarBg.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+progressBarBg.BackgroundTransparency = 0.3
+progressBarBg.BorderSizePixel = 0
+progressBarBg.Parent = frame
+
+local progressBar = Instance.new("Frame")
+progressBar.Size = UDim2.new(0, 0, 1, 0)
+progressBar.Position = UDim2.new(0, 0, 0, 0)
+progressBar.BackgroundColor3 = Color3.fromRGB(196, 40, 28)
+progressBar.BorderSizePixel = 0
+progressBar.Parent = progressBarBg
+
+-- Rounded corners for the progress bar & its background
+local progressUICorner = Instance.new("UICorner")
+progressUICorner.CornerRadius = UDim.new(0, 10)
+progressUICorner.Parent = progressBar
+
+local progressBgCorner = Instance.new("UICorner")
+progressBgCorner.CornerRadius = UDim.new(0, 10)
+progressBgCorner.Parent = progressBarBg
+
 -- Spinner Animation: continuously rotate the spinner
 local spinning = true
-spawn(function()
+task.spawn(function()
     while spinning do
         spinner.Rotation = spinner.Rotation + 5
-        wait(0.05)
+        task.wait(0.05)
     end
 end)
 
--- Animate the loading dots (cycles from none to "...")
-spawn(function()
+-- Loading Dots Animation: cycles through 1 to 3 dots after "Loading"
+task.spawn(function()
     local dotCount = 0
     while spinning do
         dotCount = (dotCount % 3) + 1
         local dots = string.rep(".", dotCount)
         loadingLabel.Text = "Loading" .. dots
-        wait(0.5)
+        task.wait(0.5)
     end
 end)
 
--- Simulate loading for 5 seconds, then fade out the GUI.
-delay(5, function()
-    spinning = false  -- Halt spinner and loading animation
+-- Simulate a filling progress bar over a total load time
+local totalLoadTime = 5 -- seconds
+local progressIncrement = 1 / (totalLoadTime / 0.05)
+task.spawn(function()
+    while spinning and progressBar.Size.X.Scale < 1 do
+        local newScale = math.min(progressBar.Size.X.Scale + progressIncrement, 1)
+        progressBar.Size = UDim2.new(newScale, 0, 1, 0)
+        task.wait(0.05)
+    end
+end)
 
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(frame, tweenInfo, {
+-- After the total load time, fade out the GUI.
+task.delay(totalLoadTime, function()
+    spinning = false  -- Stop animations
+
+    -- Animate the frame to fade out and shrink
+    local fadeTween = TweenService:Create(frame, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         BackgroundTransparency = 1,
-        Size = UDim2.new(0.6, 0, 0, 0)
+        Size = UDim2.new(frameWidthScale, 0, 0, 0)
     })
-    tween:Play()
-    tween.Completed:Connect(function()
+    fadeTween:Play()
+    
+    -- Bring the blur effect down gradually.
+    TweenService:Create(blur, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 0}):Play()
+    
+    fadeTween.Completed:Connect(function()
         screenGui:Destroy()
+        blur:Destroy()
     end)
 end)
