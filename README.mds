@@ -68,7 +68,7 @@ welcomeLabel.TextColor3 = Color3.fromRGB(196, 40, 28)
 welcomeLabel.Font = Enum.Font.GothamBold
 welcomeLabel.TextScaled = true
 welcomeLabel.TextStrokeTransparency = 0.5
-welcomeLabel.Text = "Welcome to Demon Hub Script 2025\n\nThis script was thoughtfully designed and developed by ItzOver.\n\nStay tuned for updates and enjoy your experience.\nThank you for using Demon Hub!"
+welcomeLabel.Text = "Welcome to Demon Hub Script 2025\n\nThis script was thoughtfully designed and developed by iNeiru.\n\nStay tuned for updates and enjoy your experience.\nThank you for using Demon Hub!"
 welcomeLabel.Parent = frame
 
 -- Fade in the welcome text once in view.
