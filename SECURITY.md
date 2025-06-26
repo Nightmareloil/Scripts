@@ -19,9 +19,7 @@ if PlayerGui:FindFirstChild("MainUI") then
     PlayerGui.MainUI:Destroy()
 end
 
---------------------------------------------------
 -- REMOVE UI ON RESET
---------------------------------------------------
 local function removeUI()
     local ui = PlayerGui:FindFirstChild("MainUI")
     if ui then ui:Destroy() end
