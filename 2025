@@ -17,51 +17,24 @@
 --]]
 
 -- Demon Hub 2025 --
+-- Notification Sound
+local function playNotificationSound(soundId, volume)
+    local sound = Instance.new("Sound")
+    sound.Volume = volume or 5 -- Default volume
+    sound.SoundId = soundId
+    sound.Looped = false
+    sound.Parent = workspace
+    sound:Play()
+end
 
--- Function to load UI Library from a URL (available globally)
+-- Play the notification sound
+playNotificationSound("rbxassetid://570433034", 10)
+
+-- Load UI Library
 local function loadUILibrary(url)
-    local success, result = pcall(function()
-        return loadstring(game:HttpGet(url, true))()
-    end)
-
-    if success then
-        return result
-    else
-        return nil
-    end
+    return loadstring(game:HttpGet(url))()
 end
 
--- Load external script safely
-local success, result = pcall(function()
-    return loadstring(game:HttpGet("https://pastebin.com/raw/cbBsFWLF"), true)()
-end)
-
-if success then
-    print("Demon hub script loaded")
-
-    -- Wait a second after loading
-    task.wait(1)
-
-    -- Function to play notification sound
-    local function playNotificationSound(soundId, volume)
-        local sound = Instance.new("Sound")
-        sound.Volume = volume or 5 -- Default volume if none provided
-        sound.SoundId = soundId
-        sound.Looped = false
-        sound.Parent = workspace
-        sound:Play()
-
-        -- Cleanup sound after finished playing
-        sound.Ended:Connect(function()
-            sound:Destroy()
-        end)
-    end
-
-    -- Play the notification sound with specified volume
-    playNotificationSound("rbxassetid://570433034", 10)
-end
-
--- Now you can load DiscordLib safely here:
 local DiscordLib = loadUILibrary("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")
 local win = DiscordLib:Window("Demon Hub 2025 | Latest Version")
 local serv = win:Server("Scripts", "")
