@@ -18,6 +18,19 @@
 
 -- Demon Hub 2025 --
 
+-- Function to load UI Library from a URL (available globally)
+local function loadUILibrary(url)
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url, true))()
+    end)
+
+    if success then
+        return result
+    else
+        return nil
+    end
+end
+
 -- Load external script safely
 local success, result = pcall(function()
     return loadstring(game:HttpGet("https://pastebin.com/raw/cbBsFWLF"), true)()
@@ -46,24 +59,9 @@ if success then
 
     -- Play the notification sound with specified volume
     playNotificationSound("rbxassetid://570433034", 10)
-
-    -- Function to load UI Library from a URL
-    local function loadUILibrary(url)
-        local success, result = pcall(function()
-            return loadstring(game:HttpGet(url, true))()
-        end)
-
-        if success then
-            return result
-        else
-            return nil
-        end
-    end
-
-    -- Example usage of loadUILibrary (uncomment and set URL as needed)
-    -- local uiLib = loadUILibrary("https://example.com/uiLib.lua")
 end
 
+-- Now you can load DiscordLib safely here:
 local DiscordLib = loadUILibrary("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")
 local win = DiscordLib:Window("Demon Hub 2025 | Latest Version")
 local serv = win:Server("Scripts", "")
