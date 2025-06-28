@@ -16,25 +16,24 @@
 ╚══════╝░╚════╝░╚══════╝╚═════╝░                                                                                              
 --]]
 
--- Demon Hub 2025 --
--- Notification Sound
-local function playNotificationSound(soundId, volume)
+-- Demon Hub 2025 - Improved, Cleaned, No Prints/Warnings
+
+-- Play notification sound (uses SoundService, cleans up after playing)
+task.delay(1, function()
     local sound = Instance.new("Sound")
-    sound.Volume = volume or 5 -- Default volume
-    sound.SoundId = soundId
-    sound.Looped = false
-    sound.Parent = workspace
+    sound.SoundId = "rbxassetid://570433034"
+    sound.Volume = 1
+    sound.Parent = game:GetService("SoundService")
     sound:Play()
-end
+    sound.Ended:Connect(function()
+        sound:Destroy()
+    end)
+end)
 
--- Play the notification sound
-playNotificationSound("rbxassetid://570433034", 10)
-
--- Load UI Library
+-- Load external UI library
 local function loadUILibrary(url)
     return loadstring(game:HttpGet(url))()
 end
-
 local DiscordLib = loadUILibrary("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt")
 local win = DiscordLib:Window("Demon Hub 2025 | Latest Version")
 local serv = win:Server("Scripts", "")
@@ -45,97 +44,67 @@ local other = serv:Channel("Scripts")
 local tgls = serv:Channel("Toggles")
 local uitab = serv:Channel("UI")
 local tp = serv:Channel("Teleports")
-local power
-power = serv:Channel("Power")
+local power = serv:Channel("Power")
 local worlds = serv:Channel("Worlds")
 local Music = serv:Channel("Music")
-------------------------------------------------
--- Helper function to trigger sword attack
-------------------------------------------------
+
+-- Helper: Fire sword remote
 local function fireSword(times)
     local player = game.Players.LocalPlayer
-    if not player then 
-        return
-    end
-
+    if not player then return end
     local character = player.Character or player.CharacterAdded:Wait()
     local sword = character:FindFirstChild("sword") or player.Backpack:FindFirstChild("sword")
-    if sword then
-        local handle = sword:FindFirstChild("Handle")
-        local up = handle and handle:FindFirstChild("up")
-        local remoteEvent = up and up:FindFirstChild("RemoteEvent")
-        if remoteEvent then
-            for i = 1, times do
-                remoteEvent:FireServer()
-                task.wait(0.05)  -- small delay between calls
-            end
-        end
+    if not sword then return end
+    local handle = sword:FindFirstChild("Handle")
+    if not handle then return end
+    local up = handle:FindFirstChild("up")
+    if not up then return end
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
+    if not remoteEvent then return end
+    for _ = 1, times do
+        remoteEvent:FireServer()
+        task.wait(0.05)
     end
 end
 
-------------------------------------------------
 -- Farming Buttons
-------------------------------------------------
 if main and type(main.Button) == "function" then
     main:Button("Slow Farm", function()
         _G.farm = true
         task.spawn(function()
             while _G.farm do
                 fireSword(4)
-                task.wait()  -- yield briefly; adjust as desired
+                task.wait()
             end
         end)
     end)
-
-    main:Button("Unslow Farm", function()
-        _G.farm = false
-    end)
-
+    main:Button("Unslow Farm", function() _G.farm = false end)
     main:Button("Fast Farm", function()
         _G.active = true
         if not _G.fastFarmConnection then
             _G.fastFarmConnection = game:GetService("RunService").Stepped:Connect(function()
-                if _G.active then
-                    fireSword(6)
-                end
+                if _G.active then fireSword(6) end
             end)
         end
     end)
-
-    main:Button("Unfast Farm", function()
-        _G.active = false
-    end)
+    main:Button("Unfast Farm", function() _G.active = false end)
 end
 
-------------------------------------------------
 -- Kill Aura Button
-------------------------------------------------
 if main and type(main.Button) == "function" then
     main:Button("Kill Aura", function()
-        if main.KillAuraInitialized then
-            return
-        else
-            main.KillAuraInitialized = true
-        end
-
+        if main.KillAuraInitialized then return end
+        main.KillAuraInitialized = true
         local Players = game:GetService("Players")
         local RunService = game:GetService("RunService")
         local UserInputService = game:GetService("UserInputService")
         local player = Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local backpack = player:WaitForChild("Backpack")
-
         local killAuraActive = true
         local range = 40
-        local activeSword = nil
-        local dmgRemote = nil
-
-        -- A slider to adjust the kill aura range
-        main:Slider("Kill Aura Range", 10, 1000, range, function(newRange)
-            range = newRange
-        end)
-
-        -- Finds a valid sword that has a 'Handle' with a 'dmg' object.
+        local activeSword, dmgRemote
+        main:Slider("Kill Aura Range", 10, 1000, range, function(newRange) range = newRange end)
         local function findValidSword(container)
             for _, tool in pairs(container:GetChildren()) do
                 if tool:IsA("Tool") and tool:FindFirstChild("Handle") and tool.Handle:FindFirstChild("dmg") then
@@ -144,8 +113,6 @@ if main and type(main.Button) == "function" then
             end
             return nil
         end
-
-        -- Prepare the sword: re-equip it and set its properties.
         local function setupSword()
             local sword = findValidSword(backpack) or findValidSword(character)
             if sword then
@@ -154,19 +121,15 @@ if main and type(main.Button) == "function" then
                 sword.Handle.CanCollide = true
                 sword.Parent = character
                 task.wait(0.2)
-
                 activeSword = sword
                 dmgRemote = sword.Handle.dmg:FindFirstChild("RemoteEvent")
             end
         end
         setupSword()
-
-        -- Kill Aura logic: check every frame if targets are within the specified range.
         RunService.RenderStepped:Connect(function()
             if not killAuraActive or not activeSword or not dmgRemote then return end
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
-
             for _, target in ipairs(Players:GetPlayers()) do
                 if target ~= player and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                     local targetHRP = target.Character.HumanoidRootPart
@@ -180,8 +143,6 @@ if main and type(main.Button) == "function" then
                 end
             end
         end)
-
-        -- Toggle Kill Aura on/off using the (E) key.
         UserInputService.InputBegan:Connect(function(input, gameProcessed)
             if gameProcessed then return end
             if input.KeyCode == Enum.KeyCode.E then
@@ -191,128 +152,101 @@ if main and type(main.Button) == "function" then
     end)
 end
 
-------------------------------------------------
 -- Sword Damage Script Button
-------------------------------------------------
 if main and type(main.Button) == "function" then
     main:Button("Sword Damage Script", function()
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local backpack = player.Backpack
-
-        local function findSwords(container)
-            local found = {}
-            for _, tool in pairs(container:GetChildren()) do
-                if tool:IsA("Tool") then
-                    table.insert(found, tool)
+        local function getSwords()
+            local swords = {}
+            for _, container in ipairs({backpack, character}) do
+                for _, tool in ipairs(container:GetChildren()) do
+                    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                        table.insert(swords, tool)
+                    end
                 end
             end
-            return found
+            return swords
         end
-
-        local swords = {}
-        for _, sword in pairs(findSwords(backpack)) do
-            table.insert(swords, sword)
-        end
-        for _, sword in pairs(findSwords(character)) do
-            table.insert(swords, sword)
-        end
-
-        for _, sword in pairs(swords) do
-            if sword:FindFirstChild("Handle") then
-                sword.Parent = backpack
-                sword.Handle.Massless = true
-                sword.Handle.CanCollide = true
-                sword.Parent = character
-
-                sword.Handle.Touched:Connect(function(hit)
-                    local targetHumanoid = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
-                    if targetHumanoid and hit.Parent.Name ~= player.Name then
-                        local dmg = sword.Handle:FindFirstChild("dmg")
-                        if dmg then
-                            local remoteEvent = dmg:FindFirstChild("RemoteEvent")
-                            if remoteEvent then
-                                remoteEvent:FireServer(targetHumanoid, math.huge)
-                            end
+        for _, sword in ipairs(getSwords()) do
+            sword.Parent = backpack
+            sword.Handle.Massless = true
+            sword.Handle.CanCollide = true
+            sword.Parent = character
+            sword.Handle.Touched:Connect(function(hit)
+                local targetHumanoid = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
+                if targetHumanoid and hit.Parent.Name ~= player.Name then
+                    local dmg = sword.Handle:FindFirstChild("dmg")
+                    if dmg then
+                        local remoteEvent = dmg:FindFirstChild("RemoteEvent")
+                        if remoteEvent then
+                            remoteEvent:FireServer(targetHumanoid, math.huge)
                         end
                     end
-                end)
-            end
+                end
+            end)
         end
     end)
 end
 
-------------------------------------------------
 -- Infinite Yield Button
-------------------------------------------------
 if main and type(main.Button) == "function" then
     main:Button("Infinite Yield", function()
         local url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
-        local success, result = pcall(function()
+        pcall(function()
             loadstring(game:HttpGet(url, true))()
         end)
     end)
 end
 
-------------------------------------------------
 -- WalkSpeed and JumpPower Sliders/Buttons
-------------------------------------------------
 if sldrs and type(sldrs.Slider) == "function" then
-    local wsSlider = sldrs:Slider("Walkspeed Modifier", 0, 1000, 16, function(speed)
+    local wsValue, jpValue = 16, 50
+    local function setWalkSpeed(speed)
+        wsValue = speed
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = speed
-        end
-    end)
-
-    local jumpSlider = sldrs:Slider("Jump Power Modifier", 0, 1000, 50, function(jump)
+        if humanoid then humanoid.WalkSpeed = speed end
+    end
+    local function setJumpPower(jump)
+        jpValue = jump
         local player = game.Players.LocalPlayer
         local character = player.Character or player.CharacterAdded:Wait()
         local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.JumpPower = jump
-        end
-    end)
-
-    sldrs:Button("Reset JumpPower", function()
-        jumpSlider:Change(50)
-    end)
-
-    ------------------------------------------------
+        if humanoid then humanoid.JumpPower = jump end
+    end
+    sldrs:Slider("Walkspeed Modifier", 0, 1000, wsValue, setWalkSpeed)
+    sldrs:Slider("Jump Power Modifier", 0, 1000, jpValue, setJumpPower)
+    sldrs:Button("WalkSpeed +10", function() setWalkSpeed(wsValue + 10) end)
+    sldrs:Button("WalkSpeed -10", function() setWalkSpeed(math.max(0, wsValue - 10)) end)
+    sldrs:Button("JumpPower +10", function() setJumpPower(jpValue + 10) end)
+    sldrs:Button("JumpPower -10", function() setJumpPower(math.max(0, jpValue - 10)) end)
+    sldrs:Button("Reset WalkSpeed", function() setWalkSpeed(16) end)
+    sldrs:Button("Reset JumpPower", function() setJumpPower(50) end)
     -- Respawn Button
-    ------------------------------------------------
     sldrs:Button("Force Respawn", function()
         local plr = game.Players.LocalPlayer
         local character = plr.Character
-        if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
-            local pos = character.HumanoidRootPart.CFrame
-            local humanoid = character.Humanoid
-            local clone = humanoid:Clone()
-            humanoid:Destroy()
-            clone.Parent = character
-            clone.Health = 0
-            task.wait(0.6)
-            character:Destroy()
-            plr.CharacterAdded:Wait()
-            task.wait(0.1)
-            local newChar = plr.Character
-            if newChar and newChar:FindFirstChild("HumanoidRootPart") then
-                newChar.HumanoidRootPart.CFrame = pos
-            end
-        end
+        if not (character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid")) then return end
+        local pos = character.HumanoidRootPart.CFrame
+        local humanoid = character.Humanoid
+        humanoid.Health = 0
+        task.wait(0.2)
+        if plr.Character and plr.Character.Parent then plr.Character:Destroy() end
+        local newChar = plr.CharacterAdded:Wait()
+        task.wait(0.1)
+        local hrp = newChar:FindFirstChild("HumanoidRootPart")
+        if hrp then hrp.CFrame = pos end
     end)
-
-    ------------------------------------------------
     -- God Mode Button
-    ------------------------------------------------
     sldrs:Button("Instant GodMode", function()
         local plr = game.Players.LocalPlayer
         local character = plr.Character or plr.CharacterAdded:Wait()
-        local humanoid = character:FindFirstChild("Humanoid")
+        local humanoid = character and character:FindFirstChild("Humanoid")
         if humanoid then
-            local sword = plr.Backpack:FindFirstChild("sword")
+            local sword = plr.Backpack:FindFirstChild("sword") or character:FindFirstChild("sword")
             if sword and sword:FindFirstChild("Handle") then
                 local dmg = sword.Handle:FindFirstChild("dmg")
                 if dmg then
@@ -324,73 +258,55 @@ if sldrs and type(sldrs.Slider) == "function" then
             end
         end
     end)
-
-    ------------------------------------------------
-    -- Permagod (Auto-Reapply) Toggle Button
-    ------------------------------------------------
+    -- Permagod Toggle
     sldrs:Button("Toggle Permagod", function()
         local plr = game.Players.LocalPlayer
         _G.permaGodActive = not _G.permaGodActive
         if _G.permaGodActive then
             task.spawn(function()
                 while _G.permaGodActive do
-                    local tool = plr.Backpack:FindFirstChild("sword") or plr.Character:FindFirstChild("sword")
-                    if tool and tool:FindFirstChild("Handle") then
-                        local dmg = tool.Handle:FindFirstChild("dmg")
+                    local character = plr.Character or plr.CharacterAdded:Wait()
+                    local humanoid = character and character:FindFirstChild("Humanoid")
+                    local sword = plr.Backpack:FindFirstChild("sword") or character:FindFirstChild("sword")
+                    if humanoid and sword and sword:FindFirstChild("Handle") then
+                        local dmg = sword.Handle:FindFirstChild("dmg")
                         if dmg then
                             local remoteEvent = dmg:FindFirstChild("RemoteEvent")
                             if remoteEvent then
-                                remoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
+                                remoteEvent:FireServer(humanoid, -math.huge)
                             end
                         end
                     end
-                    task.wait(1)  -- adjust this delay as needed
+                    task.wait(1)
                 end
             end)
         end
     end)
 end
 
-------------------------------------------------
 -- Flame Colors Function
-------------------------------------------------
 local function applyFlameColors(colors, repeatCount)
     local eff = workspace:FindFirstChild("eff")
-    if not eff then
-        return
-    end
+    if not eff then return end
     local event = eff:FindFirstChild("RemoteEvent")
-    if not event then
-        return
-    end
-
+    if not event then return end
     for _ = 1, repeatCount do
         for _, color in ipairs(colors) do
             event:FireServer(color)
-            task.wait(0.0001)  -- Prevents excessive server requests
+            task.wait(0.0001)
         end
     end
 end
 
-------------------------------------------------
--- Function to spawn and drop tools
-------------------------------------------------
+-- Spawn and drop tools
 local function spawnAndDropTools()
     local player = game.Players.LocalPlayer
-    if not player then
-        return
-    end
-
-    -- Create the sword
+    if not player then return end
     workspace.load.RemoteEvent:FireServer()
     task.wait(0.26)
-
-    -- Move tools to character
     for _, tool in pairs(player.Backpack:GetChildren()) do
-        tool.Parent = player.Character
+        if tool:IsA("Tool") then tool.Parent = player.Character end
     end
-
-    -- Drop tools and tag them
     for _, tool in pairs(player.Character:GetChildren()) do
         if tool:IsA("Tool") then
             tool.Parent = workspace
@@ -401,67 +317,42 @@ local function spawnAndDropTools()
     end
 end
 
-------------------------------------------------
--- Cleanup function for tagged tools
-------------------------------------------------
+-- Cleanup tagged tools
 local function cleanUpTags()
     for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
         local tag = tool:FindFirstChild("MineYesMine")
-        if tag then 
-            tag:Destroy() 
-        end
+        if tag then tag:Destroy() end
     end
 end
 
-------------------------------------------------
--- UI Button function for flame effects
-------------------------------------------------
+-- UI Button for flame effects
 local function flameEffectButton(label, colors, colorLoops, effectLoops)
-    if not effects or type(effects.Button) ~= "function" then
-        return
-    end
-
+    if not effects or type(effects.Button) ~= "function" then return end
     effects:Button(label, function()
         for _ = 1, effectLoops do
             applyFlameColors(colors, colorLoops)
-            task.wait(0.0001)
+            task.wait(0.00001)
             spawnAndDropTools()
         end
         cleanUpTags()
     end)
 end
 
-------------------------------------------------
--- Flame Effect Buttons: Official Colors Only (Purple, Red, Blue, Black)
-------------------------------------------------
-
--- Single-color flames
+-- Flame Effect Buttons
 flameEffectButton("Flaming Sword: Purple Blaze", {"Purple"}, 25, 25)
 flameEffectButton("Flaming Sword: Crimson Fury", {"Red"}, 25, 25)
 flameEffectButton("Flaming Sword: Midnight Shadow", {"Black"}, 25, 25)
 flameEffectButton("Flaming Sword: Azure Flame", {"Blue"}, 25, 25)
-
----------------------------------------------
--- Dual-color flames (6 unique combinations)
----------------------------------------------
 flameEffectButton("Dual Flames: Twilight Inferno (Purple & Red)", {"Purple", "Red"}, 25, 25)
 flameEffectButton("Dual Flames: Mystic Frost (Purple & Blue)", {"Purple", "Blue"}, 25, 25)
 flameEffectButton("Dual Flames: Midnight Eclipse (Purple & Black)", {"Purple", "Black"}, 25, 25)
 flameEffectButton("Dual Flames: Crimson Tempest (Red & Blue)", {"Red", "Blue"}, 25, 25)
 flameEffectButton("Dual Flames: Obsidian Blaze (Red & Black)", {"Black", "Red"}, 25, 25)
 flameEffectButton("Dual Flames: Abyssal Storm (Blue & Black)", {"Black", "Blue"}, 25, 25)
-
----------------------------------------------
--- Trio-color flames (4 unique combinations)
----------------------------------------------
 flameEffectButton("Trio Flames: Eternal Ember (Red, Purple & Blue)", {"Red", "Purple", "Blue"}, 25, 25)
 flameEffectButton("Trio Flames: Shadow Inferno (Red, Purple & Black)", {"Black", "Red", "Purple"}, 25, 25)
 flameEffectButton("Trio Flames: Abyssal Radiance (Purple, Blue & Black)", {"Black", "Blue", "Purple"}, 25, 25)
 flameEffectButton("Trio Flames: Infernal Surge (Red, Blue & Black)", {"Black", "Red", "Blue"}, 25, 25)
-
----------------------------------------------
--- Quad-color flames (all 4 colors in various orders)
----------------------------------------------
 flameEffectButton("Quad Flames: Rainbow Inferno (Purple, Red, Blue & Black)", {"Purple", "Red", "Blue", "Black"}, 25, 25)
 flameEffectButton("Quad Flames: Dark Spectrum (Black, Red, Purple & Blue)", {"Black", "Red", "Purple", "Blue"}, 25, 25)
 flameEffectButton("Quad Flames: Celestial Onslaught (Blue, Purple, Red & Black)", {"Blue", "Purple", "Red", "Black"}, 25, 25)
@@ -471,161 +362,97 @@ flameEffectButton("Quad Flames: Phantom Radiance (Blue, Red, Purple & Black)", {
 flameEffectButton("Quad Flames: Mystic Maelstrom (Red, Purple, Black & Blue)", {"Red", "Purple", "Black", "Blue"}, 25, 25)
 flameEffectButton("Quad Flames: Shadowed Inferno (Black, Blue, Red & Purple)", {"Black", "Blue", "Red", "Purple"}, 25, 25)
 
-other:Button("Exclusive Hub", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Exclusive%20Hub.lua"))()
-end)
+-- Other scripts (external)
+local function safeLoad(url)
+    pcall(function() loadstring(game:HttpGet(url, true))() end)
+end
+other:Button("Exclusive Hub", function() safeLoad("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Exclusive%20Hub.lua") end)
+other:Button("2take1.tk", function() safeLoad("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/2take1") end)
+other:Button("Sword Simulator Hub 2021", function() safeLoad("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Sword%20Simulator%20Hub") end)
+other:Button("Liquids Gui", function() safeLoad("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Liquid's%20Gui") end)
+other:Button("Auratus X Hub", function() safeLoad("https://raw.githubusercontent.com/AnimatedKurai/Scripts/refs/heads/main/Auratus%20Hub.txt") end)
+other:Button("Replication UI", function() safeLoad("https://raw.githubusercontent.com/EEND2SCRIPTS/Replication/main/replication") end)
+other:Button("Sword Wings", function() safeLoad("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Emperor%20Wings.lua") end)
+other:Button("Ghost Hub", function() safeLoad("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Ghost_Hub") end)
+other:Button("Dragon Hub Premium", function() safeLoad("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/main/Dragon%2520Hub") end)
+other:Button("Slayer Hub", function() safeLoad("https://raw.githubusercontent.com/Nightmareloil/Own1/main/Truecode") end)
+other:Button("Line's Script Hub v2.1.3", function() safeLoad("https://raw.githubusercontent.com/Zacky-pixel-sketch/Hubs/main/Demon%20hub%20source%20code.lua") end)
 
-other:Button("2take1.tk", function()
-    loadstring(game:HttpGet(('https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/2take1'),true))()
-end)
-
--- Services
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
--- Helper function to get all swords from player's backpack and character
+-- Sword Spin
 local function getSwords()
     local swords = {}
-    local player = Players.LocalPlayer
-    local backpack = player.Backpack
-    local character = player.Character
-
-    -- Add swords from backpack
-    for _, item in pairs(backpack:GetChildren()) do
-        if item:IsA("Tool") then
-            table.insert(swords, item)
-        end
-    end
-
-    -- Add swords from character (equipped tools)
-    for _, item in pairs(character:GetChildren()) do
-        if item:IsA("Tool") then
-            table.insert(swords, item)
-        end
-    end
-
+    local player = game.Players.LocalPlayer
+    if not player then return swords end
+    local backpack = player:FindFirstChild("Backpack")
+    local character = player.Character or player.CharacterAdded:Wait()
+    if backpack then for _, item in ipairs(backpack:GetChildren()) do if item:IsA("Tool") then table.insert(swords, item) end end end
+    if character then for _, item in ipairs(character:GetChildren()) do if item:IsA("Tool") then table.insert(swords, item) end end end
     return swords
 end
-
-
--- Action: Sword Spin (Spin swords around player)
 other:Button("Sword Spin", function()
-    local swords = getSwords() -- Get all swords from inventory
-    local spinSpeed = 1
-    local distance = 50
-    local rotating = true
-
-    -- Set initial properties of swords
-    for i, sword in ipairs(swords) do
-        sword.Parent = game.Players.LocalPlayer.Character -- Set sword to character
-        sword.Handle.Massless = true
-        sword.Handle.CanCollide = true
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local swords = getSwords()
+    if #swords == 0 then return end
+    local spinSpeed, distance, spinning, angleOffset = 2, 6, true, 0
+    for _, sword in ipairs(swords) do
+        sword.Parent = character
+        if sword:FindFirstChild("Handle") then
+            sword.Handle.Massless = true
+            sword.Handle.CanCollide = false
+        end
         sword.Grip = CFrame.new(0, 0, 0)
-        local angle = (2 * math.pi / #swords) * i
-        sword.Grip = sword.Grip * CFrame.Angles(0, angle, 0) * CFrame.new(distance * math.sin(angle), 0, distance * math.cos(angle))
     end
-
-    -- Update sword positions to rotate around player
-    local counter = 0
-    RunService.RenderStepped:Connect(function()
-        if rotating then
-            counter = counter + 0.001 * spinSpeed
-            for i, sword in ipairs(swords) do
-                local angle = (2 * math.pi / #swords) * i + counter
-                sword.Grip = CFrame.new(0, 0, 0) * CFrame.Angles(0, angle, 0) * CFrame.new(distance * math.sin(angle), 0, distance * math.cos(angle))
-            end
+    local conn
+    conn = game:GetService("RunService").RenderStepped:Connect(function(dt)
+        if not spinning then if conn then conn:Disconnect() end return end
+        angleOffset = angleOffset + dt * spinSpeed
+        for i, sword in ipairs(swords) do
+            local angle = (2 * math.pi / #swords) * (i - 1) + angleOffset
+            sword.Grip = CFrame.new(0, 0, 0) * CFrame.Angles(0, angle, 0) * CFrame.new(distance * math.sin(angle), 0, distance * math.cos(angle))
         end
     end)
-
-    -- Stop rotating when "x" is pressed
-    local mouse = Players.LocalPlayer:GetMouse()
+    local mouse = player:GetMouse()
     mouse.KeyDown:Connect(function(key)
-        if key == "x" then
-            rotating = false
-        end
+        if key:lower() == "x" then spinning = false end
     end)
 end)
-
-other:Button("Sword Hover", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Sword%20Hover.lua"))();
-end)
-
-other:Button("Levitate Tools", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Levitate%20Tools.lua"))();
-end)
-
+other:Button("Sword Hover", function() safeLoad("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Sword%20Hover.lua") end)
+other:Button("Levitate Tools", function() safeLoad("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Levitate%20Tools.lua") end)
 other:Button("Sword Halo", function()
     local player = game.Players.LocalPlayer
-    local character = player.Character
-    if not character then return end
-
-    -- For R15, the Head is the best reference point.
+    local character = player.Character or player.CharacterAdded:Wait()
     local head = character:FindFirstChild("Head")
     if not head then return end
-
-    local swords = getSwords() -- Get all swords from inventory
+    local swords = getSwords()
     if #swords == 0 then return end
-
-    -- Default sword grip (as provided)
-    local defaultGrip = CFrame.new(0, -0.15, 2, 
-        1, 0, 0, 
-        0, 0.0075545907, 0.999971449, 
-        0, -0.999971449, 0.0075545907)
-
-    -- Provided world pivot transformation
-    local worldPivot = CFrame.new(-49.3861542, 30.882246, 19.850544, 
-        0.828063488,  0.560480714,  -0.0131223798, 
-       -0.0103367567, -0.00813901424, -0.999913454, 
-       -0.560539007,  0.828127503, -0.000946044922)
-
-    -- Halo settings:
-    local haloRadius = 5                -- Horizontal radius of the halo
-    local haloHeight = head.Size.Y/2 + 3  -- Vertical offset above the head's center (adjust as needed)
-    local angleStep = 360 / #swords      -- Angle between each sword in the circle
-
+    local haloRadius, haloHeight, angleStep = 5, head.Size.Y / 2 + 3, 2 * math.pi / #swords
     for i, sword in ipairs(swords) do
-        sword.Parent = character  -- Attach sword to the character
-
-        -- Calculate angle (in radians) for this sword
-        local angle = math.rad(angleStep * (i - 1))
-
-        -- Compute the circular offset relative to the head:
+        sword.Parent = character
+        local angle = angleStep * (i - 1)
         local offset = CFrame.new(math.cos(angle) * haloRadius, haloHeight, math.sin(angle) * haloRadius)
-        
-        -- Rotate so that the sword faces outward (adjust the Z rotation if needed)
         local rotation = CFrame.Angles(0, angle, math.rad(90))
-        
-        -- Desired world-space transform for the sword
         local desiredCFrame = head.CFrame * offset * rotation
-
-        -- Convert from world space to the local space the tool expects by offsetting via worldPivot,
-        -- then reapply the default grip.
-        local finalGrip = worldPivot:Inverse() * desiredCFrame * defaultGrip
-        
-        sword.Grip = finalGrip
+        sword.Grip = character.PrimaryPart and character.PrimaryPart.CFrame:Inverse() * desiredCFrame or CFrame.new()
     end
 end)
-
-
 other:Button("Sword Shoulder", function()
     local player = game.Players.LocalPlayer
-    local character = player.Character
+    local character = player.Character or player.CharacterAdded:Wait()
     local backpack = player.Backpack
-
     local function getSwords()
         local swords = {}
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then table.insert(swords, tool) end
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then table.insert(swords, tool) end
         end
-        for _, tool in pairs(character:GetChildren()) do
-            if tool:IsA("Tool") then table.insert(swords, tool) end
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then table.insert(swords, tool) end
         end
         return swords
     end
-
     local swordPositions = {
         CFrame.new(-2.4, 2.3, 2.3) * CFrame.Angles(0, 0, math.rad(-45)),
-        CFrame.new(0, 2.3, 3.1) * CFrame.Angles(0, 0, 0),
+        CFrame.new(0, 2.3, 3.1),
         CFrame.new(2.4, 2.3, 2.3) * CFrame.Angles(0, 0, math.rad(45)),
         CFrame.new(-2.4, 0, 3.1) * CFrame.Angles(0, 0, math.rad(-25)),
         CFrame.new(0, 0, 3.6),
@@ -643,72 +470,21 @@ other:Button("Sword Shoulder", function()
         CFrame.new(0, -2.3, -3.1) * CFrame.Angles(0, math.rad(180), 0),
         CFrame.new(-2.4, -2.3, -2.3) * CFrame.Angles(0, math.rad(180), math.rad(45)),
     }
-
     local swords = getSwords()
     for i, sword in ipairs(swords) do
         local pos = swordPositions[i]
         if not pos then break end
-
         sword.Parent = backpack
-        sword.Handle.Massless = true
-        sword.Handle.CanCollide = false
+        if sword:FindFirstChild("Handle") then
+            sword.Handle.Massless = true
+            sword.Handle.CanCollide = false
+        end
         sword.Grip = pos
         sword.Parent = character
     end
 end)
 
-other:Button("Sword Simulator Hub 2021", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Sword%20Simulator%20Hub",true))()  
-end)
-
-other:Button("Liquids Gui", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Liquid's%20Gui",true))()
-end)
-
-other:Button("Auratus X Hub", function()
-   loadstring(game:HttpGet("https://raw.githubusercontent.com/AnimatedKurai/Scripts/refs/heads/main/Auratus%20Hub.txt",true))() 
-end)
-
-other:Button("Replication UI", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/EEND2SCRIPTS/Replication/main/replication"))();
-end)
-
-other:Button("Sword Wings", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Emperor%20Wings.lua",true))()  
-end)
-
-other:Button("Ghost Hub", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Ghost_Hub",true))()
-end)
-
-other:Button("Dragon Hub Premium", function()
-    loadstring(game:HttpGet(("https://raw.githubusercontent.com/AlznX/Roblox-Scripts/main/Dragon%2520Hub"), true))()
-end)
-
-other:Button("Server Crasher", function()
-local function spamEffect(effectName, repetitions)
-    local event = game:GetService("Workspace").eff.RemoteEvent
-    for _ = 1, repetitions do
-        event:FireServer(effectName)
-    end
-end
-
-local function createSword()
-    local event = game:GetService("Workspace").load.RemoteEvent
-    event:FireServer()
-end
-
--- Execute the actions
-spamEffect("Black", 81000)
-task.wait(0.1)
-createSword()
-end)
-
---------------------------------------------------
--- Helper Functions
---------------------------------------------------
-
--- Removes unwanted visual effects from a tool’s Handle.
+-- Fortress Formation
 local function cleanToolEffects(tool)
     local handle = tool:FindFirstChild("Handle")
     if handle then
@@ -719,65 +495,298 @@ local function cleanToolEffects(tool)
         end
     end
 end
-
--- Moves all Tools from a source container (Character or similar) to a destination container.
 local function moveTools(source, destination)
     for _, item in ipairs(source:GetChildren()) do
-        if item:IsA("Tool") then
-            item.Parent = destination
-        end
+        if item:IsA("Tool") then item.Parent = destination end
     end
 end
-
---------------------------------------------------
--- Button: Fortress Formation
--- (Arranges swords/tools in a spacious grid formation)
---------------------------------------------------
-
 other:Button("Fortress Formation", function()
     local player = game.Players.LocalPlayer
     local character = player.Character
     local backpack = player.Backpack
-
-    if not character or not backpack then
-        return
-    end
-
-    -- First, ensure that all currently equipped tools are in the backpack.
+    if not character or not backpack then return end
     moveTools(character, backpack)
-
-    local tools = backpack:GetChildren()
-    if #tools == 0 then
-        return
+    local tools = {}
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then table.insert(tools, tool) end
     end
-
-    -- Grid settings (spacious formation)
-    local toolsPerRow = 8
-    local rowHeight = 1.5
-    local columnSpacing = 5.5
-    local currentRow = 0
-    local currentColumn = 0
-
+    if #tools == 0 then return end
+    local toolsPerRow, rowHeight, columnSpacing = 8, 1.5, 5.5
+    local currentRow, currentColumn = 0, 0
     for _, tool in ipairs(tools) do
-        if tool:IsA("Tool") then
-            -- Calculate grid position.
-            local posX = currentColumn * columnSpacing
-            local posY = -currentRow * rowHeight
-            tool.GripPos = Vector3.new(posX, posY, 0)
-            tool.GripUp = Vector3.new(0, 1, 0)
+        local posX = currentColumn * columnSpacing
+        local posY = -currentRow * rowHeight
+        tool.GripPos = Vector3.new(posX, posY, 0)
+        tool.GripUp = Vector3.new(0, 1, 0)
+        tool.Parent = character
+        cleanToolEffects(tool)
+        currentColumn = currentColumn + 1
+        if currentColumn >= toolsPerRow then
+            currentColumn = 0
+            currentRow = currentRow + 1
+        end
+    end
+end)
+-- Boxer Formation
+other:Button("Boxer Formation", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local backpack = player.Backpack
+    if not character or not backpack then return end
+    moveTools(character, backpack)
+    local tools = {}
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then table.insert(tools, tool) end
+    end
+    if #tools == 0 then return end
+    local itemsPerRow, horizontalSpacing, verticalSpacing = 8, 0.8, 1.5
+    local offsetX, offsetY, offsetZ, columnCount = 0, 0, 0, 0
+    for _, tool in ipairs(tools) do
+        tool.GripPos = Vector3.new(offsetX, offsetY, offsetZ)
+        tool.GripUp = Vector3.new(0, 1, 0)
+        tool.Parent = character
+        cleanToolEffects(tool)
+        offsetX = offsetX + horizontalSpacing
+        columnCount = columnCount + 1
+        if columnCount >= itemsPerRow then
+            offsetX = 0
+            offsetY = offsetY - verticalSpacing
+            columnCount = 0
+        end
+    end
+end)
 
-            -- Parent the tool to the character so it can be readily used.
-            tool.Parent = character
+-- Sword Style
+other:Button("Sword Style", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local backpack = player.Backpack
+    local swords = {}
+    local function look(dir)
+        for _, v in pairs(dir:GetChildren()) do
+            if v:IsA("Tool") then table.insert(swords, v) end
+        end
+    end
+    look(backpack)
+    look(character)
+    local half = math.floor(#swords/2)
+    for i = 1, half do
+        local sword = swords[i]
+        sword.Parent = backpack
+        sword.Grip = CFrame.new(4,31.2,0)*CFrame.Angles((21.4/half*i)+0.8,0,0)*CFrame.new(0,-5.7,0)
+        sword.Parent = character
+    end
+    for i = half+1, #swords-1 do
+        local sword = swords[i]
+        sword.Parent = backpack
+        sword.Grip = CFrame.new(0,1.2,0)*CFrame.Angles(21.4/half*(i-half)+4.06,0,0)*CFrame.new(0,-5.7,0)
+        sword.Parent = character
+    end
+    if #swords > 0 then
+        local last = swords[#swords]
+        last.Parent = backpack
+        last.Grip = CFrame.new(0,0,0)
+        last.Parent = character
+    end
+end)
 
-            -- Clean up unwanted particle effects, trails, or meshes.
-            cleanToolEffects(tool)
-
-            -- Update the grid: move to the next column, or next row if we've reached the end.
-            currentColumn = currentColumn + 1
-            if currentColumn >= toolsPerRow then
-                currentColumn = 0
-                currentRow = currentRow + 1
+-- Toggles
+tgls:Toggle("Drop Tools - Unequip Your Sword First", false, function(bool)
+    local LocalPlayer = game:GetService("Players").LocalPlayer
+    if bool then
+        for _, v in pairs(LocalPlayer.Backpack:GetDescendants()) do
+            if v:IsA("Tool") then
+                v.CanBeDropped = true
+                v.Parent = LocalPlayer.Character
+                v.Parent = workspace
             end
+        end
+    end
+end)
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local killAllActive, walkSpeedActive, grabToolsActive = false, false, false
+
+tgls:Toggle("Kill All", false, function(state)
+    killAllActive = state
+    if state then
+        task.spawn(function()
+            while killAllActive do
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
+                        local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                        local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if targetRoot and localRoot then
+                            local distance = (localRoot.Position - targetRoot.Position).Magnitude
+                            if distance < 1000 then
+                                local sword = LocalPlayer.Backpack:FindFirstChild("sword") or LocalPlayer.Character:FindFirstChild("sword")
+                                if sword and sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("dmg") then
+                                    local remote = sword.Handle.dmg:FindFirstChild("RemoteEvent")
+                                    if remote then
+                                        remote:FireServer(player.Character.Humanoid, math.huge)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(0.005)
+            end
+        end)
+    end
+end)
+
+LocalPlayer:GetMouse().KeyDown:Connect(function(key)
+    if key:lower() == "f" then
+        for _ = 1, 100 do
+            if ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("DropBagItem") then
+                ReplicatedStorage.Events.DropBagItem:FireServer("sword")
+            end
+        end
+    end
+end)
+
+tgls:Toggle("Grab All Tools", false, function(state)
+    grabToolsActive = state
+    if state then
+        task.spawn(function()
+            while grabToolsActive do
+                local toolName = "sword"
+                local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not rootPart then break end
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Tool") and obj.Name == toolName and obj:FindFirstChild("Handle") then
+                        local handle = obj.Handle
+                        if handle:FindFirstChildOfClass("TouchTransmitter") then
+                            firetouchinterest(rootPart, handle, 0)
+                            firetouchinterest(rootPart, handle, 1)
+                        end
+                    end
+                end
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+tgls:Toggle("Loop WalkSpeed | 100", false, function(state)
+    walkSpeedActive = state
+    if state then
+        task.spawn(function()
+            while walkSpeedActive do
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                    LocalPlayer.Character.Humanoid.WalkSpeed = 100
+                end
+                task.wait()
+            end
+        end)
+    end
+end)
+
+-- Destroy Effects GUI
+local StarterGui = game:GetService("StarterGui")
+uitab:Button("Destroy Effects GUI", function()
+    local starterPasses = StarterGui:FindFirstChild("passes")
+    if starterPasses then starterPasses:Destroy() end
+    for _, player in ipairs(Players:GetPlayers()) do
+        local playerGui = player:FindFirstChild("PlayerGui")
+        if playerGui then
+            local passesGui = playerGui:FindFirstChild("passes")
+            if passesGui then passesGui:Destroy() end
+        end
+    end
+end)
+
+-- Teleport Buttons
+local localPlayer = Players.LocalPlayer
+if not localPlayer.Character then localPlayer.Character = localPlayer.CharacterAdded:Wait() end
+local teleportLocations = {
+    Arena = CFrame.new(-18.393, 26.978, 9.003, 0.999929, 0, 0.011914, 0, 1, 0, -0.011914, 0, 0.999929),
+    Tree = CFrame.new(-143.156, 82.464, -246.582, 0.985673, 0, -0.168666, 0, 1, 0, 0.168666, 0, 0.985673),
+    Wall = CFrame.new(-251.617, 92.690, -335.043, -0.794003, 0, -0.607913, 0, 1, 0, 0.607913, 0, -0.794003),
+    GrayWall = CFrame.new(-266.613, 119.881, -347.056, -0.698223, 0, -0.715880, 0, 1, 0, 0.715880, 0, -0.698223),
+    Secret = CFrame.new(-197.105, 22.953, -377.287) * CFrame.Angles(math.rad(0.044), math.rad(23.156), math.rad(0.08)),
+    Outside = CFrame.new(-295.778, 25.596, -355.215, -0.409, 0, -0.913, 0, 1, 0, 0.913, 0, -0.409),
+    OutsideOfGate = CFrame.new(-420.443, 25.596, -9.648, -0.0046, 0, -0.999989, 0, 1, 0, 0.999989, 0, -0.0046),
+    InsideRock = CFrame.new(-341.302, 25.596, 47.305, 0.342859, 0, 0.939387, 0, 1, 0, -0.939387, 0, 0.342859),
+    Pillar = CFrame.new(-88.647, 70.197, 92.618, 0.952380, 0, -0.304915, 0, 1, 0, 0.304915, 0, 0.952380),
+    InsideRock2 = CFrame.new(283.553, 25.596, 184.675, -0.423626, 0, 0.905837, 0, 1, 0, -0.905837, 0, -0.423626),
+    InsideRock3 = CFrame.new(43.311, 25.500, -168.158, 0.168662, 0, -0.985674, 0, 1, 0, 0.985674, 0, 0.168662),
+    Gate = CFrame.new(5.181, 25.500, 419.471, 0.985070, 0, 0.172157, 0, 1, 0, -0.172157, 0, 0.985070),
+    Pillar2 = CFrame.new(88.735, 70.100, -84.323, -0.347119, 0, 0.937821, 0, 1, 0, -0.937821, 0, -0.347119),
+    UnderRock = CFrame.new(45.779, 21.812, -185.381, -0.863430, -0.497, -0.087601, 0, 0.173651, -0.984807, 0.504468, -0.850312, -0.149936),
+}
+if tp and type(tp.Button) == "function" then
+    for name, cf in pairs(teleportLocations) do
+        tp:Button("Teleport to " .. name, function()
+            local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if hrp then hrp.CFrame = cf end
+        end)
+    end
+end
+
+-- Sword Power Functions
+local function moveSwordsToCharacter()
+    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+    for _, tool in ipairs(localPlayer.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:lower():find("sword") then
+            tool.Parent = character
+        end
+    end
+    return character
+end
+local function giveSwordPower(sword, targetPower)
+    local handle = sword:FindFirstChild("Handle")
+    if not handle then return end
+    local up = handle:FindFirstChild("up")
+    if not up then return end
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
+    if not remoteEvent then return end
+    local powerPerCall = 10
+    local callsNeeded = math.ceil(targetPower / powerPerCall)
+    for _ = 1, callsNeeded do
+        remoteEvent:FireServer()
+        task.wait(0.4)
+    end
+end
+local function attachSwordActivation(targetPower)
+    local character = moveSwordsToCharacter()
+    for _, sword in ipairs(character:GetChildren()) do
+        if sword:IsA("Tool") and sword.Name:lower():find("sword") then
+            if sword.Activated and not sword:FindFirstChild("ActivationAttached") then
+                local marker = Instance.new("BoolValue")
+                marker.Name = "ActivationAttached"
+                marker.Parent = sword
+                sword.Activated:Connect(function()
+                    giveSwordPower(sword, targetPower)
+                end)
+            end
+        end
+    end
+end
+local function activateContinuousSwordPower(interval, batchSize)
+    local character = moveSwordsToCharacter()
+    local sword = character:FindFirstChild("sword")
+    if not sword then
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") and item.Name:lower():find("sword") then
+                sword = item
+                break
+            end
+        end
+    end
+    if not sword then return end
+    local handle = sword:FindFirstChild("Handle")
+    if not handle then return end
+    local up = handle:FindFirstChild("up")
+    if not up then return end
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
+    if not remoteEvent then return end
+    _G.continuousPowerActive = true
+    task.spawn(function()
         end
     end
 end)
@@ -799,7 +808,12 @@ other:Button("Boxer Formation", function()
     -- Move all equipped tools back to the backpack.
     moveTools(character, backpack)
 
-    local tools = backpack:GetChildren()
+    local tools = {}
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(tools, tool)
+        end
+    end
     if #tools == 0 then
         return
     end
@@ -812,73 +826,69 @@ other:Button("Boxer Formation", function()
     local columnCount = 0
 
     for _, tool in ipairs(tools) do
-        if tool:IsA("Tool") then
-            tool.GripPos = Vector3.new(offsetX, offsetY, offsetZ)
-            tool.GripUp = Vector3.new(0, 1, 0)  -- Standard orientation.
-            tool.Parent = character
-
-            -- Clean out unwanted visual effects on the tool's handle.
-            cleanToolEffects(tool)
-
-            -- Update the horizontal offset and column counter.
-            offsetX = offsetX + horizontalSpacing
-            columnCount = columnCount + 1
-
-            -- When a row is full, reset X and move down vertically.
-            if columnCount >= itemsPerRow then
-                offsetX = 0
-                offsetY = offsetY - verticalSpacing
-                columnCount = 0
-            end
+        tool.GripPos = Vector3.new(offsetX, offsetY, offsetZ)
+        tool.GripUp = Vector3.new(0, 1, 0)
+        tool.Parent = character
+        cleanToolEffects(tool)
+        offsetX = offsetX + horizontalSpacing
+        columnCount = columnCount + 1
+        if columnCount >= itemsPerRow then
+            offsetX = 0
+            offsetY = offsetY - verticalSpacing
+            columnCount = 0
         end
     end
 end)
 
 other:Button("Slayer Hub", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Nightmareloil/Own1/main/Truecode"))() 
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Nightmareloil/Own1/main/Truecode"))()
+    end)
 end)
 
 other:Button("Line's Script Hub v2.1.3", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Zacky-pixel-sketch/Hubs/main/Demon%20hub%20source%20code.lua",true))()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Zacky-pixel-sketch/Hubs/main/Demon%20hub%20source%20code.lua",true))()
+    end)
 end)
 
 other:Button("Sword Style", function()
-   local player = game.Players.LocalPlayer
-local character = player.Character
-local backpack = player.Backpack
-local swords = {}
-function look(dir)
-    for i, v in pairs(dir:GetChildren()) do
-        if(v:IsA("Tool"))then
-            table.insert(swords,v)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local backpack = player.Backpack
+    local swords = {}
+    local function look(dir)
+        for _, v in pairs(dir:GetChildren()) do
+            if v:IsA("Tool") then
+                table.insert(swords, v)
+            end
         end
     end
-end
-look(backpack)
-look(character)
-    
-    for i = 1, math.floor(#swords/1)-1 do
+    look(backpack)
+    look(character)
+    local half = math.floor(#swords/2)
+    for i = 1, half do
         local sword = swords[i]
-        sword.Parent = player.Backpack
-        sword.Grip = CFrame.new(4,31.2,0)*CFrame.Angles((21.4/(#swords/2)*i)+0.8,0,0)*CFrame.new(0,-5.7,0)
-        sword.Parent = player.Character
+        sword.Parent = backpack
+        sword.Grip = CFrame.new(4,31.2,0)*CFrame.Angles((21.4/half*i)+0.8,0,0)*CFrame.new(0,-5.7,0)
+        sword.Parent = character
     end
-    for i = math.floor(#swords,2), #swords-4 do
+    for i = half+1, #swords-1 do
         local sword = swords[i]
-        sword.Parent = player.Backpack
-        sword.Grip = CFrame.new(0,1.2,0)*CFrame.Angles(21.4/(#swords/2)*(i-math.floor(#swords/2))+4.06,0,0)*CFrame.new(0,-5.7,0)
-        sword.Parent = player.Character
+        sword.Parent = backpack
+        sword.Grip = CFrame.new(0,1.2,0)*CFrame.Angles(21.4/half*(i-half)+4.06,0,0)*CFrame.new(0,-5.7,0)
+        sword.Parent = character
     end
-    local last = swords[#swords]
-    last.Parent = player.Backpack
-    last.Grip = CFrame.new(0,0,0)
-    last.Parent = player.Character 
+    if #swords > 0 then
+        local last = swords[#swords]
+        last.Parent = backpack
+        last.Grip = CFrame.new(0,0,0)
+        last.Parent = character
+    end
 end)
 
--- Section 6
 tgls:Toggle("Drop Tools - Unequip Your Sword First", false, function(bool)
     local LocalPlayer = game:GetService("Players").LocalPlayer
-
     if bool then
         for _, v in pairs(LocalPlayer.Backpack:GetDescendants()) do
             if v:IsA("Tool") then
@@ -894,12 +904,10 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Track toggle states to cleanly start/stop loops
 local killAllActive = false
 local walkSpeedActive = false
 local grabToolsActive = false
 
--- Kill All Toggle
 tgls:Toggle("Kill All", false, function(state)
     killAllActive = state
     if state then
@@ -914,30 +922,33 @@ tgls:Toggle("Kill All", false, function(state)
                             if distance < 1000 then
                                 local sword = LocalPlayer.Backpack:FindFirstChild("sword") or LocalPlayer.Character:FindFirstChild("sword")
                                 if sword and sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("dmg") then
-                                    sword.Handle.dmg.RemoteEvent:FireServer(player.Character.Humanoid, math.huge)
+                                    local remote = sword.Handle.dmg:FindFirstChild("RemoteEvent")
+                                    if remote then
+                                        remote:FireServer(player.Character.Humanoid, math.huge)
+                                    end
                                 end
                             end
                         end
                     end
                 end
-                wait(0.005)
+                task.wait(0.005)
             end
         end)
     end
 end)
 
--- Drop Item on "F" key press
 local function onKeyPress(key)
     if key:lower() == "f" then
         for _ = 1, 100 do
-            ReplicatedStorage.Events.DropBagItem:FireServer("sword") -- Change item here
+            if ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("DropBagItem") then
+                ReplicatedStorage.Events.DropBagItem:FireServer("sword")
+            end
         end
     end
 end
 
 LocalPlayer:GetMouse().KeyDown:Connect(onKeyPress)
 
--- Grab All Tools
 tgls:Toggle("Grab All Tools", false, function(state)
     grabToolsActive = state
     if state then
@@ -945,8 +956,7 @@ tgls:Toggle("Grab All Tools", false, function(state)
             while grabToolsActive do
                 local toolName = "sword"
                 local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if not rootPart then return end
-
+                if not rootPart then break end
                 for _, obj in pairs(workspace:GetDescendants()) do
                     if obj:IsA("Tool") and obj.Name == toolName and obj:FindFirstChild("Handle") then
                         local handle = obj.Handle
@@ -956,13 +966,12 @@ tgls:Toggle("Grab All Tools", false, function(state)
                         end
                     end
                 end
-                wait(0.1)
+                task.wait(0.1)
             end
         end)
     end
 end)
 
--- Loop WalkSpeed
 tgls:Toggle("Loop WalkSpeed | 100", false, function(state)
     walkSpeedActive = state
     if state then
@@ -971,7 +980,7 @@ tgls:Toggle("Loop WalkSpeed | 100", false, function(state)
                 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                     LocalPlayer.Character.Humanoid.WalkSpeed = 100
                 end
-                wait()
+                task.wait()
             end
         end)
     end
@@ -982,55 +991,29 @@ local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 
 uitab:Button("Destroy Effects GUI", function()
-    -- Function to destroy the GUI named "passes"
-    local function destroyPassesGui()
-        -- Remove "passes" from StarterGui (prevents new players from cloning it)
-        local starterPasses = StarterGui:FindFirstChild("passes")
-        if starterPasses then
-            starterPasses:Destroy()
-        end
-
-        -- Remove "passes" GUI from each player's PlayerGui
-        for _, player in ipairs(Players:GetPlayers()) do
-            local playerGui = player:FindFirstChild("PlayerGui")
-            if playerGui then
-                local passesGui = playerGui:FindFirstChild("passes")
-                if passesGui then
-                    passesGui:Destroy()
-                end
+    -- Remove "passes" from StarterGui
+    local starterPasses = StarterGui:FindFirstChild("passes")
+    if starterPasses then
+        starterPasses:Destroy()
+    end
+    -- Remove "passes" GUI from each player's PlayerGui
+    for _, player in ipairs(Players:GetPlayers()) do
+        local playerGui = player:FindFirstChild("PlayerGui")
+        if playerGui then
+            local passesGui = playerGui:FindFirstChild("passes")
+            if passesGui then
+                passesGui:Destroy()
             end
         end
     end
-
-    -- Execute the GUI destruction function
-    destroyPassesGui()
 end)
 
---[[ 
-    Improved Teleport Buttons and Sword Power Scripts
-    ==================================================
-    This script includes two main parts:
-      • Teleport Buttons – creates buttons for a set of teleport locations.
-      • Sword Power – functions to “charge” your sword via RemoteEvent calls,
-                      both on activation and continuously.
---]]
-
------------------------------------------
--- Common Setup and Utility Functions
------------------------------------------
-local Players = game:GetService("Players")
+-- Teleport Buttons
 local localPlayer = Players.LocalPlayer
-
--- Ensure character is loaded
 if not localPlayer.Character then 
     localPlayer.Character = localPlayer.CharacterAdded:Wait()
 end
 
---------------------------------------------------
--- Teleport Buttons Section
---------------------------------------------------
-
--- Define teleport locations with descriptive names
 local teleportLocations = {
     Arena = CFrame.new(-18.393, 26.978, 9.003, 0.999929, 0, 0.011914, 0, 1, 0, -0.011914, 0, 0.999929),
     Tree = CFrame.new(-143.156, 82.464, -246.582, 0.985673, 0, -0.168666, 0, 1, 0, 0.168666, 0, 0.985673),
@@ -1048,7 +1031,6 @@ local teleportLocations = {
     UnderRock = CFrame.new(45.779, 21.812, -185.381, -0.863430, -0.497, -0.087601, 0, 0.173651, -0.984807, 0.504468, -0.850312, -0.149936),
 }
 
--- Ensure the Teleport UI (tp) is defined
 if tp and type(tp.Button) == "function" then
     for name, cf in pairs(teleportLocations) do
         tp:Button("Teleport to " .. name, function()
@@ -1060,13 +1042,8 @@ if tp and type(tp.Button) == "function" then
         end)
     end
 end
------------------------------------------
--- Sword Power Functions
------------------------------------------
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
 
--- Utility: Move all sword tools from backpack to character
+-- Sword Power Functions
 local function moveSwordsToCharacter()
     local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
     for _, tool in ipairs(localPlayer.Backpack:GetChildren()) do
@@ -1077,17 +1054,13 @@ local function moveSwordsToCharacter()
     return character
 end
 
--- Function: Fire the remote event enough times to "charge" the sword (targetPower)
 local function giveSwordPower(sword, targetPower)
     local handle = sword:FindFirstChild("Handle")
     if not handle then return end
-
     local up = handle:FindFirstChild("up")
     if not up then return end
-
     local remoteEvent = up:FindFirstChild("RemoteEvent")
     if not remoteEvent then return end
-
     local powerPerCall = 10
     local callsNeeded = math.ceil(targetPower / powerPerCall)
     for _ = 1, callsNeeded do
@@ -1096,7 +1069,6 @@ local function giveSwordPower(sword, targetPower)
     end
 end
 
--- Function: Attach activation so that when a sword tool is activated it applies power
 local function attachSwordActivation(targetPower)
     local character = moveSwordsToCharacter()
     for _, sword in ipairs(character:GetChildren()) do
@@ -1113,36 +1085,30 @@ local function attachSwordActivation(targetPower)
     end
 end
 
--- Function: Continuously "charge" the sword in batches on a recurring interval
 local function activateContinuousSwordPower(interval, targetPower)
     local character = moveSwordsToCharacter()
-    local sword
-
-    for _, item in ipairs(character:GetChildren()) do
-        if item:IsA("Tool") and item.Name:lower():find("sword") then
-            sword = item
-            break
+    local sword = character:FindFirstChild("sword")
+    if not sword then
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") and item.Name:lower():find("sword") then
+                sword = item
+                break
+            end
         end
     end
-
     if not sword then return end
-
     local handle = sword:FindFirstChild("Handle")
     if not handle then return end
-
     local up = handle:FindFirstChild("up")
     if not up then return end
-
     local remoteEvent = up:FindFirstChild("RemoteEvent")
     if not remoteEvent then return end
-
-    local powerPerCall = 10
-    local batchSize = math.ceil(targetPower / powerPerCall)
-
     _G.continuousPowerActive = true
     task.spawn(function()
         while _G.continuousPowerActive do
-            for _ = 1, batchSize do
+            local powerPerCall = 10
+            local callsNeeded = math.ceil(targetPower / powerPerCall)
+            for _ = 1, callsNeeded do
                 remoteEvent:FireServer()
                 task.wait(0.4)
             end
@@ -1151,86 +1117,72 @@ local function activateContinuousSwordPower(interval, targetPower)
     end)
 end
 
------------------------------------------
--- Button Bindings for Sword Power UI
------------------------------------------
 if power and type(power.Button) == "function" then
-    -- Single Tap Power
-    power:Button("Activate Sword Once for 100 Power", function()
-        attachSwordActivation(100)
-    end)
-
-    -- Continuous Low Power
-    power:Button("Activate Continuous Sword Power", function()
-        activateContinuousSwordPower(2, 50)
-    end)
-
-    -- 10K Power | Sword
     power:Button("10K Power | Sword", function()
         task.wait(0.4)
         attachSwordActivation(10000)
     end)
-
-    -- 5K Power | Sword
     power:Button("5K Power | Sword", function()
         task.wait(0.4)
         attachSwordActivation(5000)
     end)
-
-    -- 10K Power Every 3 Seconds | Sword
     power:Button("10K Power Every | 3 Seconds", function()
         task.wait(0.4)
         activateContinuousSwordPower(3, 10000)
     end)
-end
-
-
+    power:Button("Stop Power Loop", function()
+        _G.continuousPowerActive = false
+    end)
+    
     -- NEW UI: PowerViewer
     power:Button("PowerViewer", function()
         local url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/SECURITY.md"
-        local success, result = pcall(function()
-            return loadstring(game:HttpGet(url, true))()
+        pcall(function()
+            loadstring(game:HttpGet(url, true))()
         end)
     end)
+end
+    
+    -- NEW UI: PowerViewer
+    power:Button("PowerViewer", function()
+        local url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/SECURITY.md"
+        pcall(function()
+            loadstring(game:HttpGet(url, true))()
+        end)
+    end)
+end
 
--- Check that the Worlds UI exists and supports the :Button() method.
+-- Worlds UI Buttons
 if worlds and type(worlds.Button) == "function" then
-    -- Table to hold the names and corresponding URLs for each world.
     local worldButtons = {
-        ["Coffee Shop"]      = "https://pastebin.com/raw/Pvj5Ckc2",
-        ["ClockworkArena"]   = "https://pastebin.com/raw/NNp1NJKT",
-        ["Shipment"]         = "https://pastebin.com/raw/J3Jk3NaC",
+        ["Coffee Shop"]        = "https://pastebin.com/raw/Pvj5Ckc2",
+        ["ClockworkArena"]     = "https://pastebin.com/raw/NNp1NJKT",
+        ["Shipment"]           = "https://pastebin.com/raw/J3Jk3NaC",
         ["PurpleBattlefields"] = "https://pastebin.com/raw/kdg5tmdg",
-        ["Lock Shift"]       = "https://pastebin.com/raw/uqAS6EfN",
+        ["Lock Shift"]         = "https://pastebin.com/raw/uqAS6EfN",
     }
-
-    -- Create a button for each world.
     for name, url in pairs(worldButtons) do
         worlds:Button(name, function()
-            local success, result = pcall(function()
-                return loadstring(game:HttpGet(url, true))()
+            pcall(function()
+                loadstring(game:HttpGet(url, true))()
             end)
         end)
     end
 end
 
--- Section 11
+-- Music Section
 if Music and type(Music.Button) == "function" then
     Music:Button("Delete Music", function()
-        local soundCount = 0
-
         local function removeSounds(container)
             for _, descendant in ipairs(container:GetDescendants()) do
                 if descendant:IsA("Sound") then
                     descendant:Stop()
                     descendant:Destroy()
-                    soundCount = soundCount + 1
                 end
             end
         end
-
-        removeSounds(workspace) -- original
-        removeSounds(game:GetService("SoundService")) -- now also removes music from buttons!
+        removeSounds(workspace)
+        removeSounds(game:GetService("SoundService"))
     end)
 end
 
@@ -1239,10 +1191,9 @@ function playSound(soundId, looped)
     local sound = Instance.new("Sound")
     sound.SoundId = "rbxassetid://" .. soundId
     sound.Looped = looped or false
-    sound.Volume = 1 -- 🔊 this makes the sound audible
+    sound.Volume = 1
     sound.Parent = game:GetService("SoundService")
     sound:Play()
-
     if not sound.Looped then
         sound.Ended:Connect(function()
             sound:Destroy()
@@ -1250,7 +1201,7 @@ function playSound(soundId, looped)
     end
 end
 
--- Music buttons
+-- Music buttons --
 Music:Button("Rootkit", function() playSound("5410081542") end)
 Music:Button("Say So", function() playSound("1840036018") end)
 Music:Button("The Future", function() playSound("1837358800") end)
