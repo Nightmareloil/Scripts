@@ -752,6 +752,7 @@ local function giveSwordPower(sword, targetPower)
         task.wait(0.4)
     end
 end
+
 local function attachSwordActivation(targetPower)
     local character = moveSwordsToCharacter()
     for _, sword in ipairs(character:GetChildren()) do
@@ -767,6 +768,7 @@ local function attachSwordActivation(targetPower)
         end
     end
 end
+
 local function activateContinuousSwordPower(interval, batchSize)
     local character = moveSwordsToCharacter()
     local sword = character:FindFirstChild("sword")
@@ -785,16 +787,18 @@ local function activateContinuousSwordPower(interval, batchSize)
     if not up then return end
     local remoteEvent = up:FindFirstChild("RemoteEvent")
     if not remoteEvent then return end
-    _G.continuousPowerActive = true
-    task.spawn(function()
-        end
-    end
-end)
 
---------------------------------------------------
--- Button: Boxer Formation
--- (Arranges swords/tools in a tight, compact grid formation)
---------------------------------------------------
+    _G.continuousPowerActive = true
+
+    task.spawn(function()
+        while _G.continuousPowerActive do
+            for i = 1, batchSize do
+                remoteEvent:FireServer()
+            end
+            task.wait(interval)
+        end
+    end)
+end
 
 other:Button("Boxer Formation", function()
     local player = game.Players.LocalPlayer
@@ -1141,7 +1145,7 @@ if power and type(power.Button) == "function" then
             loadstring(game:HttpGet(url, true))()
         end)
     end)
-end
+
     
     -- NEW UI: PowerViewer
     power:Button("PowerViewer", function()
