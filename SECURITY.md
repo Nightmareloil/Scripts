@@ -1,8 +1,8 @@
 --!strict
 
 --================================================
--- ENHANCED ROBLOX UI SCRIPT v2.1 - FIXED
--- Created by AlznDev - Bug Fixed Version
+-- ENHANCED ROBLOX UI SCRIPT v2.0
+-- Created by AlznDev - Enhanced Version
 --================================================
 
 -- Services
@@ -31,38 +31,26 @@ local UI_COLORS = {
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local selectedPlayer = LocalPlayer
-local mainScreenGui
-local mainPanel
+local mainScreenGui: ScreenGui
+local mainPanel: Frame
 local isUIVisible = true
-local connections = {}
 
--- Wait for PlayerGui to be ready
-if not PlayerGui then
-    LocalPlayer.CharacterAdded:Wait()
-    PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-end
-
--- Remove default loading screen safely
-pcall(function()
-    ReplicatedFirst:RemoveDefaultLoadingScreen()
-end)
+-- Remove default loading screen
+ReplicatedFirst:RemoveDefaultLoadingScreen()
 
 -- Utility Functions
-local function playSound(soundId, volume)
-    pcall(function()
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://" .. tostring(soundId)
-        sound.Volume = volume or 0.3
-        sound.Parent = SoundService
-        sound:Play()
-        sound.Ended:Connect(function()
-            sound:Destroy()
-        end)
+local function playSound(soundId: string, volume: number?)
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. soundId
+    sound.Volume = volume or 0.3
+    sound.Parent = SoundService
+    sound:Play()
+    sound.Ended:Connect(function()
+        sound:Destroy()
     end)
 end
 
-local function createTween(object, properties, duration)
-    if not object or not object.Parent then return end
+local function createTween(object: Instance, properties: {[string]: any}, duration: number?)
     local tweenInfo = TweenInfo.new(
         duration or TWEEN_TIME,
         Enum.EasingStyle.Quad,
@@ -71,16 +59,14 @@ local function createTween(object, properties, duration)
     return TweenService:Create(object, tweenInfo, properties)
 end
 
-local function addCornerRadius(parent, radius)
-    if not parent then return end
+local function addCornerRadius(parent: GuiObject, radius: number?)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius or 8)
     corner.Parent = parent
     return corner
 end
 
-local function addStroke(parent, color, thickness)
-    if not parent then return end
+local function addStroke(parent: GuiObject, color: Color3?, thickness: number?)
     local stroke = Instance.new("UIStroke")
     stroke.Color = color or UI_COLORS.ACCENT
     stroke.Thickness = thickness or 1
@@ -88,8 +74,7 @@ local function addStroke(parent, color, thickness)
     return stroke
 end
 
-local function addGradient(parent, colors)
-    if not parent then return end
+local function addGradient(parent: GuiObject, colors: {Color3}?)
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new(colors or {UI_COLORS.PRIMARY, UI_COLORS.SECONDARY})
     gradient.Rotation = 45
@@ -97,8 +82,7 @@ local function addGradient(parent, colors)
     return gradient
 end
 
-local function addHoverEffect(button, hoverColor, normalColor)
-    if not button then return end
+local function addHoverEffect(button: GuiButton, hoverColor: Color3?, normalColor: Color3?)
     local normal = normalColor or button.BackgroundColor3
     local hover = hoverColor or Color3.fromRGB(
         math.min(normal.R * 255 + 20, 255),
@@ -107,36 +91,28 @@ local function addHoverEffect(button, hoverColor, normalColor)
     ) / 255
 
     button.MouseEnter:Connect(function()
-        local tween = createTween(button, {BackgroundColor3 = hover}, 0.2)
-        if tween then tween:Play() end
+        createTween(button, {BackgroundColor3 = hover}, 0.2):Play()
         playSound("131961136", 0.1)
     end)
 
     button.MouseLeave:Connect(function()
-        local tween = createTween(button, {BackgroundColor3 = normal}, 0.2)
-        if tween then tween:Play() end
+        createTween(button, {BackgroundColor3 = normal}, 0.2):Play()
     end)
 end
 
-local function addButtonEffect(button)
-    if not button then return end
-    local originalSize = button.Size
-    
+local function addButtonEffect(button: GuiButton)
     button.MouseButton1Down:Connect(function()
-        local tween = createTween(button, {Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset - 4, originalSize.Y.Scale, originalSize.Y.Offset - 4)}, 0.1)
-        if tween then tween:Play() end
+        createTween(button, {Size = button.Size - UDim2.new(0, 4, 0, 4)}, 0.1):Play()
     end)
 
     button.MouseButton1Up:Connect(function()
-        local tween = createTween(button, {Size = originalSize}, 0.1)
-        if tween then tween:Play() end
+        createTween(button, {Size = button.Size + UDim2.new(0, 4, 0, 4)}, 0.1):Play()
         playSound("131961136", 0.2)
     end)
 end
 
 -- UI Creation Functions
-local function createStyledButton(parent, name, text, position, size, color)
-    if not parent then return end
+local function createStyledButton(parent: GuiObject, name: string, text: string, position: UDim2, size: UDim2, color: Color3?): TextButton
     local button = Instance.new("TextButton")
     button.Name = name
     button.Parent = parent
@@ -157,8 +133,7 @@ local function createStyledButton(parent, name, text, position, size, color)
     return button
 end
 
-local function createStyledLabel(parent, name, text, position, size)
-    if not parent then return end
+local function createStyledLabel(parent: GuiObject, name: string, text: string, position: UDim2, size: UDim2): TextLabel
     local label = Instance.new("TextLabel")
     label.Name = name
     label.Parent = parent
@@ -176,42 +151,35 @@ end
 
 -- Main UI Cleanup
 local function cleanupUI()
-    if mainScreenGui and mainScreenGui.Parent then
+    if mainScreenGui then
         mainScreenGui:Destroy()
+        mainScreenGui = nil
     end
-    mainScreenGui = nil
-    mainPanel = nil
 end
 
 -- Player Functions
-local function getAllSwords(player)
-    if not player then return 0 end
+local function getAllSwords(player: Player): number
     local count = 0
-    
-    pcall(function()
-        local backpack = player:FindFirstChild("Backpack")
-        if backpack then
-            for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") and string.lower(tool.Name):find("sword") then
-                    count = count + 1
-                end
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and string.lower(tool.Name):find("sword") then
+                count += 1
             end
         end
-        
-        local character = player.Character
-        if character then
-            for _, tool in ipairs(character:GetChildren()) do
-                if tool:IsA("Tool") and string.lower(tool.Name):find("sword") then
-                    count = count + 1
-                end
+    end
+    local character = player.Character
+    if character then
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") and string.lower(tool.Name):find("sword") then
+                count += 1
             end
         end
-    end)
-    
+    end
     return count
 end
 
-local function getPlayerStats(player)
+local function getPlayerStats(player: Player): {[string]: any}
     local stats = {
         swords = 0,
         power = 0,
@@ -224,163 +192,73 @@ local function getPlayerStats(player)
 
     if not player then return stats end
 
-    pcall(function()
-        stats.swords = getAllSwords(player)
+    stats.swords = getAllSwords(player)
 
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if leaderstats then
-            local power = leaderstats:FindFirstChild("Power")
-            local kills = leaderstats:FindFirstChild("Kills")
-            stats.power = power and power.Value or 0
-            stats.kills = kills and kills.Value or 0
-        end
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        local power = leaderstats:FindFirstChild("Power")
+        local kills = leaderstats:FindFirstChild("Kills")
+        stats.power = power and power.Value or 0
+        stats.kills = kills and kills.Value or 0
+    end
 
-        local character = player.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                stats.health = math.floor(humanoid.Health)
-                stats.maxHealth = math.floor(humanoid.MaxHealth)
-                stats.walkSpeed = humanoid.WalkSpeed
-                stats.jumpPower = humanoid.JumpPower
-            end
+    local character = player.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            stats.health = math.floor(humanoid.Health)
+            stats.maxHealth = math.floor(humanoid.MaxHealth)
+            stats.walkSpeed = humanoid.WalkSpeed
+            stats.jumpPower = humanoid.JumpPower
         end
-    end)
+    end
 
     return stats
 end
 
-local function executePlayerAction(player, actionType)
+local function executePlayerAction(player: Player, actionType: string)
     if not player or not player.Character then
         return false, "Player or character not found"
     end
 
-    local success, result = pcall(function()
-        local targetHumanoid = player.Character:FindFirstChildOfClass("Humanoid")
-        if not targetHumanoid then
-            return false, "Target humanoid not found"
-        end
-
-        -- Try to find sword in backpack first
-        local backpack = LocalPlayer.Backpack
-        local sword = nil
-        
-        -- Look for any tool that might be a sword
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") and (string.lower(tool.Name):find("sword") or tool.Name:lower() == "sword") then
-                sword = tool
-                break
-            end
-        end
-        
-        -- If no sword in backpack, check character
-        if not sword and LocalPlayer.Character then
-            for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
-                if tool:IsA("Tool") and (string.lower(tool.Name):find("sword") or tool.Name:lower() == "sword") then
-                    sword = tool
-                    break
-                end
-            end
-        end
-        
-        if not sword then
-            return false, "No sword found! Make sure you have a sword equipped."
-        end
-
-        -- Move sword to character if it's in backpack
-        if sword.Parent == backpack then
-            sword.Parent = LocalPlayer.Character
-        end
-        
-        task.wait(0.1) -- Small delay to ensure sword is equipped
-        
-        local swordHandle = sword:FindFirstChild("Handle")
-        if swordHandle then
-            -- Look for damage remote in different possible locations
-            local damageEvent = nil
-            
-            -- Common damage event locations
-            local possiblePaths = {
-                swordHandle:FindFirstChild("dmg"),
-                swordHandle:FindFirstChild("Damage"),
-                swordHandle:FindFirstChild("RemoteEvent"),
-                sword:FindFirstChild("RemoteEvent"),
-                sword:FindFirstChild("dmg")
-            }
-            
-            for _, path in pairs(possiblePaths) do
-                if path then
-                    if path:IsA("RemoteEvent") then
-                        damageEvent = path
-                        break
-                    elseif path:FindFirstChild("RemoteEvent") then
-                        damageEvent = path:FindFirstChild("RemoteEvent")
-                        break
-                    end
-                end
-            end
-            
-            if damageEvent and damageEvent:IsA("RemoteEvent") then
-                local damage = actionType == "god" and -math.huge or math.huge
-                
-                -- Try different remote event call patterns
-                local success = pcall(function()
-                    damageEvent:FireServer(targetHumanoid, damage)
-                end)
-                
-                if not success then
-                    -- Try alternative calling method
-                    success = pcall(function()
-                        damageEvent:FireServer(player.Character, damage)
-                    end)
-                end
-                
-                if not success then
-                    -- Try another alternative
-                    success = pcall(function()
-                        damageEvent:FireServer(damage, targetHumanoid)
-                    end)
-                end
-                
-                -- Move sword back to backpack after a short delay
-                task.wait(0.2)
-                if sword and sword.Parent == LocalPlayer.Character then
-                    sword.Parent = backpack
-                end
-                
-                if success then
-                    return true, actionType == "god" and "✅ Player given god mode!" or "✅ Player eliminated!"
-                else
-                    return false, "❌ Failed to execute action - RemoteEvent call failed"
-                end
-            else
-                -- Move sword back if no damage event found
-                if sword and sword.Parent == LocalPlayer.Character then
-                    sword.Parent = backpack
-                end
-                return false, "❌ Damage event not found in sword"
-            end
-        else
-            return false, "❌ Sword handle not found"
-        end
-    end)
+    local backpack = LocalPlayer.Backpack
+    local sword = backpack:FindFirstChild("sword")
     
-    if success then
-        return result
-    else
-        return false, "❌ Error: " .. tostring(result)
+    if not sword then
+        return false, "Sword not found in backpack"
     end
+
+    local targetHumanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not targetHumanoid then
+        return false, "Target humanoid not found"
+    end
+
+    sword.Parent = LocalPlayer.Character
+    
+    local swordHandle = sword:FindFirstChild("Handle")
+    if swordHandle then
+        local damageEvent = swordHandle:FindFirstChild("dmg")
+        damageEvent = damageEvent and damageEvent:FindFirstChild("RemoteEvent")
+        
+        if damageEvent then
+            local damage = actionType == "god" and -math.huge or math.huge
+            damageEvent:FireServer(targetHumanoid, damage)
+            
+            -- Move sword back to backpack
+            task.wait(0.1)
+            sword.Parent = backpack
+            
+            return true, actionType == "god" and "Player given god mode" or "Player eliminated"
+        end
+    end
+    
+    sword.Parent = backpack
+    return false, "Damage event not found"
 end
 
 -- UI Creation
 local function createMainUI()
     cleanupUI()
-
-    -- Check if PlayerGui exists
-    if not PlayerGui then
-        warn("PlayerGui not found!")
-        return
-    end
 
     -- Main ScreenGui
     mainScreenGui = Instance.new("ScreenGui")
@@ -404,6 +282,28 @@ local function createMainUI()
     addStroke(mainPanel, UI_COLORS.ACCENT, 2)
     addGradient(mainPanel, {UI_COLORS.PRIMARY, UI_COLORS.SECONDARY})
 
+    -- Animated border effect
+    local borderEffect = Instance.new("Frame")
+    borderEffect.Name = "BorderEffect"
+    borderEffect.Parent = mainPanel
+    borderEffect.BackgroundTransparency = 1
+    borderEffect.Size = UDim2.new(1, 0, 1, 0)
+    borderEffect.Position = UDim2.new(0, 0, 0, 0)
+    addCornerRadius(borderEffect, 12)
+    local borderStroke = addStroke(borderEffect, UI_COLORS.ACCENT, 3)
+    
+    -- Animate border
+    task.spawn(function()
+        while borderEffect.Parent do
+            local colors = {UI_COLORS.ACCENT, UI_COLORS.SUCCESS, UI_COLORS.WARNING, UI_COLORS.DANGER}
+            for _, color in ipairs(colors) do
+                if not borderEffect.Parent then break end
+                createTween(borderStroke, {Color = color}, 1):Play()
+                task.wait(1)
+            end
+        end
+    end)
+
     -- Title Section
     local titleFrame = Instance.new("Frame")
     titleFrame.Name = "TitleFrame"
@@ -416,47 +316,34 @@ local function createMainUI()
 
     local title = createStyledLabel(titleFrame, "Title", "🗡️ ENHANCED STATS PANEL 🗡️", 
         UDim2.new(0, 10, 0, 5), UDim2.new(1, -120, 0, 30))
-    if title then
-        title.Font = Enum.Font.GothamBold
-        title.TextColor3 = UI_COLORS.ACCENT
-    end
+    title.Font = Enum.Font.GothamBold
+    title.TextColor3 = UI_COLORS.ACCENT
 
-    local subtitle = createStyledLabel(titleFrame, "Subtitle", "Created by AlznDev v2.1 - Fixed", 
+    local subtitle = createStyledLabel(titleFrame, "Subtitle", "Created by AlznDev v2.0", 
         UDim2.new(0, 10, 0, 30), UDim2.new(1, -120, 0, 25))
-    if subtitle then
-        subtitle.TextColor3 = UI_COLORS.TEXT_SECONDARY
-        subtitle.Font = Enum.Font.Gotham
-    end
+    subtitle.TextColor3 = UI_COLORS.TEXT_SECONDARY
+    subtitle.Font = Enum.Font.Gotham
 
     -- Close Button
     local closeButton = createStyledButton(titleFrame, "CloseButton", "✕", 
         UDim2.new(1, -50, 0, 5), UDim2.new(0, 40, 0, 25), UI_COLORS.DANGER)
-    if closeButton then
-        closeButton.MouseButton1Click:Connect(function()
-            local tween = createTween(mainPanel, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-            if tween then tween:Play() end
-            task.wait(0.3)
-            if mainPanel then
-                mainPanel.Visible = false
-            end
-            isUIVisible = false
-        end)
-    end
+    closeButton.MouseButton1Click:Connect(function()
+        createTween(mainPanel, {Size = UDim2.new(0, 0, 0, 0)}, 0.3):Play()
+        task.wait(0.3)
+        mainPanel.Visible = false
+        isUIVisible = false
+    end)
 
     -- Minimize Button
     local minimizeButton = createStyledButton(titleFrame, "MinimizeButton", "—", 
         UDim2.new(1, -95, 0, 5), UDim2.new(0, 40, 0, 25), UI_COLORS.WARNING)
-    if minimizeButton then
-        minimizeButton.MouseButton1Click:Connect(function()
-            if mainPanel and mainPanel.Size.Y.Offset > 100 then
-                local tween = createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 60)}, 0.3)
-                if tween then tween:Play() end
-            elseif mainPanel then
-                local tween = createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 400)}, 0.3)
-                if tween then tween:Play() end
-            end
-        end)
-    end
+    minimizeButton.MouseButton1Click:Connect(function()
+        if mainPanel.Size.Y.Offset > 100 then
+            createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 60)}, 0.3):Play()
+        else
+            createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 400)}, 0.3):Play()
+        end
+    end)
 
     -- Player Selection Section
     local selectionFrame = Instance.new("Frame")
@@ -470,9 +357,7 @@ local function createMainUI()
 
     local selectionLabel = createStyledLabel(selectionFrame, "SelectionLabel", "🎯 Target Player", 
         UDim2.new(0, 10, 0, 5), UDim2.new(0.5, -10, 0, 25))
-    if selectionLabel then
-        selectionLabel.Font = Enum.Font.GothamBold
-    end
+    selectionLabel.Font = Enum.Font.GothamBold
 
     -- Profile Picture
     local profilePic = Instance.new("ImageLabel")
@@ -482,7 +367,6 @@ local function createMainUI()
     profilePic.Size = UDim2.new(0, 60, 0, 60)
     profilePic.Position = UDim2.new(0, 10, 0, 15)
     profilePic.ScaleType = Enum.ScaleType.Crop
-    profilePic.Image = "rbxasset://textures/face.png"
     addCornerRadius(profilePic, 30)
     addStroke(profilePic, UI_COLORS.ACCENT, 2)
 
@@ -515,38 +399,31 @@ local function createMainUI()
 
     local statsTitle = createStyledLabel(statsFrame, "StatsTitle", "📊 Player Statistics", 
         UDim2.new(0, 10, 0, 5), UDim2.new(1, -20, 0, 25))
-    if statsTitle then
-        statsTitle.Font = Enum.Font.GothamBold
-    end
+    statsTitle.Font = Enum.Font.GothamBold
 
     local statsDisplay = createStyledLabel(statsFrame, "StatsDisplay", "Loading stats...", 
         UDim2.new(0, 10, 0, 30), UDim2.new(1, -20, 0, 85))
-    if statsDisplay then
-        statsDisplay.TextYAlignment = Enum.TextYAlignment.Top
-    end
+    statsDisplay.TextYAlignment = Enum.TextYAlignment.Top
 
     -- Action Buttons Section
     local actionFrame = Instance.new("Frame")
     actionFrame.Name = "ActionFrame"
     actionFrame.Parent = mainPanel
     actionFrame.BackgroundColor3 = UI_COLORS.SECONDARY
-    actionFrame.Size = UDim2.new(1, -20, 0, 80)
+    actionFrame.Size = UDim2.new(1, -20, 0, 60)
     actionFrame.Position = UDim2.new(0, 10, 0, 290)
     actionFrame.BorderSizePixel = 0
-    actionFrame.Visible = true
     addCornerRadius(actionFrame, 8)
 
     local actionTitle = createStyledLabel(actionFrame, "ActionTitle", "⚡ Quick Actions", 
         UDim2.new(0, 10, 0, 5), UDim2.new(1, -20, 0, 20))
-    if actionTitle then
-        actionTitle.Font = Enum.Font.GothamBold
-    end
+    actionTitle.Font = Enum.Font.GothamBold
 
     local godButton = createStyledButton(actionFrame, "GodButton", "🛡️ God Mode", 
-        UDim2.new(0, 10, 0, 30), UDim2.new(0.48, -5, 0, 40), UI_COLORS.SUCCESS)
+        UDim2.new(0, 10, 0, 25), UDim2.new(0.5, -15, 0, 30), UI_COLORS.SUCCESS)
     
     local killButton = createStyledButton(actionFrame, "KillButton", "💀 Eliminate", 
-        UDim2.new(0.52, 5, 0, 30), UDim2.new(0.48, -5, 0, 40), UI_COLORS.DANGER)
+        UDim2.new(0.5, 5, 0, 25), UDim2.new(0.5, -15, 0, 30), UI_COLORS.DANGER)
 
     -- Status Bar
     local statusBar = Instance.new("Frame")
@@ -554,34 +431,30 @@ local function createMainUI()
     statusBar.Parent = mainPanel
     statusBar.BackgroundColor3 = UI_COLORS.PRIMARY
     statusBar.Size = UDim2.new(1, 0, 0, 30)
-    statusBar.Position = UDim2.new(0, 0, 0, 370)
+    statusBar.Position = UDim2.new(0, 0, 1, -30)
     statusBar.BorderSizePixel = 0
 
     local statusLabel = createStyledLabel(statusBar, "StatusLabel", "Press 'K' to toggle | Ready", 
         UDim2.new(0, 10, 0, 0), UDim2.new(1, -20, 1, 0))
-    if statusLabel then
-        statusLabel.TextColor3 = UI_COLORS.TEXT_SECONDARY
-    end
+    statusLabel.TextColor3 = UI_COLORS.TEXT_SECONDARY
 
     -- Functions
-    local function updateProfilePic(player)
-        if not player or not profilePic then return end
+    local function updateProfilePic(player: Player)
+        if not player then return end
         task.spawn(function()
             local success, thumbnailUrl = pcall(function()
                 return Players:GetUserThumbnailAsync(player.UserId, 
                     Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
             end)
-            if success and thumbnailUrl and profilePic then
+            if success and thumbnailUrl then
                 profilePic.Image = thumbnailUrl
-            elseif profilePic then
+            else
                 profilePic.Image = "rbxasset://textures/face.png"
             end
         end)
     end
 
     local function populateDropdown()
-        if not dropdownFrame then return end
-        
         -- Clear existing items
         for _, child in ipairs(dropdownFrame:GetChildren()) do
             if child:IsA("TextButton") then
@@ -600,87 +473,67 @@ local function createMainUI()
                 UDim2.new(0, 5, 0, (index - 1) * itemHeight), 
                 UDim2.new(1, -10, 0, itemHeight - 5), UI_COLORS.PRIMARY)
             
-            if item then
-                item.MouseButton1Click:Connect(function()
-                    selectedPlayer = player
-                    if dropdownButton then
-                        dropdownButton.Text = player.Name
-                    end
-                    updateProfilePic(player)
-                    dropdownFrame.Visible = false
-                    if statusLabel then
-                        statusLabel.Text = "Selected: " .. player.Name
-                    end
-                    playSound("131961136", 0.3)
-                end)
-            end
-        end
-    end
-
-    local function showStatus(message, color)
-        if statusLabel and statusLabel.Parent then
-            statusLabel.Text = message
-            statusLabel.TextColor3 = color or UI_COLORS.TEXT_SECONDARY
-            task.spawn(function()
-                task.wait(3)
-                if statusLabel and statusLabel.Parent then
-                    statusLabel.TextColor3 = UI_COLORS.TEXT_SECONDARY
-                    statusLabel.Text = "Press 'K' to toggle | Ready"
-                end
+            item.MouseButton1Click:Connect(function()
+                selectedPlayer = player
+                dropdownButton.Text = player.Name
+                updateProfilePic(player)
+                dropdownFrame.Visible = false
+                statusLabel.Text = "Selected: " .. player.Name
+                playSound("131961136", 0.3)
             end)
         end
     end
 
+    local function showStatus(message: string, color: Color3?)
+        statusLabel.Text = message
+        statusLabel.TextColor3 = color or UI_COLORS.TEXT_SECONDARY
+        task.wait(3)
+        if statusLabel and statusLabel.Parent then
+            statusLabel.TextColor3 = UI_COLORS.TEXT_SECONDARY
+            statusLabel.Text = "Press 'K' to toggle | Ready"
+        end
+    end
+
     -- Event Connections
-    if dropdownButton then
-        dropdownButton.MouseButton1Click:Connect(function()
-            if dropdownFrame then
-                dropdownFrame.Visible = not dropdownFrame.Visible
-                if dropdownFrame.Visible then
-                    populateDropdown()
-                end
-            end
-        end)
-    end
+    dropdownButton.MouseButton1Click:Connect(function()
+        dropdownFrame.Visible = not dropdownFrame.Visible
+        if dropdownFrame.Visible then
+            populateDropdown()
+        end
+    end)
 
-    if godButton then
-        godButton.MouseButton1Click:Connect(function()
-            if selectedPlayer then
-                task.spawn(function()
-                    local success, message = executePlayerAction(selectedPlayer, "god")
-                    showStatus(message, success and UI_COLORS.SUCCESS or UI_COLORS.DANGER)
-                end)
-            end
-        end)
-    end
+    godButton.MouseButton1Click:Connect(function()
+        if selectedPlayer then
+            task.spawn(function()
+                local success, message = executePlayerAction(selectedPlayer, "god")
+                showStatus(message, success and UI_COLORS.SUCCESS or UI_COLORS.DANGER)
+            end)
+        end
+    end)
 
-    if killButton then
-        killButton.MouseButton1Click:Connect(function()
-            if selectedPlayer then
-                task.spawn(function()
-                    local success, message = executePlayerAction(selectedPlayer, "kill")
-                    showStatus(message, success and UI_COLORS.SUCCESS or UI_COLORS.DANGER)
-                end)
-            end
-        end)
-    end
+    killButton.MouseButton1Click:Connect(function()
+        if selectedPlayer then
+            task.spawn(function()
+                local success, message = executePlayerAction(selectedPlayer, "kill")
+                showStatus(message, success and UI_COLORS.SUCCESS or UI_COLORS.DANGER)
+            end)
+        end
+    end)
 
     -- Make UI Draggable
-    local function makeDraggable(frame)
-        if not frame or not titleFrame then return end
-        
+    local function makeDraggable(frame: GuiObject)
         local dragging = false
-        local dragInput
-        local dragStart
-        local startPos
+        local dragInput: InputObject
+        local dragStart: Vector3
+        local startPos: UDim2
 
-        local function update(input)
+        local function update(input: InputObject)
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
                 startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
 
-        titleFrame.InputBegan:Connect(function(input)
+        titleFrame.InputBegan:Connect(function(input: InputObject)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = true
                 dragStart = input.Position
@@ -694,13 +547,13 @@ local function createMainUI()
             end
         end)
 
-        titleFrame.InputChanged:Connect(function(input)
+        titleFrame.InputChanged:Connect(function(input: InputObject)
             if input.UserInputType == Enum.UserInputType.MouseMovement then
                 dragInput = input
             end
         end)
 
-        UserInputService.InputChanged:Connect(function(input)
+        UserInputService.InputChanged:Connect(function(input: InputObject)
             if input == dragInput and dragging then
                 update(input)
             end
@@ -711,7 +564,7 @@ local function createMainUI()
 
     -- Stats Update Loop
     task.spawn(function()
-        while mainPanel and mainPanel.Parent and statsDisplay do
+        while mainPanel and mainPanel.Parent do
             if selectedPlayer and selectedPlayer.Parent then
                 local stats = getPlayerStats(selectedPlayer)
                 local statsText = string.format(
@@ -736,34 +589,9 @@ local function createMainUI()
     -- Entry animation
     mainPanel.Size = UDim2.new(0, 0, 0, 0)
     mainPanel.Visible = true
-    local tween = createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 400)}, 0.5)
-    if tween then tween:Play() end
+    createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 400)}, 0.5):Play()
     playSound("131961136", 0.4)
 end
-
--- Toggle UI function
-local function toggleUI()
-    if mainPanel then
-        isUIVisible = not isUIVisible
-        mainPanel.Visible = isUIVisible
-        if isUIVisible then
-            local tween = createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 400)}, 0.3)
-            if tween then tween:Play() end
-        else
-            local tween = createTween(mainPanel, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-            if tween then tween:Play() end
-        end
-        playSound("131961136", 0.3)
-    end
-end
-
--- Input Handler
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.K then
-        toggleUI()
-    end
-end)
 
 -- Cleanup and Event Handlers
 local function handleCharacterRemoving()
@@ -777,85 +605,54 @@ local function handleCharacterAdded()
     end
 end
 
--- Connection Management (continued from your script)
-connections[#connections + 1] = LocalPlayer.CharacterRemoving:Connect(handleCharacterRemoving)
-connections[#connections + 1] = LocalPlayer.CharacterAdded:Connect(handleCharacterAdded)
-
--- Player Events
-connections[#connections + 1] = Players.PlayerAdded:Connect(function(player)
-    -- Update dropdown when new player joins
-    task.wait(1)
-    if dropdownFrame and dropdownFrame.Visible then
-        populateDropdown()
-    end
-end)
-
-connections[#connections + 1] = Players.PlayerRemoving:Connect(function(player)
-    -- Update dropdown when player leaves
-    if dropdownFrame and dropdownFrame.Visible then
-        populateDropdown()
-    end
-    
-    -- Reset selected player if they left
-    if selectedPlayer == player then
-        selectedPlayer = LocalPlayer
-        if dropdownButton then
-            dropdownButton.Text = LocalPlayer.Name
+-- Toggle UI function
+local function toggleUI()
+    if mainPanel then
+        isUIVisible = not isUIVisible
+        mainPanel.Visible = isUIVisible
+        if isUIVisible then
+            createTween(mainPanel, {Size = UDim2.new(0, 500, 0, 400)}, 0.3):Play()
+        else
+            createTween(mainPanel, {Size = UDim2.new(0, 0, 0, 0)}, 0.3):Play()
         end
-        updateProfilePic(LocalPlayer)
+        playSound("131961136", 0.3)
     end
-end)
-
--- Error Handling and Recovery
-local function safeExecute(func, errorMessage)
-    local success, result = pcall(func)
-    if not success then
-        warn(errorMessage or "Script Error:", result)
-        return false, result
-    end
-    return true, result
 end
 
--- Periodic UI Health Check
-task.spawn(function()
-    while true do
-        task.wait(5)
-        if not mainScreenGui or not mainScreenGui.Parent then
-            -- UI was destroyed, recreate it
-            task.wait(1)
-            safeExecute(createMainUI, "Failed to recreate UI")
-        end
+-- Input Handler
+UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: boolean)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        toggleUI()
     end
 end)
 
--- Initial UI Creation
-task.spawn(function()
-    -- Wait for everything to load
-    if LocalPlayer.Character then
-        task.wait(2)
-    else
-        LocalPlayer.CharacterAdded:Wait()
-        task.wait(2)
-    end
-    
-    -- Create the main UI
-    safeExecute(createMainUI, "Failed to create initial UI")
-end)
+-- Connection Management
+local connections = {}
 
--- Cleanup on script termination
-game:BindToClose(function()
-    for _, connection in ipairs(connections) do
+local function setupConnections()
+    -- Clear existing connections
+    for _, connection in pairs(connections) do
         if connection then
             connection:Disconnect()
         end
     end
-    cleanupUI()
-end)
+    connections = {}
 
--- Status Message
-print("🗡️ Enhanced Roblox UI Script v2.1 - Fixed Version Loaded!")
-print("📋 Press 'K' to toggle the UI")
-print("🛠️ Created by AlznDev - Bug Fixed Version")
-print("✅ Script initialization complete!")
+    -- Setup new connections
+    connections.characterRemoving = LocalPlayer.CharacterRemoving:Connect(handleCharacterRemoving)
+    connections.characterAdded = LocalPlayer.CharacterAdded:Connect(handleCharacterAdded)
+    connections.ancestryChanged = LocalPlayer.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            cleanupUI()
+        end
+    end)
+end
 
--- End of Script
+-- Initialize
+setupConnections()
+createMainUI()
+
+-- Auto-cleanup on script end
+-- game:BindToClose can only be called on the server, so we skip this on the client.
+-- Cleanup is handled by character removing and ancestry changed events.
