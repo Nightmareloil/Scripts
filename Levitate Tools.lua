@@ -248,8 +248,10 @@ local function scanForNewTools()
                 h.Anchored = false
                 createPhysicsComponents(h)
                 local effects = {}
-                table.insert(effects, createParticleEffect(h))
-                table.insert(effects, createGlowEffect(h))
+                local particle = createParticleEffect(h)
+                if particle then table.insert(effects, particle) end
+                local glow = createGlowEffect(h)
+                if glow then table.insert(effects, glow) end
                 toolManager:assignToolToSlot(obj, i)
                 toolManager.activeTools[obj].effects = effects
                 print("Enhanced Levitate Tools: Added", obj.Name, "to slot", i)
