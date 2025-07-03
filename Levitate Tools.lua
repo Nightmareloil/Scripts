@@ -1,6 +1,6 @@
 --[[
-    Enhanced Levitate Tools Script (Fixed & Improved + Player Movement Bug Fix)
-
+    Enhanced Levitate Tools Script (Fixed & Improved)
+    
     Features:
     - Multiple orbit patterns (circular, figure-8, spiral)
     - Dynamic orbit layers for multiple tools
@@ -190,7 +190,6 @@ local function createGlowEffect(handle)
 end
 
 local function createPhysicsComponents(handle)
-    handle:BreakJoints() -- Prevent any physical forces transferring to the player
     local bp = handle:FindFirstChild("LevitatePosition") or Instance.new("BodyPosition")
     bp.Name = "LevitatePosition"
     bp.MaxForce = CONFIG.bodyPosition.maxForce
@@ -207,5 +206,130 @@ local function createPhysicsComponents(handle)
     return bp, bav
 end
 
--- [rest of the code remains unchanged]
--- Your bug is fixed by breaking joints of levitating tools to prevent physics pushback
+local toolManager = ToolManager.new()
+
+local function processLevitatingTool(tool, toolData, now)
+    local handle = tool:FindFirstChild("Handle")
+    if not handle then return false end
+    local slot = toolManager.toolSlots[toolData.slotIndex]
+    if not slot then return false end
+    if not torso or not torso.Parent then
+        torso = getTorso()
+        if not torso then return false end
+    end
+    local t = now - toolManager.orbitStartTime
+    local angle = slot.angle + t * CONFIG.orbitSpeed
+    local getOffset = CONFIG.orbitPatterns[CONFIG.currentPattern] or CONFIG.orbitPatterns.circular
+    local x, z = getOffset(angle, slot.radius)
+    local y = slot.height + math.sin(t * 2 + slot.angle) * 0.5
+    local target = torso.Position + Vector3.new(x, y, z)
+    local bp = handle:FindFirstChild("LevitatePosition")
+    if not bp then
+        bp, _ = createPhysicsComponents(handle)
+    end
+    bp.Position = target
+    handle.CanCollide = false
+    handle.Anchored = false
+    return true
+end
+
+local function isToolDropped(tool)
+    local handle = tool:FindFirstChild("Handle")
+    return tool and tool:IsA("Tool") and handle and handle.Transparency < 1 and not tool:IsDescendantOf(Character) and not tool:IsDescendantOf(Player.Backpack) and tool.Parent == Workspace
+end
+
+local function scanForNewTools()
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        if isToolDropped(obj) and not toolManager.activeTools[obj] then
+            local i, slot = toolManager:getAvailableSlot()
+            if i then
+                local h = obj.Handle
+                h.CanCollide = false
+                h.Anchored = false
+                createPhysicsComponents(h)
+                local effects = {}
+                table.insert(effects, createParticleEffect(h))
+                table.insert(effects, createGlowEffect(h))
+                toolManager:assignToolToSlot(obj, i)
+                toolManager.activeTools[obj].effects = effects
+                print("Enhanced Levitate Tools: Added", obj.Name, "to slot", i)
+            else
+                print("Enhanced Levitate Tools: Max tools reached.")
+            end
+        end
+    end
+end
+
+local function cleanupInvalidTools()
+    for tool, data in pairs(toolManager.activeTools) do
+        if not tool or not tool.Parent or not isToolDropped(tool) then
+            toolManager:removeToolFromSlot(tool)
+            print("Enhanced Levitate Tools: Removed invalid tool")
+        end
+    end
+end
+
+-- Character respawn
+Player.CharacterAdded:Connect(function(c)
+    Character = c
+    Humanoid = Character:WaitForChild("Humanoid")
+    torso = getTorso()
+    repeat torso = getTorso() task.wait() until torso
+    for tool in pairs(toolManager.activeTools) do
+        toolManager:removeToolFromSlot(tool)
+    end
+    print("Enhanced Levitate Tools: Character respawned, tools reset.")
+end)
+
+-- Main update loop
+local lastUpdate = 0
+RunService.Heartbeat:Connect(function()
+    local now = tick()
+    if now - lastUpdate < CONFIG.updateInterval then return end
+    lastUpdate = now
+    if now - toolManager.lastScanTime >= CONFIG.scanInterval then
+        scanForNewTools()
+        toolManager.lastScanTime = now
+    end
+    if now - toolManager.lastCleanupTime >= CONFIG.cleanupInterval then
+        cleanupInvalidTools()
+        toolManager.lastCleanupTime = now
+    end
+    for tool, data in pairs(toolManager.activeTools) do
+        local success, result = pcall(function()
+            return processLevitatingTool(tool, data, now)
+        end)
+        if not success or not result then
+            toolManager:removeToolFromSlot(tool)
+        end
+    end
+end)
+
+-- Runtime config
+_G.LevitateToolsConfig = {
+    changePattern = function(p)
+        if CONFIG.orbitPatterns[p] then
+            CONFIG.currentPattern = p
+            toolManager.orbitStartTime = tick()
+            print("Changed pattern to", p)
+        else
+            warn("Unknown orbit pattern:", p)
+        end
+    end,
+    setSpeed = function(s) CONFIG.orbitSpeed = math.max(0.1, s) end,
+    setRadius = function(r) CONFIG.baseRadius = math.max(2, r) end,
+    toggleEffects = function()
+        CONFIG.enableParticles = not CONFIG.enableParticles
+        CONFIG.enableGlow = not CONFIG.enableGlow
+    end,
+    getCurrentStats = function()
+        return {
+            activeTools = #toolManager.activeTools,
+            maxTools = CONFIG.maxTools,
+            currentPattern = CONFIG.currentPattern,
+            effectsEnabled = CONFIG.enableParticles and CONFIG.enableGlow
+        }
+    end
+}
+
+print("Enhanced Levitate Tools: Loaded and ready!")
