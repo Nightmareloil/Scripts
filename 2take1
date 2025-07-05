@@ -85,6 +85,8 @@ local COMMANDS = {
     "monitor [plr] - Monitors player's power",
     "unmonitor - Stops monitoring",
     "speed [num] - Changes walkspeed",
+    "ws [num] - Changes walkspeed (alias)",
+    "walkspeed [num] - Changes walkspeed",
     "jump [num] - Changes jump power",
     "drop [num] - Drops swords",
     "trapdrop [num] - Drops killing swords",
@@ -315,7 +317,183 @@ local function createUI()
     }
 end
 
+local function createSlider(parent, name, position, minValue, maxValue, defaultValue, callback)
+    local frame = Instance.new("Frame")
+    frame.Name = name .. "Frame"
+    frame.Size = UDim2.new(1, -10, 0, 40)
+    frame.Position = position
+    frame.BackgroundColor3 = theme.secondary
+    frame.BorderColor3 = theme.primary
+    frame.BorderSizePixel = 1
+    frame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -60, 0, 20)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = theme.primary
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 40, 0, 20)
+    valueLabel.Position = UDim2.new(1, -50, 0, 0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(defaultValue)
+    valueLabel.TextColor3 = theme.primary
+    valueLabel.TextSize = 12
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Font = Enum.Font.Gotham
+    valueLabel.Parent = frame
+    
+    -- Slider track
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, -20, 0, 6)
+    track.Position = UDim2.new(0, 10, 0, 25)
+    track.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+    track.BorderSizePixel = 0
+    track.Parent = frame
+    
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(0, 3)
+    trackCorner.Parent = track
+    
+    -- Slider fill
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(0.5, 0, 1, 0)
+    fill.Position = UDim2.new(0, 0, 0, 0)
+    fill.BackgroundColor3 = theme.primary
+    fill.BorderSizePixel = 0
+    fill.Parent = track
+    
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(0, 3)
+    fillCorner.Parent = fill
+    
+    -- Slider handle
+    local handle = Instance.new("Frame")
+    handle.Size = UDim2.new(0, 16, 0, 16)
+    handle.Position = UDim2.new(0.5, -8, 0, -5)
+    handle.BackgroundColor3 = theme.primary
+    handle.BorderSizePixel = 0
+    handle.Parent = track
+    
+    local handleCorner = Instance.new("UICorner")
+    handleCorner.CornerRadius = UDim.new(0, 8)
+    handleCorner.Parent = handle
+    
+    local currentValue = defaultValue
+    local dragging = false
+    
+    local function updateSlider(value)
+        currentValue = math.clamp(value, minValue, maxValue)
+        local percent = (currentValue - minValue) / (maxValue - minValue)
+        
+        fill.Size = UDim2.new(percent, 0, 1, 0)
+        handle.Position = UDim2.new(percent, -8, 0, -5)
+        valueLabel.Text = tostring(math.floor(currentValue))
+        
+        callback(currentValue)
+    end
+    
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local trackSize = track.AbsoluteSize.X
+            local mouseX = input.Position.X - track.AbsolutePosition.X
+            local percent = math.clamp(mouseX / trackSize, 0, 1)
+            local value = minValue + (percent * (maxValue - minValue))
+            updateSlider(value)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    -- Initialize
+    updateSlider(defaultValue)
+    
 local function createToggle(parent, name, position, callback)
+    local frame = Instance.new("Frame")
+    frame.Name = name .. "Frame"
+    frame.Size = UDim2.new(1, -10, 0, 30)
+    frame.Position = position
+    frame.BackgroundColor3 = theme.secondary
+    frame.BorderColor3 = theme.primary
+    frame.BorderSizePixel = 1
+    frame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = theme.primary
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0, 40, 0, 20)
+    toggle.Position = UDim2.new(1, -45, 0.5, -10)
+    toggle.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    toggle.BorderSizePixel = 0
+    toggle.Text = ""
+    toggle.Parent = frame
+    
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 10)
+    toggleCorner.Parent = toggle
+    
+    local indicator = Instance.new("Frame")
+    indicator.Size = UDim2.new(0, 16, 0, 16)
+    indicator.Position = UDim2.new(0, 2, 0, 2)
+    indicator.BackgroundColor3 = Color3.new(1, 1, 1)
+    indicator.BorderSizePixel = 0
+    indicator.Parent = toggle
+    
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(0, 8)
+    indicatorCorner.Parent = indicator
+    
+    local active = false
+    
+    toggle.MouseButton1Click:Connect(function()
+        active = not active
+        
+        if active then
+            createTween(toggle, {BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)}):Play()
+            createTween(indicator, {Position = UDim2.new(0, 22, 0, 2)}):Play()
+        else
+            createTween(toggle, {BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)}):Play()
+            createTween(indicator, {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        end
+        
+        callback(active)
+    end)
+    
+    return frame, toggle, function() return active end
+end
     local frame = Instance.new("Frame")
     frame.Name = name .. "Frame"
     frame.Size = UDim2.new(1, -10, 0, 30)
@@ -687,22 +865,48 @@ function runCommand(cmd)
     local command = args[1]
     local target = findPlayer(args[2])
     
-    -- Kill command
+    -- Kill command with improved verification
     if command == "kill" then
         if target and type(target) == "table" then
             spawn(function()
                 local handle = getSwordHandle()
                 if handle and handle:FindFirstChild("dmg") then
                     local killed = 0
+                    local totalTargets = 0
+                    
+                    -- Count valid targets
                     for _, plr in pairs(target) do
                         if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr ~= player then
-                            handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
-                            output("Killed " .. plr.Name)
-                            killed = killed + 1
-                            wait(0.2)
+                            totalTargets = totalTargets + 1
                         end
                     end
-                    output("Total killed: " .. killed .. " players")
+                    
+                    output("Starting mass kill on " .. totalTargets .. " players...")
+                    
+                    for _, plr in pairs(target) do
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr ~= player then
+                            local humanoid = plr.Character.Humanoid
+                            local initialHealth = humanoid.Health
+                            
+                            -- Kill attempt
+                            handle.dmg.RemoteEvent:FireServer(humanoid, math.huge)
+                            
+                            -- Wait and verify kill
+                            wait(0.1)
+                            
+                            if humanoid.Health <= 0 or humanoid.Health < initialHealth then
+                                killed = killed + 1
+                                output("✓ Killed " .. plr.Name .. " (" .. killed .. "/" .. totalTargets .. ")")
+                                print("KILLED: " .. plr.Name .. " - Health: " .. humanoid.Health)
+                            else
+                                output("✗ Failed to kill " .. plr.Name)
+                                print("FAILED: " .. plr.Name .. " - Health: " .. humanoid.Health)
+                            end
+                            
+                            wait(0.4) -- 0.4 second delay between kills
+                        end
+                    end
+                    output("Mass kill complete: " .. killed .. "/" .. totalTargets .. " players killed")
                 else
                     output("No sword available")
                 end
@@ -713,8 +917,19 @@ function runCommand(cmd)
                 if char and char:FindFirstChild("Humanoid") then
                     local handle = getSwordHandle()
                     if handle and handle:FindFirstChild("dmg") then
-                        handle.dmg.RemoteEvent:FireServer(char.Humanoid, math.huge)
-                        output("Killed " .. target.Name)
+                        local humanoid = char.Humanoid
+                        local initialHealth = humanoid.Health
+                        
+                        handle.dmg.RemoteEvent:FireServer(humanoid, math.huge)
+                        wait(0.1)
+                        
+                        if humanoid.Health <= 0 or humanoid.Health < initialHealth then
+                            output("✓ Killed " .. target.Name)
+                            print("KILLED: " .. target.Name)
+                        else
+                            output("✗ Failed to kill " .. target.Name)
+                            print("FAILED: " .. target.Name)
+                        end
                     else
                         output("No sword available")
                     end
@@ -823,12 +1038,12 @@ function runCommand(cmd)
         end
     end
     
-    -- Non-target commands
-    if command == "speed" then
+    -- Speed commands (speed, ws, walkspeed)
+    if command == "speed" or command == "ws" or command == "walkspeed" then
         local speed = tonumber(args[2]) or 16
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             player.Character.Humanoid.WalkSpeed = speed
-            output("Speed set to " .. speed)
+            output("Walkspeed set to " .. speed)
         end
         
     elseif command == "jump" then
@@ -1086,9 +1301,10 @@ UI = createUI()
 local commandFrame, commandBox = createCommandBar()
 UI.godListFrame, UI.godScrollFrame = createGodList()
 
--- Create Toggles
+-- Create Toggles and Sliders
 local yPos = 0
 local toggleSpacing = 35
+local sliderSpacing = 45
 
 createToggle(UI.contentFrame, "Fast Farm", UDim2.new(0, 0, 0, yPos), function(active)
     STATE.fastfarm = active
@@ -1117,6 +1333,13 @@ createToggle(UI.contentFrame, "Kill Aura", UDim2.new(0, 0, 0, yPos), function(ac
 end)
 yPos = yPos + toggleSpacing
 
+-- Kill Aura Range Slider
+createSlider(UI.contentFrame, "Kill Aura Range", UDim2.new(0, 0, 0, yPos), 5, 50, CONFIG.killAuraRange, function(value)
+    CONFIG.killAuraRange = value
+    output("Kill Aura range set to " .. math.floor(value))
+end)
+yPos = yPos + sliderSpacing
+
 createToggle(UI.contentFrame, "Anti-Kick", UDim2.new(0, 0, 0, yPos), function(active)
     STATE.antiKick = active
 end)
@@ -1133,8 +1356,8 @@ UI.themeBtn.MouseButton1Click:Connect(function()
     currentTheme = currentTheme >= #THEMES and 1 or currentTheme + 1
     theme = THEMES[currentTheme]
     
-    -- Update all UI colors
-    for _, obj in pairs(UI.screenGui:GetDescendants()) do
+    -- Update canvas size for scrolling
+    UI.contentFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
         if obj.Name == "MainFrame" or obj.Name == "StatusFrame" or obj.Name == "CommandFrame" or obj.Name == "GodListFrame" then
             obj.BackgroundColor3 = theme.secondary
             obj.BorderColor3 = theme.primary
