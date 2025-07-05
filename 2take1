@@ -145,6 +145,24 @@ local function output(text, persistent)
     UI.output.Text = text
 end
 
+local function ensureSword()
+    local sword = player.Backpack:FindFirstChildOfClass("Tool") or player.Character:FindFirstChildOfClass("Tool")
+    if not sword then
+        load:FireServer()
+        wait(0.1)
+        sword = player.Backpack:WaitForChild("sword", 3)
+    end
+    return sword
+end
+
+local function getSwordHandle()
+    local sword = ensureSword()
+    if sword and sword:FindFirstChild("Handle") then
+        return sword.Handle
+    end
+    return nil
+end
+
 local function getSwords()
     local swords = {}
     for _, v in pairs(player.Backpack:GetChildren()) do
@@ -288,18 +306,18 @@ local function createUI()
     statusCorner.Parent = statusFrame
     
     -- Output Label
-    local output = Instance.new("TextLabel")
-    output.Name = "Output"
-    output.Size = UDim2.new(1, -10, 1, -10)
-    output.Position = UDim2.new(0, 5, 0, 5)
-    output.BackgroundTransparency = 1
-    output.Text = "Ready"
-    output.TextColor3 = theme.primary
-    output.TextSize = 12
-    output.TextWrapped = true
-    output.Font = Enum.Font.Gotham
-    output.Parent = statusFrame
-    output:SetAttribute("SecondaryBG", true)
+    local outputLabel = Instance.new("TextLabel")
+    outputLabel.Name = "Output"
+    outputLabel.Size = UDim2.new(1, -10, 1, -10)
+    outputLabel.Position = UDim2.new(0, 5, 0, 5)
+    outputLabel.BackgroundTransparency = 1
+    outputLabel.Text = "Ready"
+    outputLabel.TextColor3 = theme.primary
+    outputLabel.TextSize = 12
+    outputLabel.TextWrapped = true
+    outputLabel.Font = Enum.Font.Gotham
+    outputLabel.Parent = statusFrame
+    outputLabel:SetAttribute("SecondaryBG", true)
     
     return {
         screenGui = screenGui,
@@ -309,7 +327,7 @@ local function createUI()
         themeBtn = themeBtn,
         contentFrame = contentFrame,
         statusFrame = statusFrame,
-        output = output
+        output = outputLabel
     }
 end
 
@@ -383,24 +401,6 @@ local function createToggle(parent, name, position, callback)
     return frame, toggle, function() return active end
 end
 
-local function ensureSword()
-    local sword = player.Backpack:FindFirstChildOfClass("Tool") or player.Character:FindFirstChildOfClass("Tool")
-    if not sword then
-        load:FireServer()
-        wait(0.1)
-        sword = player.Backpack:WaitForChild("sword", 3)
-    end
-    return sword
-end
-
-local function getSwordHandle()
-    local sword = ensureSword()
-    if sword and sword:FindFirstChild("Handle") then
-        return sword.Handle
-    end
-    return nil
-end
-
 -- Enhanced Command Handler
 local function runCommand(cmd)
     local args = cmd:lower():split(" ")
@@ -408,7 +408,7 @@ local function runCommand(cmd)
     local target = findPlayer(args[2])
     
     -- Single target commands
-            if target and type(target) ~= "table" then
+    if target and type(target) ~= "table" then
         local char = target.Character
         if not char then return output("Player not found or no character") end
         
@@ -514,7 +514,7 @@ local function runCommand(cmd)
         load:FireServer()
         output("Character reloaded")
         
-            elseif command == "drop" then
+    elseif command == "drop" then
         local amount = tonumber(args[2]) or 1
         spawn(function()
             for i = 1, amount do
@@ -965,24 +965,6 @@ RunService.Heartbeat:Connect(function()
             local handle = getSwordHandle()
             if handle and handle:FindFirstChild("dmg") then
                 handle.dmg.RemoteEvent:FireServer(target.Character.Humanoid, -math.huge)
-            end
-        end
-    endd target:FindFirstChild("HumanoidRootPart") then
-                    local distance = (rootPart.Position - target.HumanoidRootPart.Position).Magnitude
-                    if distance <= CONFIG.killAuraRange and target.Name ~= player.Name and target.Humanoid.Health > 0 then
-                        sword.Handle.dmg.RemoteEvent:FireServer(target.Humanoid, player.leaderstats.Power.Value)
-                    end
-                end
-            end
-        end
-    end
-    
-    -- Permagod System
-    for _, target in pairs(DATA.permagods) do
-        if target.Character and target.Character:FindFirstChild("Humanoid") then
-            local sword = generateSword()
-            if sword and sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("dmg") then
-                sword.Handle.dmg.RemoteEvent:FireServer(target.Character.Humanoid, -math.huge)
             end
         end
     end
