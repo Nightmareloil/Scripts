@@ -72,10 +72,10 @@ local theme = THEMES[currentTheme]
 
 -- Enhanced Commands List
 local COMMANDS = {
-    {cmd = "kill [plr]", desc = "Kills the target player"},
-    {cmd = "god [plr]", desc = "Gods the target player"},
-    {cmd = "permagod [plr]", desc = "Permanently gods the player"},
-    {cmd = "ungod [plr]", desc = "Ungods and kills the player"},
+    {cmd = "kill [plr/all/others]", desc = "Kills the target player(s)"},
+    {cmd = "god [plr/all/others]", desc = "Gods the target player(s)"},
+    {cmd = "permagod [plr/all/others]", desc = "Permanently gods the player(s)"},
+    {cmd = "unpermagod [plr/all/others]", desc = "Removes permagod from player(s)"},
     {cmd = "heal [plr]", desc = "Heals the target player"},
     {cmd = "dmg [plr]", desc = "Damages the target player"},
     {cmd = "tp [plr]", desc = "Teleports to the player"},
@@ -110,7 +110,8 @@ local COMMANDS = {
     {cmd = "clear", desc = "Clears output"},
     {cmd = "rejoin", desc = "Rejoins the server"},
     {cmd = "crash", desc = "Crashes your client"},
-    {cmd = "listgods", desc = "Shows god list"}
+    {cmd = "listgods", desc = "Shows god list"},
+    {cmd = "help", desc = "Shows this command list"}
 }
 
 -- Utility Functions
@@ -407,6 +408,97 @@ local function runCommand(cmd)
     local command = args[1]
     local target = findPlayer(args[2])
     
+    -- Handle kill command for multiple targets
+    if command == "kill" then
+        if target and type(target) == "table" then
+            -- Kill all/others
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    local killed = 0
+                    for _, plr in pairs(target) do
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                            -- One-hit kill with massive damage
+                            handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
+                            killed = killed + 1
+                            wait(0.1)
+                        end
+                    end
+                    output("Killed " .. killed .. " players")
+                else
+                    output("No sword available")
+                end
+            end)
+            return
+        elseif target then
+            -- Single target kill
+            spawn(function()
+                local char = target.Character
+                if not char then return output("Player not found or no character") end
+                
+                local humanoid = char:FindFirstChild("Humanoid")
+                local handle = getSwordHandle()
+                
+                if handle and handle:FindFirstChild("dmg") and humanoid then
+                    -- One-hit kill with massive damage
+                    handle.dmg.RemoteEvent:FireServer(humanoid, math.huge)
+                    output("Killed " .. target.Name)
+                else
+                    output("No sword available or invalid target")
+                end
+            end)
+            return
+        end
+    end
+    
+    -- Handle god command for multiple targets
+    if command == "god" then
+        if target and type(target) == "table" then
+            -- God all/others
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    local godded = 0
+                    for _, plr in pairs(target) do
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                            -- Multiple god attempts for reliability
+                            for i = 1, 5 do
+                                handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
+                                wait(0.05)
+                            end
+                            godded = godded + 1
+                        end
+                    end
+                    output("Godded " .. godded .. " players")
+                else
+                    output("No sword available")
+                end
+            end)
+            return
+        elseif target then
+            -- Single target god
+            spawn(function()
+                local char = target.Character
+                if not char then return output("Player not found or no character") end
+                
+                local humanoid = char:FindFirstChild("Humanoid")
+                local handle = getSwordHandle()
+                
+                if handle and handle:FindFirstChild("dmg") and humanoid then
+                    -- Multiple god attempts for reliability
+                    for i = 1, 5 do
+                        handle.dmg.RemoteEvent:FireServer(humanoid, -math.huge)
+                        wait(0.05)
+                    end
+                    output(target.Name .. " is now godded")
+                else
+                    output("No sword available or invalid target")
+                end
+            end)
+            return
+        end
+    end
+    
     -- Single target commands
     if target and type(target) ~= "table" then
         local char = target.Character
@@ -415,35 +507,7 @@ local function runCommand(cmd)
         local humanoid = char:FindFirstChild("Humanoid")
         local rootPart = char:FindFirstChild("HumanoidRootPart")
         
-        if command == "kill" then
-            spawn(function()
-                local handle = getSwordHandle()
-                if handle and handle:FindFirstChild("dmg") then
-                    while humanoid.Health > 0 and humanoid.Parent do
-                        handle.dmg.RemoteEvent:FireServer(humanoid, player.leaderstats.Power.Value)
-                        wait(0.1)
-                    end
-                    output("Killed " .. target.Name)
-                else
-                    output("No sword available")
-                end
-            end)
-            
-        elseif command == "god" then
-            spawn(function()
-                local handle = getSwordHandle()
-                if handle and handle:FindFirstChild("dmg") then
-                    for i = 1, 10 do
-                        handle.dmg.RemoteEvent:FireServer(humanoid, -math.huge)
-                        wait(0.1)
-                    end
-                    output(target.Name .. " is now godded")
-                else
-                    output("No sword available")
-                end
-            end)
-            
-        elseif command == "heal" then
+        if command == "heal" then
             local handle = getSwordHandle()
             if handle and handle:FindFirstChild("dmg") then
                 handle.dmg.RemoteEvent:FireServer(humanoid, -(humanoid.MaxHealth - humanoid.Health))
@@ -468,7 +532,7 @@ local function runCommand(cmd)
             end
             
         elseif command == "bring" then
-            if rootPart then
+            if rootPart and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 rootPart.CFrame = player.Character.HumanoidRootPart.CFrame
                 output("Brought " .. target.Name)
             end
@@ -554,29 +618,62 @@ local function runCommand(cmd)
         end)
         
     elseif command == "permagod" or command == "pg" then
-        if target and type(target) ~= "table" then
-            local found = false
-            for i, v in pairs(DATA.permagods) do
-                if v == target then found = true break end
-            end
-            if not found then
-                table.insert(DATA.permagods, target)
-                output(target.Name .. " added to permagod list")
+        if target then
+            if type(target) == "table" then
+                -- Permagod all/others
+                local added = 0
+                for _, plr in pairs(target) do
+                    local found = false
+                    for i, v in pairs(DATA.permagods) do
+                        if v == plr then found = true break end
+                    end
+                    if not found then
+                        table.insert(DATA.permagods, plr)
+                        added = added + 1
+                    end
+                end
+                output("Added " .. added .. " players to permagod list")
             else
-                output(target.Name .. " is already permagodded")
+                -- Single permagod
+                local found = false
+                for i, v in pairs(DATA.permagods) do
+                    if v == target then found = true break end
+                end
+                if not found then
+                    table.insert(DATA.permagods, target)
+                    output(target.Name .. " added to permagod list")
+                else
+                    output(target.Name .. " is already permagodded")
+                end
             end
         end
         
     elseif command == "unpermagod" or command == "unpg" then
-        if target and type(target) ~= "table" then
-            for i, v in pairs(DATA.permagods) do
-                if v == target then
-                    table.remove(DATA.permagods, i)
-                    output(target.Name .. " removed from permagod list")
-                    return
+        if target then
+            if type(target) == "table" then
+                -- Remove all/others from permagod
+                local removed = 0
+                for _, plr in pairs(target) do
+                    for i, v in pairs(DATA.permagods) do
+                        if v == plr then
+                            table.remove(DATA.permagods, i)
+                            removed = removed + 1
+                            break
+                        end
+                    end
                 end
+                output("Removed " .. removed .. " players from permagod list")
+            else
+                -- Single unpermagod
+                for i, v in pairs(DATA.permagods) do
+                    if v == target then
+                        table.remove(DATA.permagods, i)
+                        output(target.Name .. " removed from permagod list")
+                        return
+                    end
+                end
+                output(target.Name .. " is not permagodded")
             end
-            output(target.Name .. " is not permagodded")
         end
         
     elseif command == "ff" then
@@ -614,6 +711,9 @@ local function runCommand(cmd)
         end
         output("Made invisible")
         
+    elseif command == "help" then
+        output("Available commands: kill, god, permagod, heal, dmg, tp, bring, watch, monitor, speed, jump, drop, trapdrop, load, ff, sf, fly, noclip, invisible, visible, freeze, unfreeze, orbit, spin, antikick, serverinfo, clear, rejoin, crash. Use 'all' or 'others' with kill/god/permagod commands.")
+        
     elseif command == "visible" then
         for _, part in pairs(player.Character:GetChildren()) do
             if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
@@ -623,6 +723,25 @@ local function runCommand(cmd)
             end
         end
         output("Made visible")
+        
+    elseif command == "help" then
+        output("Available commands: kill, god, permagod, heal, dmg, tp, bring, watch, monitor, speed, jump, drop, trapdrop, load, ff, sf, fly, noclip, invisible, visible, freeze, unfreeze, orbit, spin, antikick, serverinfo, clear, rejoin, crash. Use 'all' or 'others' with kill/god/permagod commands.")
+        
+    elseif command == "playerinfo" then
+        if target and type(target) ~= "table" then
+            local info = target.Name .. " | Power: "
+            if target.leaderstats and target.leaderstats:FindFirstChild("Power") then
+                info = info .. target.leaderstats.Power.Value
+            else
+                info = info .. "Unknown"
+            end
+            if target.Character and target.Character:FindFirstChild("Humanoid") then
+                local hp = target.Character.Humanoid.Health
+                local maxHp = target.Character.Humanoid.MaxHealth
+                info = info .. " | HP: " .. math.floor(hp) .. "/" .. math.floor(maxHp)
+            end
+            output(info)
+        end
     end
 end
 
