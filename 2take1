@@ -187,6 +187,99 @@ local function equipSword()
     return sword
 end
 
+local function checkGodStatus(char)
+    if not char or not char:FindFirstChild("Humanoid") then
+        return false, "No Character"
+    end
+    
+    local humanoid = char.Humanoid
+    local hasHealthGod = humanoid.Health > humanoid.MaxHealth
+    local hasPvpGod = not char:FindFirstChild("pvp")
+    
+    if hasHealthGod and hasPvpGod then
+        return true, "DualGod"
+    elseif hasHealthGod then
+        return true, "HealthGod"
+    elseif hasPvpGod then
+        return true, "PvpGod"
+    else
+        return false, "NotGodded"
+    end
+end
+
+local function createGodList()
+    local godListFrame = Instance.new("Frame")
+    godListFrame.Name = "GodListFrame"
+    godListFrame.Size = UDim2.new(0, 200, 0, 300)
+    godListFrame.Position = UDim2.new(1, -220, 0, 20)
+    godListFrame.BackgroundColor3 = theme.secondary
+    godListFrame.BorderColor3 = theme.primary
+    godListFrame.BorderSizePixel = 2
+    godListFrame.Visible = false
+    godListFrame.Parent = UI.screenGui
+    godListFrame:SetAttribute("SecondaryColor", true)
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = godListFrame
+    
+    -- Title Bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = theme.primary
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = godListFrame
+    titleBar:SetAttribute("PrimaryColor", true)
+    
+    local titleCorner = corner:Clone()
+    titleCorner.Parent = titleBar
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -30, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "God List"
+    title.TextColor3 = theme.secondary
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Font = Enum.Font.GothamBold
+    title.Parent = titleBar
+    title:SetAttribute("PrimaryBG", true)
+    
+    -- Close Button
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 25, 0, 25)
+    closeBtn.Position = UDim2.new(1, -30, 0, 2.5)
+    closeBtn.BackgroundColor3 = Color3.new(1, 0.3, 0.3)
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Text = "×"
+    closeBtn.TextColor3 = Color3.new(1, 1, 1)
+    closeBtn.TextSize = 14
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.Parent = titleBar
+    
+    local closeBtnCorner = Instance.new("UICorner")
+    closeBtnCorner.CornerRadius = UDim.new(0, 4)
+    closeBtnCorner.Parent = closeBtn
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        godListFrame.Visible = false
+    end)
+    
+    -- Scrolling Frame for god list
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, -10, 1, -40)
+    scrollFrame.Position = UDim2.new(0, 5, 0, 35)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarThickness = 6
+    scrollFrame.ScrollBarImageColor3 = theme.primary
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scrollFrame.Parent = godListFrame
+    
+    return godListFrame, scrollFrame
+end
+
 local function generateSword()
     local sword = player.Backpack:FindFirstChildOfClass("Tool") or player.Character:FindFirstChildOfClass("Tool")
     if not sword then
@@ -194,6 +287,77 @@ local function generateSword()
         sword = player.Backpack:WaitForChild("sword", 5)
     end
     return sword
+end
+
+local function updateGodList()
+    -- Clear existing entries
+    for _, child in pairs(godScrollFrame:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+    
+    local yPos = 0
+    local godCount = 0
+    
+    -- Check all players for god status
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Character then
+            local isGodded, godType = checkGodStatus(plr.Character)
+            if isGodded then
+                godCount = godCount + 1
+                
+                -- Create entry frame
+                local entryFrame = Instance.new("Frame")
+                entryFrame.Size = UDim2.new(1, -10, 0, 25)
+                entryFrame.Position = UDim2.new(0, 0, 0, yPos)
+                entryFrame.BackgroundColor3 = theme.secondary
+                entryFrame.BorderColor3 = theme.primary
+                entryFrame.BorderSizePixel = 1
+                entryFrame.Parent = godScrollFrame
+                entryFrame:SetAttribute("SecondaryColor", true)
+                
+                local entryCorner = Instance.new("UICorner")
+                entryCorner.CornerRadius = UDim.new(0, 4)
+                entryCorner.Parent = entryFrame
+                
+                -- Player name label
+                local nameLabel = Instance.new("TextLabel")
+                nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+                nameLabel.Position = UDim2.new(0, 5, 0, 0)
+                nameLabel.BackgroundTransparency = 1
+                nameLabel.Text = plr.Name
+                nameLabel.TextColor3 = theme.primary
+                nameLabel.TextSize = 11
+                nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+                nameLabel.Font = Enum.Font.Gotham
+                nameLabel.Parent = entryFrame
+                nameLabel:SetAttribute("SecondaryBG", true)
+                
+                -- God type label
+                local typeLabel = Instance.new("TextLabel")
+                typeLabel.Size = UDim2.new(0.4, -5, 1, 0)
+                typeLabel.Position = UDim2.new(0.6, 0, 0, 0)
+                typeLabel.BackgroundTransparency = 1
+                typeLabel.Text = godType
+                typeLabel.TextColor3 = Color3.new(0.2, 0.8, 0.2)
+                typeLabel.TextSize = 10
+                typeLabel.TextXAlignment = Enum.TextXAlignment.Right
+                typeLabel.Font = Enum.Font.Gotham
+                typeLabel.Parent = entryFrame
+                
+                yPos = yPos + 30
+            end
+        end
+    end
+    
+    -- Update canvas size
+    godScrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos)
+    
+    -- Update title with count
+    if godListFrame:FindFirstChild("TitleBar") and godListFrame.TitleBar:FindFirstChild("TextLabel") then
+        godListFrame.TitleBar.TextLabel.Text = "God List (" .. godCount .. ")"
+    end
 end
 
 -- UI Creation
@@ -402,8 +566,31 @@ local function createToggle(parent, name, position, callback)
     return frame, toggle, function() return active end
 end
 
--- Enhanced Command Handler
-local function runCommand(cmd)
+-- Create the god list UI
+local godListFrame, godScrollFrame = createGodList()
+
+-- Add listgods command
+local originalRunCommand = runCommand
+local function enhancedRunCommand(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    
+    if command == "listgods" then
+        godListFrame.Visible = true
+        updateGodList()
+        output("God list opened")
+        return
+    end
+    
+    -- Call original command handler
+    originalRunCommand(cmd)
+end
+
+-- Replace the runCommand function
+runCommand = enhancedRunCommand
+
+-- Enhanced Command Handler  
+local function originalRunCommand(cmd)
     local args = cmd:lower():split(" ")
     local command = args[1]
     local target = findPlayer(args[2])
@@ -417,14 +604,15 @@ local function runCommand(cmd)
                 if handle and handle:FindFirstChild("dmg") then
                     local killed = 0
                     for _, plr in pairs(target) do
-                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr ~= player then
                             -- One-hit kill with massive damage
                             handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
+                            output("Killed " .. plr.Name)
                             killed = killed + 1
-                            wait(0.1)
+                            wait(0.2) -- Delay between kills
                         end
                     end
-                    output("Killed " .. killed .. " players")
+                    output("Total killed: " .. killed .. " players")
                 else
                     output("No sword available")
                 end
@@ -460,16 +648,18 @@ local function runCommand(cmd)
                 if handle and handle:FindFirstChild("dmg") then
                     local godded = 0
                     for _, plr in pairs(target) do
-                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr ~= player then
                             -- Multiple god attempts for reliability
                             for i = 1, 5 do
                                 handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
-                                wait(0.05)
+                                wait(0.02)
                             end
+                            output("Godded " .. plr.Name)
                             godded = godded + 1
+                            wait(0.2) -- Delay between godding
                         end
                     end
-                    output("Godded " .. godded .. " players")
+                    output("Total godded: " .. godded .. " players")
                 else
                     output("No sword available")
                 end
@@ -488,7 +678,7 @@ local function runCommand(cmd)
                     -- Multiple god attempts for reliability
                     for i = 1, 5 do
                         handle.dmg.RemoteEvent:FireServer(humanoid, -math.huge)
-                        wait(0.05)
+                        wait(0.02)
                     end
                     output(target.Name .. " is now godded")
                 else
@@ -623,16 +813,20 @@ local function runCommand(cmd)
                 -- Permagod all/others
                 local added = 0
                 for _, plr in pairs(target) do
-                    local found = false
-                    for i, v in pairs(DATA.permagods) do
-                        if v == plr then found = true break end
-                    end
-                    if not found then
-                        table.insert(DATA.permagods, plr)
-                        added = added + 1
+                    if plr ~= player then
+                        local found = false
+                        for i, v in pairs(DATA.permagods) do
+                            if v == plr then found = true break end
+                        end
+                        if not found then
+                            table.insert(DATA.permagods, plr)
+                            output("Permagodded " .. plr.Name)
+                            added = added + 1
+                            wait(0.1)
+                        end
                     end
                 end
-                output("Added " .. added .. " players to permagod list")
+                output("Total permagodded: " .. added .. " players")
             else
                 -- Single permagod
                 local found = false
@@ -654,15 +848,19 @@ local function runCommand(cmd)
                 -- Remove all/others from permagod
                 local removed = 0
                 for _, plr in pairs(target) do
-                    for i, v in pairs(DATA.permagods) do
-                        if v == plr then
-                            table.remove(DATA.permagods, i)
-                            removed = removed + 1
-                            break
+                    if plr ~= player then
+                        for i, v in pairs(DATA.permagods) do
+                            if v == plr then
+                                table.remove(DATA.permagods, i)
+                                output("Removed " .. plr.Name .. " from permagod")
+                                removed = removed + 1
+                                wait(0.1)
+                                break
+                            end
                         end
                     end
                 end
-                output("Removed " .. removed .. " players from permagod list")
+                output("Total removed: " .. removed .. " players from permagod")
             else
                 -- Single unpermagod
                 for i, v in pairs(DATA.permagods) do
@@ -946,6 +1144,24 @@ UI.themeBtn.MouseButton1Click:Connect(function()
             elseif child:IsA("Frame") and child.Name == "SuggestFrame" then
                 child.BackgroundColor3 = theme.secondary
                 child.BorderColor3 = theme.primary
+            end
+        end
+    end
+    
+    -- Update god list colors
+    if godListFrame then
+        for _, obj in pairs(godListFrame:GetDescendants()) do
+            if obj:GetAttribute("PrimaryColor") then
+                obj.BackgroundColor3 = theme.primary
+            elseif obj:GetAttribute("SecondaryColor") then
+                obj.BackgroundColor3 = theme.secondary
+                obj.BorderColor3 = theme.primary
+            end
+            
+            if obj:GetAttribute("PrimaryBG") and (obj:IsA("TextLabel") or obj:IsA("TextButton")) then
+                obj.TextColor3 = theme.secondary
+            elseif obj:GetAttribute("SecondaryBG") and (obj:IsA("TextLabel") or obj:IsA("TextButton")) then
+                obj.TextColor3 = theme.primary
             end
         end
     end
