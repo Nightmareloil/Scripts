@@ -95,6 +95,7 @@ local COMMANDS = {
     {cmd = "drophats", desc = "Drops all accessories"},
     {cmd = "equip [num]", desc = "Equips tools"},
     {cmd = "fly", desc = "Toggles fly mode"},
+    {cmd = "unfly", desc = "Disables fly mode"},
     {cmd = "noclip", desc = "Toggles noclip"},
     {cmd = "invisible", desc = "Makes you invisible"},
     {cmd = "visible", desc = "Makes you visible"},
@@ -1181,12 +1182,81 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Chat Command Handler
-player.Chatted:Connect(function(message)
-    if message:sub(1, 1) == ";" then
-        runCommand(message:sub(2))
+-- Chat Command Handler (Updated for Roblox 2025)
+local function setupChatHandler()
+    -- Try multiple methods for chat detection
+    local TextChatService = game:GetService("TextChatService")
+    local StarterGui = game:GetService("StarterGui")
+    
+    -- Method 1: New TextChatService (2025)
+    if TextChatService then
+        local success = pcall(function()
+            -- Try to connect to the new chat system
+            if TextChatService.ChatInputBarConfiguration then
+                TextChatService.ChatInputBarConfiguration.TargetTextChannel.OnIncomingMessage = function(message)
+                    if message.TextSource and message.TextSource.UserId == player.UserId then
+                        local text = message.Text
+                        if text and text:sub(1, 1) == ";" then
+                            runCommand(text:sub(2))
+                        end
+                    end
+                end
+            end
+            
+            -- Alternative method for TextChatService
+            if TextChatService.MessageReceived then
+                TextChatService.MessageReceived:Connect(function(message)
+                    if message.TextSource and message.TextSource.UserId == player.UserId then
+                        local text = message.Text
+                        if text and text:sub(1, 1) == ";" then
+                            runCommand(text:sub(2))
+                        end
+                    end
+                end)
+            end
+        end)
+        
+        if success then
+            output("Chat handler setup (TextChatService)")
+            return
+        end
     end
-end)
+    
+    -- Method 2: Legacy player.Chatted (Fallback)
+    local success2 = pcall(function()
+        player.Chatted:Connect(function(message)
+            if message:sub(1, 1) == ";" then
+                runCommand(message:sub(2))
+            end
+        end)
+    end)
+    
+    if success2 then
+        output("Chat handler setup (Legacy)")
+    else
+        output("Chat handler failed - use command bar only")
+    end
+    
+    -- Method 3: Alternative TextChatService approach
+    spawn(function()
+        wait(2)
+        pcall(function()
+            local textChannels = TextChatService:GetChildren()
+            for _, channel in pairs(textChannels) do
+                if channel:IsA("TextChannel") then
+                    channel.OnIncomingMessage = function(message)
+                        if message.TextSource and message.TextSource.UserId == player.UserId then
+                            local text = message.Text
+                            if text and text:sub(1, 1) == ";" then
+                                runCommand(text:sub(2))
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+end
 
 -- Dragging System
 local dragging = false
