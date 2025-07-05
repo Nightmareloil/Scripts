@@ -421,11 +421,113 @@ local function createCommandBar()
     textBox.ClearTextOnFocus = false
     textBox.Parent = commandFrame
     
+    -- Command suggestions frame
+    local suggestFrame = Instance.new("ScrollingFrame")
+    suggestFrame.Name = "SuggestFrame"
+    suggestFrame.Size = UDim2.new(1, 0, 0, 0)
+    suggestFrame.Position = UDim2.new(0, 0, 1, 5)
+    suggestFrame.BackgroundColor3 = theme.secondary
+    suggestFrame.BorderColor3 = theme.primary
+    suggestFrame.BorderSizePixel = 1
+    suggestFrame.ScrollBarThickness = 4
+    suggestFrame.ScrollBarImageColor3 = theme.primary
+    suggestFrame.Visible = false
+    suggestFrame.Parent = commandFrame
+    
+    local suggestCorner = corner:Clone()
+    suggestCorner.Parent = suggestFrame
+    
+    -- Function to update suggestions
+    local function updateSuggestions()
+        local text = textBox.Text:lower()
+        
+        -- Clear existing suggestions
+        for _, child in pairs(suggestFrame:GetChildren()) do
+            if child:IsA("TextButton") then
+                child:Destroy()
+            end
+        end
+        
+        if text ~= "" then
+            local matches = {}
+            
+            -- Find matching commands
+            for _, cmdText in pairs(COMMANDS) do
+                local cmdName = cmdText:split(" ")[1]:split("-")[1]:gsub(" ", "")
+                if cmdName:lower():find(text) or cmdText:lower():find(text) then
+                    table.insert(matches, cmdText)
+                end
+            end
+            
+            if #matches > 0 then
+                suggestFrame.Visible = true
+                local maxHeight = math.min(#matches * 25, 150)
+                suggestFrame.Size = UDim2.new(1, 0, 0, maxHeight)
+                suggestFrame.CanvasSize = UDim2.new(0, 0, 0, #matches * 25)
+                
+                for i, cmdText in pairs(matches) do
+                    local btn = Instance.new("TextButton")
+                    btn.Size = UDim2.new(1, -10, 0, 25)
+                    btn.Position = UDim2.new(0, 5, 0, (i-1) * 25)
+                    btn.BackgroundColor3 = theme.secondary
+                    btn.BorderSizePixel = 0
+                    btn.Text = cmdText
+                    btn.TextColor3 = theme.primary
+                    btn.TextSize = 10
+                    btn.TextXAlignment = Enum.TextXAlignment.Left
+                    btn.TextYAlignment = Enum.TextYAlignment.Center
+                    btn.Font = Enum.Font.Gotham
+                    btn.Parent = suggestFrame
+                    
+                    local btnCorner = Instance.new("UICorner")
+                    btnCorner.CornerRadius = UDim.new(0, 3)
+                    btnCorner.Parent = btn
+                    
+                    -- Hover effects
+                    btn.MouseEnter:Connect(function()
+                        createTween(btn, {BackgroundColor3 = theme.primary}):Play()
+                        createTween(btn, {TextColor3 = theme.secondary}):Play()
+                    end)
+                    
+                    btn.MouseLeave:Connect(function()
+                        createTween(btn, {BackgroundColor3 = theme.secondary}):Play()
+                        createTween(btn, {TextColor3 = theme.primary}):Play()
+                    end)
+                    
+                    -- Click to auto-complete
+                    btn.MouseButton1Click:Connect(function()
+                        local commandName = cmdText:split(" ")[1]
+                        textBox.Text = commandName
+                        suggestFrame.Visible = false
+                        textBox:CaptureFocus()
+                    end)
+                end
+            else
+                suggestFrame.Visible = false
+            end
+        else
+            suggestFrame.Visible = false
+        end
+    end
+    
+    -- Connect text change event
+    textBox.Changed:Connect(function()
+        updateSuggestions()
+    end)
+    
+    -- Handle focus events
+    textBox.Focused:Connect(function()
+        STATE.focused = true
+        updateSuggestions()
+    end)
+    
     textBox.FocusLost:Connect(function(enterPressed)
+        STATE.focused = false
         if enterPressed and textBox.Text ~= "" then
             runCommand(textBox.Text)
         end
         textBox.Text = ""
+        suggestFrame.Visible = false
         createTween(commandFrame, {Position = UDim2.new(0.5, -200, 0, -80)}):Play()
         wait(0.3)
         commandFrame.Visible = false
@@ -1038,12 +1140,19 @@ UI.themeBtn.MouseButton1Click:Connect(function()
             obj.BorderColor3 = theme.primary
         elseif obj.Name == "TitleBar" then
             obj.BackgroundColor3 = theme.primary
+        elseif obj.Name == "SuggestFrame" then
+            obj.BackgroundColor3 = theme.secondary
+            obj.BorderColor3 = theme.primary
+            obj.ScrollBarImageColor3 = theme.primary
         elseif obj:IsA("TextLabel") or obj:IsA("TextBox") then
             if obj.Parent and obj.Parent.Name == "TitleBar" then
                 obj.TextColor3 = theme.secondary
             else
                 obj.TextColor3 = theme.primary
             end
+        elseif obj:IsA("TextButton") and obj.Parent and obj.Parent.Name == "SuggestFrame" then
+            obj.BackgroundColor3 = theme.secondary
+            obj.TextColor3 = theme.primary
         end
     end
     
