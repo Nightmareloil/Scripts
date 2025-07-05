@@ -193,6 +193,7 @@ local function createUI()
     mainFrame.BorderColor3 = theme.primary
     mainFrame.BorderSizePixel = 2
     mainFrame.Parent = screenGui
+    mainFrame:SetAttribute("SecondaryColor", true)
     
     -- Add corner rounding
     local corner = Instance.new("UICorner")
@@ -206,6 +207,7 @@ local function createUI()
     titleBar.BackgroundColor3 = theme.primary
     titleBar.BorderSizePixel = 0
     titleBar.Parent = mainFrame
+    titleBar:SetAttribute("PrimaryColor", true)
     
     local titleCorner = corner:Clone()
     titleCorner.Parent = titleBar
@@ -221,6 +223,7 @@ local function createUI()
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Font = Enum.Font.GothamBold
     title.Parent = titleBar
+    title:SetAttribute("PrimaryBG", true)
     
     -- Close Button
     local closeBtn = Instance.new("TextButton")
@@ -244,13 +247,14 @@ local function createUI()
     themeBtn.Name = "ThemeButton"
     themeBtn.Size = UDim2.new(0, 25, 0, 25)
     themeBtn.Position = UDim2.new(1, -60, 0, 2.5)
-    themeBtn.BackgroundColor3 = theme.primary
-    themeBtn.BorderColor3 = theme.secondary
+    themeBtn.BackgroundColor3 = theme.secondary
+    themeBtn.BorderColor3 = theme.primary
     themeBtn.BorderSizePixel = 1
     themeBtn.Text = "🎨"
-    themeBtn.TextColor3 = theme.secondary
+    themeBtn.TextColor3 = theme.primary
     themeBtn.TextSize = 12
     themeBtn.Parent = titleBar
+    themeBtn:SetAttribute("SecondaryColor", true)
     
     local themeBtnCorner = Instance.new("UICorner")
     themeBtnCorner.CornerRadius = UDim.new(0, 4)
@@ -277,6 +281,7 @@ local function createUI()
     statusFrame.BorderColor3 = theme.primary
     statusFrame.BorderSizePixel = 1
     statusFrame.Parent = mainFrame
+    statusFrame:SetAttribute("SecondaryColor", true)
     
     local statusCorner = Instance.new("UICorner")
     statusCorner.CornerRadius = UDim.new(0, 4)
@@ -294,6 +299,7 @@ local function createUI()
     output.TextWrapped = true
     output.Font = Enum.Font.Gotham
     output.Parent = statusFrame
+    output:SetAttribute("SecondaryBG", true)
     
     return {
         screenGui = screenGui,
@@ -317,6 +323,7 @@ local function createToggle(parent, name, position, callback)
     frame.BorderColor3 = theme.primary
     frame.BorderSizePixel = 1
     frame.Parent = parent
+    frame:SetAttribute("SecondaryColor", true)
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
@@ -332,6 +339,7 @@ local function createToggle(parent, name, position, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Font = Enum.Font.Gotham
     label.Parent = frame
+    label:SetAttribute("SecondaryBG", true)
     
     local toggle = Instance.new("TextButton")
     toggle.Size = UDim2.new(0, 40, 0, 20)
@@ -375,6 +383,24 @@ local function createToggle(parent, name, position, callback)
     return frame, toggle, function() return active end
 end
 
+local function ensureSword()
+    local sword = player.Backpack:FindFirstChildOfClass("Tool") or player.Character:FindFirstChildOfClass("Tool")
+    if not sword then
+        load:FireServer()
+        wait(0.1)
+        sword = player.Backpack:WaitForChild("sword", 3)
+    end
+    return sword
+end
+
+local function getSwordHandle()
+    local sword = ensureSword()
+    if sword and sword:FindFirstChild("Handle") then
+        return sword.Handle
+    end
+    return nil
+end
+
 -- Enhanced Command Handler
 local function runCommand(cmd)
     local args = cmd:lower():split(" ")
@@ -382,7 +408,7 @@ local function runCommand(cmd)
     local target = findPlayer(args[2])
     
     -- Single target commands
-    if target and type(target) ~= "table" then
+            if target and type(target) ~= "table" then
         local char = target.Character
         if not char then return output("Player not found or no character") end
         
@@ -390,37 +416,49 @@ local function runCommand(cmd)
         local rootPart = char:FindFirstChild("HumanoidRootPart")
         
         if command == "kill" then
-            local sword = generateSword()
-            if sword then
-                while humanoid.Health > 0 do
-                    sword.Handle.dmg.RemoteEvent:FireServer(humanoid, player.leaderstats.Power.Value)
-                    wait()
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    while humanoid.Health > 0 and humanoid.Parent do
+                        handle.dmg.RemoteEvent:FireServer(humanoid, player.leaderstats.Power.Value)
+                        wait(0.1)
+                    end
+                    output("Killed " .. target.Name)
+                else
+                    output("No sword available")
                 end
-                output("Killed " .. target.Name)
-            end
+            end)
             
         elseif command == "god" then
-            local sword = generateSword()
-            if sword then
-                while humanoid.MaxHealth >= humanoid.Health and humanoid.Health > 0 do
-                    sword.Handle.dmg.RemoteEvent:FireServer(humanoid, -math.huge)
-                    wait()
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    for i = 1, 10 do
+                        handle.dmg.RemoteEvent:FireServer(humanoid, -math.huge)
+                        wait(0.1)
+                    end
+                    output(target.Name .. " is now godded")
+                else
+                    output("No sword available")
                 end
-                output(target.Name .. " is now godded")
-            end
+            end)
             
         elseif command == "heal" then
-            local sword = generateSword()
-            if sword then
-                sword.Handle.dmg.RemoteEvent:FireServer(humanoid, -(humanoid.MaxHealth - humanoid.Health))
+            local handle = getSwordHandle()
+            if handle and handle:FindFirstChild("dmg") then
+                handle.dmg.RemoteEvent:FireServer(humanoid, -(humanoid.MaxHealth - humanoid.Health))
                 output("Healed " .. target.Name)
+            else
+                output("No sword available")
             end
             
         elseif command == "dmg" then
-            local sword = generateSword()
-            if sword then
-                sword.Handle.dmg.RemoteEvent:FireServer(humanoid, humanoid.Health / 2)
+            local handle = getSwordHandle()
+            if handle and handle:FindFirstChild("dmg") then
+                handle.dmg.RemoteEvent:FireServer(humanoid, humanoid.Health / 2)
                 output("Damaged " .. target.Name)
+            else
+                output("No sword available")
             end
             
         elseif command == "tp" then
@@ -476,18 +514,70 @@ local function runCommand(cmd)
         load:FireServer()
         output("Character reloaded")
         
-    elseif command == "drop" then
+            elseif command == "drop" then
         local amount = tonumber(args[2]) or 1
-        for i = 1, amount do
-            load:FireServer()
-            local sword = player.Backpack:WaitForChild("sword", 5)
-            if sword then
-                sword.Parent = player.Character
-                wait(0.1)
-                sword.Parent = workspace
+        spawn(function()
+            for i = 1, amount do
+                load:FireServer()
+                wait(0.2)
+                local sword = player.Backpack:WaitForChild("sword", 5)
+                if sword then
+                    sword.Parent = player.Character
+                    wait(0.1)
+                    sword.Parent = workspace
+                end
+            end
+            output("Dropped " .. amount .. " swords")
+        end)
+        
+    elseif command == "trapdrop" then
+        local amount = tonumber(args[2]) or 1
+        spawn(function()
+            for i = 1, amount do
+                load:FireServer()
+                wait(0.2)
+                local sword = player.Backpack:WaitForChild("sword", 5)
+                if sword then
+                    sword.Parent = player.Character
+                    -- Add kill touch
+                    sword.Handle.Touched:Connect(function(hit)
+                        local humanoid = hit.Parent:FindFirstChild("Humanoid")
+                        if humanoid and hit.Parent.Name ~= player.Name then
+                            sword.Handle.dmg.RemoteEvent:FireServer(humanoid, player.leaderstats.Power.Value)
+                        end
+                    end)
+                    wait(0.1)
+                    sword.Parent = workspace
+                end
+            end
+            output("Dropped " .. amount .. " trap swords")
+        end)
+        
+    elseif command == "permagod" or command == "pg" then
+        if target and type(target) ~= "table" then
+            local found = false
+            for i, v in pairs(DATA.permagods) do
+                if v == target then found = true break end
+            end
+            if not found then
+                table.insert(DATA.permagods, target)
+                output(target.Name .. " added to permagod list")
+            else
+                output(target.Name .. " is already permagodded")
             end
         end
-        output("Dropped " .. amount .. " swords")
+        
+    elseif command == "unpermagod" or command == "unpg" then
+        if target and type(target) ~= "table" then
+            for i, v in pairs(DATA.permagods) do
+                if v == target then
+                    table.remove(DATA.permagods, i)
+                    output(target.Name .. " removed from permagod list")
+                    return
+                end
+            end
+            output(target.Name .. " is not permagodded")
+        end
         
     elseif command == "ff" then
         STATE.fastfarm = not STATE.fastfarm
@@ -711,20 +801,37 @@ UI.themeBtn.MouseButton1Click:Connect(function()
     currentTheme = currentTheme >= #THEMES and 1 or currentTheme + 1
     theme = THEMES[currentTheme]
     
-    -- Update all UI colors
+    -- Update all UI colors using attributes
     for _, obj in pairs(UI.screenGui:GetDescendants()) do
         if obj:GetAttribute("PrimaryColor") then
             obj.BackgroundColor3 = theme.primary
-            if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-                obj.TextColor3 = theme.secondary
-            end
         elseif obj:GetAttribute("SecondaryColor") then
             obj.BackgroundColor3 = theme.secondary
-            if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-                obj.TextColor3 = theme.primary
+            obj.BorderColor3 = theme.primary
+        end
+        
+        if obj:GetAttribute("PrimaryBG") and (obj:IsA("TextLabel") or obj:IsA("TextButton")) then
+            obj.TextColor3 = theme.secondary
+        elseif obj:GetAttribute("SecondaryBG") and (obj:IsA("TextLabel") or obj:IsA("TextButton")) then
+            obj.TextColor3 = theme.primary
+        end
+    end
+    
+    -- Update command frame colors if it exists
+    if commandFrame then
+        commandFrame.BackgroundColor3 = theme.secondary
+        commandFrame.BorderColor3 = theme.primary
+        for _, child in pairs(commandFrame:GetDescendants()) do
+            if child:IsA("TextLabel") or child:IsA("TextBox") then
+                child.TextColor3 = theme.primary
+            elseif child:IsA("Frame") and child.Name == "SuggestFrame" then
+                child.BackgroundColor3 = theme.secondary
+                child.BorderColor3 = theme.primary
             end
         end
     end
+    
+    output("Theme changed to " .. currentTheme)
 end)
 
 -- Input Handling
@@ -797,8 +904,8 @@ RunService.Heartbeat:Connect(function()
     
     -- Fast Farm
     if STATE.fastfarm then
-        local sword = generateSword()
-        if sword and sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("up") then
+        local handle = getSwordHandle()
+        if handle and handle:FindFirstChild("up") then
             local multiplier = CONFIG.multi
             if DATA.gain > CONFIG.min * multiplier and DATA.gain < CONFIG.max * multiplier then
                 DATA.counter2 = DATA.counter2 + 1
@@ -815,17 +922,17 @@ RunService.Heartbeat:Connect(function()
             end
             
             for i = 1, CONFIG.speed do
-                sword.Handle.up.RemoteEvent:FireServer()
+                handle.up.RemoteEvent:FireServer()
             end
         end
     end
     
     -- Slow Farm
     if STATE.slowfarm then
-        local sword = equipSword()
-        if sword and sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("up") then
+        local handle = getSwordHandle()
+        if handle and handle:FindFirstChild("up") then
             for i = 1, 5 do
-                sword.Handle.up.RemoteEvent:FireServer()
+                handle.up.RemoteEvent:FireServer()
             end
         end
     end
@@ -839,10 +946,28 @@ RunService.Heartbeat:Connect(function()
     
     -- Kill Aura
     if STATE.kaura then
-        local sword = equipSword()
-        if sword and sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("dmg") then
+        local handle = getSwordHandle()
+        if handle and handle:FindFirstChild("dmg") then
             for _, target in pairs(workspace:GetChildren()) do
                 if target:FindFirstChild("Humanoid") and target:FindFirstChild("HumanoidRootPart") then
+                    local distance = (rootPart.Position - target.HumanoidRootPart.Position).Magnitude
+                    if distance <= CONFIG.killAuraRange and target.Name ~= player.Name and target.Humanoid.Health > 0 then
+                        handle.dmg.RemoteEvent:FireServer(target.Humanoid, player.leaderstats.Power.Value)
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Permagod System
+    for _, target in pairs(DATA.permagods) do
+        if target.Character and target.Character:FindFirstChild("Humanoid") then
+            local handle = getSwordHandle()
+            if handle and handle:FindFirstChild("dmg") then
+                handle.dmg.RemoteEvent:FireServer(target.Character.Humanoid, -math.huge)
+            end
+        end
+    endd target:FindFirstChild("HumanoidRootPart") then
                     local distance = (rootPart.Position - target.HumanoidRootPart.Position).Magnitude
                     if distance <= CONFIG.killAuraRange and target.Name ~= player.Name and target.Humanoid.Health > 0 then
                         sword.Handle.dmg.RemoteEvent:FireServer(target.Humanoid, player.leaderstats.Power.Value)
