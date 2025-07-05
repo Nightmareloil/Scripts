@@ -1,5 +1,5 @@
 -- Enhanced Sword Simulator GUI 4.0
--- Fixed and Optimized Version
+-- Fixed and Working Version
 
 repeat wait() until game.Players.LocalPlayer
 
@@ -75,7 +75,6 @@ local COMMANDS = {
     "kill [plr/all/others] - Kills target player(s)",
     "god [plr/all/others] - Gods target player(s)",
     "permagod [plr/all/others] - Permanently gods player(s)",
-    "unpermagod [plr/all/others] - Removes permagod",
     "heal [plr] - Heals target player",
     "dmg [plr] - Damages target player",
     "tp [plr] - Teleports to player",
@@ -89,7 +88,6 @@ local COMMANDS = {
     "walkspeed [num] - Changes walkspeed",
     "jump [num] - Changes jump power",
     "drop [num] - Drops swords",
-    "trapdrop [num] - Drops killing swords",
     "load - Reloads character",
     "ff - Toggles fast farming",
     "sf - Toggles slow farming",
@@ -198,8 +196,8 @@ local function createUI()
     -- Main Frame
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 220, 0, 300)
-    mainFrame.Position = UDim2.new(0, 20, 0.5, -150)
+    mainFrame.Size = UDim2.new(0, 240, 0, 400)
+    mainFrame.Position = UDim2.new(0, 20, 0.5, -200)
     mainFrame.BackgroundColor3 = theme.secondary
     mainFrame.BorderColor3 = theme.primary
     mainFrame.BorderSizePixel = 2
@@ -275,7 +273,7 @@ local function createUI()
     contentFrame.BorderSizePixel = 0
     contentFrame.ScrollBarThickness = 6
     contentFrame.ScrollBarImageColor3 = theme.primary
-    contentFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
+    contentFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
     contentFrame.Parent = mainFrame
     
     -- Status Frame
@@ -315,6 +313,73 @@ local function createUI()
         statusFrame = statusFrame,
         output = outputLabel
     }
+end
+
+local function createToggle(parent, name, position, callback)
+    local frame = Instance.new("Frame")
+    frame.Name = name .. "Frame"
+    frame.Size = UDim2.new(1, -10, 0, 30)
+    frame.Position = position
+    frame.BackgroundColor3 = theme.secondary
+    frame.BorderColor3 = theme.primary
+    frame.BorderSizePixel = 1
+    frame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = theme.primary
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0, 40, 0, 20)
+    toggle.Position = UDim2.new(1, -45, 0.5, -10)
+    toggle.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    toggle.BorderSizePixel = 0
+    toggle.Text = ""
+    toggle.Parent = frame
+    
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 10)
+    toggleCorner.Parent = toggle
+    
+    local indicator = Instance.new("Frame")
+    indicator.Size = UDim2.new(0, 16, 0, 16)
+    indicator.Position = UDim2.new(0, 2, 0, 2)
+    indicator.BackgroundColor3 = Color3.new(1, 1, 1)
+    indicator.BorderSizePixel = 0
+    indicator.Parent = toggle
+    
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(0, 8)
+    indicatorCorner.Parent = indicator
+    
+    local active = false
+    
+    toggle.MouseButton1Click:Connect(function()
+        active = not active
+        
+        if active then
+            createTween(toggle, {BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)}):Play()
+            createTween(indicator, {Position = UDim2.new(0, 22, 0, 2)}):Play()
+        else
+            createTween(toggle, {BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)}):Play()
+            createTween(indicator, {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        end
+        
+        callback(active)
+    end)
+    
+    return frame, toggle, function() return active end
 end
 
 local function createSlider(parent, name, position, minValue, maxValue, defaultValue, callback)
@@ -428,136 +493,7 @@ local function createSlider(parent, name, position, minValue, maxValue, defaultV
     -- Initialize
     updateSlider(defaultValue)
     
-local function createToggle(parent, name, position, callback)
-    local frame = Instance.new("Frame")
-    frame.Name = name .. "Frame"
-    frame.Size = UDim2.new(1, -10, 0, 30)
-    frame.Position = position
-    frame.BackgroundColor3 = theme.secondary
-    frame.BorderColor3 = theme.primary
-    frame.BorderSizePixel = 1
-    frame.Parent = parent
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = frame
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -60, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.TextColor3 = theme.primary
-    label.TextSize = 12
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Font = Enum.Font.Gotham
-    label.Parent = frame
-    
-    local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, 40, 0, 20)
-    toggle.Position = UDim2.new(1, -45, 0.5, -10)
-    toggle.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    toggle.BorderSizePixel = 0
-    toggle.Text = ""
-    toggle.Parent = frame
-    
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 10)
-    toggleCorner.Parent = toggle
-    
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 16, 0, 16)
-    indicator.Position = UDim2.new(0, 2, 0, 2)
-    indicator.BackgroundColor3 = Color3.new(1, 1, 1)
-    indicator.BorderSizePixel = 0
-    indicator.Parent = toggle
-    
-    local indicatorCorner = Instance.new("UICorner")
-    indicatorCorner.CornerRadius = UDim.new(0, 8)
-    indicatorCorner.Parent = indicator
-    
-    local active = false
-    
-    toggle.MouseButton1Click:Connect(function()
-        active = not active
-        
-        if active then
-            createTween(toggle, {BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)}):Play()
-            createTween(indicator, {Position = UDim2.new(0, 22, 0, 2)}):Play()
-        else
-            createTween(toggle, {BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)}):Play()
-            createTween(indicator, {Position = UDim2.new(0, 2, 0, 2)}):Play()
-        end
-        
-        callback(active)
-    end)
-    
-    return frame, toggle, function() return active end
-end
-    local frame = Instance.new("Frame")
-    frame.Name = name .. "Frame"
-    frame.Size = UDim2.new(1, -10, 0, 30)
-    frame.Position = position
-    frame.BackgroundColor3 = theme.secondary
-    frame.BorderColor3 = theme.primary
-    frame.BorderSizePixel = 1
-    frame.Parent = parent
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = frame
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -60, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.TextColor3 = theme.primary
-    label.TextSize = 12
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Font = Enum.Font.Gotham
-    label.Parent = frame
-    
-    local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, 40, 0, 20)
-    toggle.Position = UDim2.new(1, -45, 0.5, -10)
-    toggle.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    toggle.BorderSizePixel = 0
-    toggle.Text = ""
-    toggle.Parent = frame
-    
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 10)
-    toggleCorner.Parent = toggle
-    
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 16, 0, 16)
-    indicator.Position = UDim2.new(0, 2, 0, 2)
-    indicator.BackgroundColor3 = Color3.new(1, 1, 1)
-    indicator.BorderSizePixel = 0
-    indicator.Parent = toggle
-    
-    local indicatorCorner = Instance.new("UICorner")
-    indicatorCorner.CornerRadius = UDim.new(0, 8)
-    indicatorCorner.Parent = indicator
-    
-    local active = false
-    
-    toggle.MouseButton1Click:Connect(function()
-        active = not active
-        
-        if active then
-            createTween(toggle, {BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)}):Play()
-            createTween(indicator, {Position = UDim2.new(0, 22, 0, 2)}):Play()
-        else
-            createTween(toggle, {BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)}):Play()
-            createTween(indicator, {Position = UDim2.new(0, 2, 0, 2)}):Play()
-        end
-        
-        callback(active)
-    end)
-    
-    return frame, toggle, function() return active end
+    return frame, function() return currentValue end
 end
 
 local function createCommandBar()
@@ -853,7 +789,7 @@ local function updateGodList()
     scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos)
     
     -- Update title with count
-    local titleLabel = godListFrame:FindFirstChild("TitleBar"):FindFirstChild("TextLabel")
+    local titleLabel = godListFrame:FindFirstChild("Frame"):FindFirstChild("TextLabel")
     if titleLabel then
         titleLabel.Text = "God List (" .. godCount .. ")"
     end
@@ -1256,7 +1192,7 @@ function runCommand(cmd)
         output("God list opened")
         
     elseif command == "help" then
-        output("Commands: kill, god, heal, tp, speed, fly, unfly, noclip, spin, orbit, listgods, help. Use 'all' or 'others' with kill/god.")
+        output("Commands: kill, god, heal, tp, speed/ws, fly, unfly, noclip, spin, orbit, listgods, help. Use 'all' or 'others' with kill/god.")
         
     else
         output("Unknown command. Type 'help' for commands.")
@@ -1336,7 +1272,6 @@ yPos = yPos + toggleSpacing
 -- Kill Aura Range Slider
 createSlider(UI.contentFrame, "Kill Aura Range", UDim2.new(0, 0, 0, yPos), 5, 50, CONFIG.killAuraRange, function(value)
     CONFIG.killAuraRange = value
-    output("Kill Aura range set to " .. math.floor(value))
 end)
 yPos = yPos + sliderSpacing
 
@@ -1344,9 +1279,12 @@ createToggle(UI.contentFrame, "Anti-Kick", UDim2.new(0, 0, 0, yPos), function(ac
     STATE.antiKick = active
 end)
 
+-- Update canvas size for scrolling
+UI.contentFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
+
 -- Event Handlers
 UI.closeBtn.MouseButton1Click:Connect(function()
-    createTween(UI.mainFrame, {Position = UDim2.new(0, -250, 0.5, -150)}):Play()
+    createTween(UI.mainFrame, {Position = UDim2.new(0, -250, 0.5, -200)}):Play()
     wait(0.3)
     UI.screenGui:Destroy()
     STATE.open = false
@@ -1356,19 +1294,19 @@ UI.themeBtn.MouseButton1Click:Connect(function()
     currentTheme = currentTheme >= #THEMES and 1 or currentTheme + 1
     theme = THEMES[currentTheme]
     
-    -- Update canvas size for scrolling
-    UI.contentFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
+    -- Update all UI colors
+    for _, obj in pairs(UI.screenGui:GetDescendants()) do
         if obj.Name == "MainFrame" or obj.Name == "StatusFrame" or obj.Name == "CommandFrame" or obj.Name == "GodListFrame" then
             obj.BackgroundColor3 = theme.secondary
             obj.BorderColor3 = theme.primary
-        elseif obj.Name == "TitleBar" then
+        elseif obj.Name == "Frame" and obj.Parent and (obj.Parent.Name == "TitleBar" or obj.Parent.Name == "GodListFrame") then
             obj.BackgroundColor3 = theme.primary
         elseif obj.Name == "SuggestFrame" then
             obj.BackgroundColor3 = theme.secondary
             obj.BorderColor3 = theme.primary
             obj.ScrollBarImageColor3 = theme.primary
         elseif obj:IsA("TextLabel") or obj:IsA("TextBox") then
-            if obj.Parent and obj.Parent.Name == "TitleBar" then
+            if obj.Parent and (obj.Parent.Name == "Frame" or obj.Parent.Name == "TitleBar") then
                 obj.TextColor3 = theme.secondary
             else
                 obj.TextColor3 = theme.primary
@@ -1529,7 +1467,7 @@ RunService.Heartbeat:Connect(function()
         if STATE.fastfarm then status = status .. " | FF: ON" end
         if STATE.slowfarm then status = status .. " | SF: ON" end
         if STATE.god then status = status .. " | GOD: ON" end
-        if STATE.kaura then status = status .. " | KA: ON" end
+        if STATE.kaura then status = status .. " | KA: ON (" .. math.floor(CONFIG.killAuraRange) .. ")" end
         if STATE.flying then status = status .. " | FLY: ON" end
         
         if player.leaderstats and player.leaderstats:FindFirstChild("Power") then
@@ -1549,16 +1487,6 @@ end)
 setupChatHandler()
 
 -- Startup animation
-createTween(UI.mainFrame, {Position = UDim2.new(0, 20, 0.5, -150)}, 0.5, Enum.EasingStyle.Back):Play()
+createTween(UI.mainFrame, {Position = UDim2.new(0, 20, 0.5, -200)}, 0.5, Enum.EasingStyle.Back):Play()
 
-output("Sword Simulator GUI 4.0 loaded! Press ';' to open command bar or chat ';help' for commands")
-
--- Auto-save position
-spawn(function()
-    while STATE.open do
-        wait(5)
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            -- Auto-save functionality here
-        end
-    end
-end)
+output("Sword Simulator GUI 4.0 loaded! Press ';' for command bar or chat ';help' for commands")
