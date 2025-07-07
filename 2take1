@@ -1,5 +1,5 @@
 -- Enhanced Sword Simulator GUI 5.1 - Fixed Version
--- All bugs fixed, improved UI, working commands
+-- Complete working script with all features
 
 repeat wait() until game.Players.LocalPlayer
 
@@ -68,44 +68,17 @@ local DATA = {
     historyIndex = 0
 }
 
--- Modern UI Theme
-local THEMES = {
-    Dark = {
-        background = Color3.fromRGB(25, 25, 25),
-        secondary = Color3.fromRGB(35, 35, 35),
-        tertiary = Color3.fromRGB(45, 45, 45),
-        accent = Color3.fromRGB(88, 101, 242),
-        text = Color3.fromRGB(255, 255, 255),
-        textDim = Color3.fromRGB(180, 180, 180),
-        success = Color3.fromRGB(87, 242, 135),
-        danger = Color3.fromRGB(237, 66, 69),
-        warning = Color3.fromRGB(255, 193, 7)
-    }
-}
-
-local currentTheme = "Dark"
-local theme = THEMES[currentTheme]
-
--- Enhanced Commands List
-local COMMANDS = {
-    {cmd = "kill", args = "[player/all/others]", desc = "Kills target player(s)", category = "Combat"},
-    {cmd = "god", args = "[player/all/others]", desc = "Gods target player(s)", category = "Combat"},
-    {cmd = "tp", args = "[player]", desc = "Teleports to player", category = "Movement"},
-    {cmd = "bring", args = "[player]", desc = "Brings player to you", category = "Movement"},
-    {cmd = "fly", args = "", desc = "Enables fly mode", category = "Movement"},
-    {cmd = "unfly", args = "", desc = "Disables fly mode", category = "Movement"},
-    {cmd = "noclip", args = "", desc = "Toggles noclip", category = "Movement"},
-    {cmd = "clip", args = "", desc = "Disables noclip", category = "Movement"},
-    {cmd = "speed", args = "[number]", desc = "Sets walk speed", category = "Character"},
-    {cmd = "jumppower", args = "[number]", desc = "Sets jump power", category = "Character"},
-    {cmd = "reset", args = "", desc = "Resets character", category = "Character"},
-    {cmd = "ff", args = "", desc = "Toggles fast farm", category = "Farm"},
-    {cmd = "sf", args = "", desc = "Toggles slow farm", category = "Farm"},
-    {cmd = "godmode", args = "", desc = "Toggles god mode", category = "Farm"},
-    {cmd = "kaura", args = "", desc = "Toggles kill aura", category = "Farm"},
-    {cmd = "esp", args = "", desc = "Toggles ESP", category = "Visual"},
-    {cmd = "rejoin", args = "", desc = "Rejoins server", category = "Utility"},
-    {cmd = "cmds", args = "", desc = "Shows all commands", category = "Info"}
+-- Theme
+local theme = {
+    background = Color3.fromRGB(25, 25, 25),
+    secondary = Color3.fromRGB(35, 35, 35),
+    tertiary = Color3.fromRGB(45, 45, 45),
+    accent = Color3.fromRGB(88, 101, 242),
+    text = Color3.fromRGB(255, 255, 255),
+    textDim = Color3.fromRGB(180, 180, 180),
+    success = Color3.fromRGB(87, 242, 135),
+    danger = Color3.fromRGB(237, 66, 69),
+    warning = Color3.fromRGB(255, 193, 7)
 }
 
 -- Global UI variable
@@ -209,6 +182,328 @@ local function getSwordHandle()
     return nil
 end
 
+-- Command Handler
+local function runCommand(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    local target = findPlayer(args[2])
+    
+    -- Combat Commands
+    if command == "kill" then
+        if args[2] == "all" then
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    local killed = 0
+                    local players = Players:GetPlayers()
+                    
+                    notify("Killing all players...", "info")
+                    
+                    for _, plr in pairs(players) do
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                            local humanoid = plr.Character.Humanoid
+                            handle.dmg.RemoteEvent:FireServer(humanoid, math.huge)
+                            wait(0.1)
+                            
+                            if humanoid.Health <= 0 then
+                                killed = killed + 1
+                            end
+                        end
+                    end
+                    
+                    notify("Killed " .. killed .. " players", "success")
+                else
+                    notify("No sword equipped", "error")
+                end
+            end)
+        elseif target and type(target) == "table" then
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    local killed = 0
+                    
+                    for _, plr in pairs(target) do
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                            handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
+                            killed = killed + 1
+                            wait(0.1)
+                        end
+                    end
+                    
+                    notify("Killed " .. killed .. " players", "success")
+                else
+                    notify("No sword equipped", "error")
+                end
+            end)
+        elseif target then
+            spawn(function()
+                local char = target.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    local handle = getSwordHandle()
+                    if handle and handle:FindFirstChild("dmg") then
+                        handle.dmg.RemoteEvent:FireServer(char.Humanoid, math.huge)
+                        notify("Killed " .. target.Name, "success")
+                    else
+                        notify("No sword equipped", "error")
+                    end
+                else
+                    notify("Target has no character", "error")
+                end
+            end)
+        else
+            notify("Player not found", "error")
+        end
+        return
+    end
+    
+    if command == "god" then
+        if target and type(target) == "table" then
+            spawn(function()
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    for _, plr in pairs(target) do
+                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                            for i = 1, 5 do
+                                handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
+                                wait(0.02)
+                            end
+                        end
+                    end
+                    notify("Godded players", "success")
+                else
+                    notify("No sword equipped", "error")
+                end
+            end)
+        elseif target then
+            spawn(function()
+                local char = target.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    local handle = getSwordHandle()
+                    if handle and handle:FindFirstChild("dmg") then
+                        for i = 1, 5 do
+                            handle.dmg.RemoteEvent:FireServer(char.Humanoid, -math.huge)
+                            wait(0.02)
+                        end
+                        notify("Godded " .. target.Name, "success")
+                    else
+                        notify("No sword equipped", "error")
+                    end
+                else
+                    notify("Target has no character", "error")
+                end
+            end)
+        else
+            notify("Player not found", "error")
+        end
+        return
+    end
+    
+    -- Movement Commands
+    if command == "tp" or command == "goto" then
+        if target then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
+               target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+                notify("Teleported to " .. target.Name, "success")
+            else
+                notify("Cannot teleport - missing character", "error")
+            end
+        else
+            notify("Player not found", "error")
+        end
+        return
+    end
+    
+    if command == "bring" then
+        if target then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
+               target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                target.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+                notify("Brought " .. target.Name, "success")
+            else
+                notify("Cannot bring - missing character", "error")
+            end
+        else
+            notify("Player not found", "error")
+        end
+        return
+    end
+    
+    if command == "fly" then
+        if not STATE.flying then
+            STATE.flying = true
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local rootPart = char.HumanoidRootPart
+                
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                bodyVelocity.Parent = rootPart
+                
+                local bodyGyro = Instance.new("BodyGyro")
+                bodyGyro.MaxTorque = Vector3.new(4000, 4000, 4000)
+                bodyGyro.D = 500
+                bodyGyro.P = 5000
+                bodyGyro.Parent = rootPart
+                
+                DATA.flyObjects = {bodyVelocity, bodyGyro}
+                
+                notify("Fly enabled", "success")
+                
+                spawn(function()
+                    while STATE.flying do
+                        if not char or not char:FindFirstChild("HumanoidRootPart") or not bodyVelocity.Parent then
+                            STATE.flying = false
+                            break
+                        end
+                        
+                        local camera = workspace.CurrentCamera
+                        local moveVector = Vector3.new(0, 0, 0)
+                        
+                        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                            moveVector = moveVector + camera.CFrame.LookVector
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                            moveVector = moveVector - camera.CFrame.LookVector
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                            moveVector = moveVector - camera.CFrame.RightVector
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                            moveVector = moveVector + camera.CFrame.RightVector
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                            moveVector = moveVector + Vector3.new(0, 1, 0)
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                            moveVector = moveVector - Vector3.new(0, 1, 0)
+                        end
+                        
+                        bodyVelocity.Velocity = moveVector * CONFIG.flySpeed
+                        bodyGyro.CFrame = camera.CFrame
+                        wait()
+                    end
+                end)
+            end
+        else
+            notify("Fly is already enabled", "warning")
+        end
+        return
+    end
+    
+    if command == "unfly" then
+        STATE.flying = false
+        for _, obj in pairs(DATA.flyObjects) do
+            if obj and obj.Parent then
+                obj:Destroy()
+            end
+        end
+        DATA.flyObjects = {}
+        notify("Fly disabled", "success")
+        return
+    end
+    
+    if command == "noclip" then
+        STATE.noclip = true
+        notify("Noclip enabled", "success")
+        
+        spawn(function()
+            while STATE.noclip do
+                if player.Character then
+                    for _, part in pairs(player.Character:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+                wait(0.1)
+            end
+        end)
+        return
+    end
+    
+    if command == "clip" then
+        STATE.noclip = false
+        notify("Noclip disabled", "success")
+        return
+    end
+    
+    -- Character Commands
+    if command == "speed" or command == "ws" or command == "walkspeed" then
+        local speed = tonumber(args[2]) or 16
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = speed
+            CONFIG.walkSpeed = speed
+            notify("Walk speed set to " .. speed, "success")
+        end
+        return
+    end
+    
+    if command == "jumppower" or command == "jp" then
+        local power = tonumber(args[2]) or 50
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.JumpPower = power
+            CONFIG.jumpPower = power
+            notify("Jump power set to " .. power, "success")
+        end
+        return
+    end
+    
+    if command == "reset" then
+        load:FireServer()
+        notify("Character reset", "success")
+        return
+    end
+    
+    -- Farm Commands
+    if command == "ff" or command == "fastfarm" then
+        STATE.fastfarm = not STATE.fastfarm
+        notify("Fast farm " .. (STATE.fastfarm and "enabled" or "disabled"), STATE.fastfarm and "success" or "info")
+        return
+    end
+    
+    if command == "sf" or command == "slowfarm" then
+        STATE.slowfarm = not STATE.slowfarm
+        notify("Slow farm " .. (STATE.slowfarm and "enabled" or "disabled"), STATE.slowfarm and "success" or "info")
+        return
+    end
+    
+    if command == "godmode" then
+        STATE.god = not STATE.god
+        notify("God mode " .. (STATE.god and "enabled" or "disabled"), STATE.god and "success" or "info")
+        return
+    end
+    
+    if command == "kaura" or command == "killaura" then
+        STATE.kaura = not STATE.kaura
+        notify("Kill aura " .. (STATE.kaura and "enabled" or "disabled"), STATE.kaura and "success" or "info")
+        return
+    end
+    
+    -- Visual Commands
+    if command == "esp" then
+        STATE.esp = not STATE.esp
+        notify("ESP " .. (STATE.esp and "enabled" or "disabled"), STATE.esp and "success" or "info")
+        return
+    end
+    
+    -- Utility Commands
+    if command == "rejoin" then
+        notify("Rejoining server...", "info")
+        wait(1)
+        game:GetService("TeleportService"):Teleport(game.PlaceId, player)
+        return
+    end
+    
+    if command == "cmds" then
+        notify("Check the Commands tab for all available commands", "info")
+        return
+    end
+    
+    notify("Unknown command: " .. command, "error")
+end
+
 -- Modern UI Creation
 local function createModernUI()
     -- Main ScreenGui
@@ -225,10 +520,10 @@ local function createModernUI()
         screenGui.Parent = player:WaitForChild("PlayerGui")
     end
     
-    -- Main Container - Smaller size
+    -- Main Container
     local container = Instance.new("Frame")
     container.Name = "Container"
-    container.Size = UDim2.new(0, 400, 0, 450) -- Reduced size
+    container.Size = UDim2.new(0, 400, 0, 450)
     container.Position = UDim2.new(0.5, -200, 0.5, -225)
     container.BackgroundColor3 = theme.background
     container.BorderSizePixel = 0
@@ -241,7 +536,7 @@ local function createModernUI()
     -- Header
     local header = Instance.new("Frame")
     header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, 40) -- Smaller header
+    header.Size = UDim2.new(1, 0, 0, 40)
     header.BackgroundColor3 = theme.secondary
     header.BorderSizePixel = 0
     header.Parent = container
@@ -610,286 +905,6 @@ local function createCommandBar()
     return commandBar, commandInput
 end
 
--- Command Handler
-function runCommand(cmd)
-    local args = cmd:lower():split(" ")
-    local command = args[1]
-    local target = findPlayer(args[2])
-    
-    -- Combat Commands
-    if command == "kill" then
-        if args[2] == "all" then
-            spawn(function()
-                local handle = getSwordHandle()
-                if handle and handle:FindFirstChild("dmg") then
-                    local killed = 0
-                    local players = Players:GetPlayers()
-                    
-                    notify("Killing all players...", "info")
-                    
-                    for _, plr in pairs(players) do
-                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                            local humanoid = plr.Character.Humanoid
-                            handle.dmg.RemoteEvent:FireServer(humanoid, math.huge)
-                            wait(0.1)
-                            
-                            if humanoid.Health <= 0 then
-                                killed = killed + 1
-                            end
-                        end
-                    end
-                    
-                    notify("Killed " .. killed .. " players", "success")
-                else
-                    notify("No sword equipped", "error")
-                end
-            end)
-        elseif target and type(target) == "table" then
-            spawn(function()
-                local handle = getSwordHandle()
-                if handle and handle:FindFirstChild("dmg") then
-                    local killed = 0
-                    
-                    for _, plr in pairs(target) do
-                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                            handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
-                            killed = killed + 1
-                            wait(0.1)
-                        end
-                    end
-                    
-                    notify("Killed " .. killed .. " players", "success")
-                else
-                    notify("No sword equipped", "error")
-                end
-            end)
-        elseif target then
-            spawn(function()
-                local char = target.Character
-                if char and char:FindFirstChild("Humanoid") then
-                    local handle = getSwordHandle()
-                    if handle and handle:FindFirstChild("dmg") then
-                        handle.dmg.RemoteEvent:FireServer(char.Humanoid, math.huge)
-                        notify("Killed " .. target.Name, "success")
-                    else
-                        notify("No sword equipped", "error")
-                    end
-                else
-                    notify("Target has no character", "error")
-                end
-            end)
-        else
-            notify("Player not found", "error")
-        end
-        return
-    end
-    
-    -- Movement Commands
-    if command == "tp" or command == "goto" then
-        if target then
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
-               target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-                notify("Teleported to " .. target.Name, "success")
-            else
-                notify("Cannot teleport - missing character", "error")
-            end
-        else
-            notify("Player not found", "error")
-        end
-        return
-    end
-    
-    if command == "bring" then
-        if target then
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
-               target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                target.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
-                notify("Brought " .. target.Name, "success")
-            else
-                notify("Cannot bring - missing character", "error")
-            end
-        else
-            notify("Player not found", "error")
-        end
-        return
-    end
-    
-    if command == "fly" then
-        if not STATE.flying then
-            STATE.flying = true
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local rootPart = char.HumanoidRootPart
-                
-                local bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                bodyVelocity.Parent = rootPart
-                
-                local bodyGyro = Instance.new("BodyGyro")
-                bodyGyro.MaxTorque = Vector3.new(4000, 4000, 4000)
-                bodyGyro.D = 500
-                bodyGyro.P = 5000
-                bodyGyro.Parent = rootPart
-                
-                DATA.flyObjects = {bodyVelocity, bodyGyro}
-                
-                notify("Fly enabled", "success")
-                
-                spawn(function()
-                    while STATE.flying do
-                        if not char or not char:FindFirstChild("HumanoidRootPart") or not bodyVelocity.Parent then
-                            STATE.flying = false
-                            break
-                        end
-                        
-                        local camera = workspace.CurrentCamera
-                        local moveVector = Vector3.new(0, 0, 0)
-                        
-                        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                            moveVector = moveVector + camera.CFrame.LookVector
-                        end
-                        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                            moveVector = moveVector - camera.CFrame.LookVector
-                        end
-                        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                            moveVector = moveVector - camera.CFrame.RightVector
-                        end
-                        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                            moveVector = moveVector + camera.CFrame.RightVector
-                        end
-                        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                            moveVector = moveVector + Vector3.new(0, 1, 0)
-                        end
-                        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-                            moveVector = moveVector - Vector3.new(0, 1, 0)
-                        end
-                        
-                        bodyVelocity.Velocity = moveVector * CONFIG.flySpeed
-                        bodyGyro.CFrame = camera.CFrame
-                        wait()
-                    end
-                end)
-            end
-        else
-            notify("Fly is already enabled", "warning")
-        end
-        return
-    end
-    
-    if command == "unfly" then
-        STATE.flying = false
-        for _, obj in pairs(DATA.flyObjects) do
-            if obj and obj.Parent then
-                obj:Destroy()
-            end
-        end
-        DATA.flyObjects = {}
-        notify("Fly disabled", "success")
-        return
-    end
-    
-    if command == "noclip" then
-        STATE.noclip = true
-        notify("Noclip enabled", "success")
-        
-        spawn(function()
-            while STATE.noclip do
-                if player.Character then
-                    for _, part in pairs(player.Character:GetDescendants()) do
-                        if part:IsA("BasePart") and part.CanCollide then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-                wait(0.1)
-            end
-        end)
-        return
-    end
-    
-    if command == "clip" then
-        STATE.noclip = false
-        notify("Noclip disabled", "success")
-        return
-    end
-    
-    -- Character Commands
-    if command == "speed" or command == "ws" or command == "walkspeed" then
-        local speed = tonumber(args[2]) or 16
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = speed
-            CONFIG.walkSpeed = speed
-            notify("Walk speed set to " .. speed, "success")
-        end
-        return
-    end
-    
-    if command == "jumppower" or command == "jp" then
-        local power = tonumber(args[2]) or 50
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.JumpPower = power
-            CONFIG.jumpPower = power
-            notify("Jump power set to " .. power, "success")
-        end
-        return
-    end
-    
-    if command == "reset" then
-        load:FireServer()
-        notify("Character reset", "success")
-        return
-    end
-    
-    -- Farm Commands
-    if command == "ff" or command == "fastfarm" then
-        STATE.fastfarm = not STATE.fastfarm
-        notify("Fast farm " .. (STATE.fastfarm and "enabled" or "disabled"), STATE.fastfarm and "success" or "info")
-        return
-    end
-    
-    if command == "sf" or command == "slowfarm" then
-        STATE.slowfarm = not STATE.slowfarm
-        notify("Slow farm " .. (STATE.slowfarm and "enabled" or "disabled"), STATE.slowfarm and "success" or "info")
-        return
-    end
-    
-    if command == "godmode" then
-        STATE.god = not STATE.god
-        notify("God mode " .. (STATE.god and "enabled" or "disabled"), STATE.god and "success" or "info")
-        return
-    end
-    
-    if command == "kaura" or command == "killaura" then
-        STATE.kaura = not STATE.kaura
-        notify("Kill aura " .. (STATE.kaura and "enabled" or "disabled"), STATE.kaura and "success" or "info")
-        return
-    end
-    
-    -- Visual Commands
-    if command == "esp" then
-        STATE.esp = not STATE.esp
-        notify("ESP " .. (STATE.esp and "enabled" or "disabled"), STATE.esp and "success" or "info")
-        return
-    end
-    
-    -- Utility Commands
-    if command == "rejoin" then
-        notify("Rejoining server...", "info")
-        wait(1)
-        game:GetService("TeleportService"):Teleport(game.PlaceId, player)
-        return
-    end
-    
-    if command == "cmds" then
-        notify("Check the Commands tab for all available commands", "info")
-        return
-    end
-    
-    notify("Unknown command: " .. command, "error")
-end
-
 -- Initialize UI
 UI = createModernUI()
 
@@ -1015,7 +1030,28 @@ local commandsContent = tabContents["Commands"]
 
 createSection("All Commands", commandsContent)
 
-for _, cmd in pairs(COMMANDS) do
+local commands = {
+    {cmd = "kill [player/all/others]", desc = "Kills target player(s)"},
+    {cmd = "god [player/all/others]", desc = "Gods target player(s)"},
+    {cmd = "tp [player]", desc = "Teleports to player"},
+    {cmd = "bring [player]", desc = "Brings player to you"},
+    {cmd = "fly", desc = "Enables fly mode"},
+    {cmd = "unfly", desc = "Disables fly mode"},
+    {cmd = "noclip", desc = "Toggles noclip"},
+    {cmd = "clip", desc = "Disables noclip"},
+    {cmd = "speed [number]", desc = "Sets walk speed"},
+    {cmd = "jumppower [number]", desc = "Sets jump power"},
+    {cmd = "reset", desc = "Resets character"},
+    {cmd = "ff", desc = "Toggles fast farm"},
+    {cmd = "sf", desc = "Toggles slow farm"},
+    {cmd = "godmode", desc = "Toggles god mode"},
+    {cmd = "kaura", desc = "Toggles kill aura"},
+    {cmd = "esp", desc = "Toggles ESP"},
+    {cmd = "rejoin", desc = "Rejoins server"},
+    {cmd = "cmds", desc = "Shows all commands"}
+}
+
+for _, cmd in pairs(commands) do
     local cmdFrame = Instance.new("Frame")
     cmdFrame.Size = UDim2.new(1, 0, 0, 25)
     cmdFrame.BackgroundColor3 = theme.tertiary
@@ -1027,7 +1063,7 @@ for _, cmd in pairs(COMMANDS) do
     cmdCorner.Parent = cmdFrame
     
     local cmdLabel = Instance.new("TextLabel")
-    cmdLabel.Size = UDim2.new(0.3, -5, 1, 0)
+    cmdLabel.Size = UDim2.new(0.5, -5, 1, 0)
     cmdLabel.Position = UDim2.new(0, 8, 0, 0)
     cmdLabel.BackgroundTransparency = 1
     cmdLabel.Text = cmd.cmd
@@ -1038,8 +1074,8 @@ for _, cmd in pairs(COMMANDS) do
     cmdLabel.Parent = cmdFrame
     
     local descLabel = Instance.new("TextLabel")
-    descLabel.Size = UDim2.new(0.7, -8, 1, 0)
-    descLabel.Position = UDim2.new(0.3, 0, 0, 0)
+    descLabel.Size = UDim2.new(0.5, -8, 1, 0)
+    descLabel.Position = UDim2.new(0.5, 0, 0, 0)
     descLabel.BackgroundTransparency = 1
     descLabel.Text = cmd.desc
     descLabel.TextColor3 = theme.text
@@ -1264,46 +1300,33 @@ createTween(UI.container, {Position = UDim2.new(0.5, -200, 0.5, -225)}, 0.5, Enu
 task.wait(0.5)
 notify("Sword Sim GUI v5.1 loaded!", "success")
 task.wait(1)
-notify("Press ';' to open command bar", "info")d
-        return
+notify("Press ';' to open command bar", "info")
+
+-- Character respawn handling
+player.CharacterAdded:Connect(function(char)
+    wait(1)
+    
+    -- Restore settings
+    if char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = CONFIG.walkSpeed
+        char.Humanoid.JumpPower = CONFIG.jumpPower
     end
     
-    if command == "god" then
-        if target and type(target) == "table" then
-            spawn(function()
-                local handle = getSwordHandle()
-                if handle and handle:FindFirstChild("dmg") then
-                    for _, plr in pairs(target) do
-                        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                            for i = 1, 5 do
-                                handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
-                                wait(0.02)
-                            end
-                        end
-                    end
-                    notify("Godded players", "success")
-                else
-                    notify("No sword equipped", "error")
-                end
-            end)
-        elseif target then
-            spawn(function()
-                local char = target.Character
-                if char and char:FindFirstChild("Humanoid") then
-                    local handle = getSwordHandle()
-                    if handle and handle:FindFirstChild("dmg") then
-                        for i = 1, 5 do
-                            handle.dmg.RemoteEvent:FireServer(char.Humanoid, -math.huge)
-                            wait(0.02)
-                        end
-                        notify("Godded " .. target.Name, "success")
-                    else
-                        notify("No sword equipped", "error")
-                    end
-                else
-                    notify("Target has no character", "error")
-                end
-            end)
-        else
-            notify("Player not found", "error")
-        en
+    -- Re-enable active features
+    if STATE.god and char:FindFirstChild("pvp") then
+        char.pvp:Destroy()
+    end
+    
+    if STATE.noclip then
+        runCommand("noclip")
+    end
+end)
+
+-- Startup animation
+createTween(UI.container, {Position = UDim2.new(0.5, -200, 0.5, -225)}, 0.5, Enum.EasingStyle.Back):Play()
+
+-- Welcome notification
+task.wait(0.5)
+notify("Sword Sim GUI v5.1 loaded!", "success")
+task.wait(1)
+notify("Press ';' to open command bar", "info")
