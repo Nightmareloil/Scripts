@@ -1296,37 +1296,250 @@ end)
 -- Startup animation
 createTween(UI.container, {Position = UDim2.new(0.5, -200, 0.5, -225)}, 0.5, Enum.EasingStyle.Back):Play()
 
--- Welcome notification
-task.wait(0.5)
-notify("Sword Sim GUI v5.1 loaded!", "success")
-task.wait(1)
-notify("Press ';' to open command bar", "info")
+-- Admin System
+local ADMIN_DATA = {
+    admins = {}, -- List of admin player names
+    adminCommands = {"kill", "god", "killall", "godall"} -- Commands admins can use
+}
 
--- Character respawn handling
-player.CharacterAdded:Connect(function(char)
-    wait(1)
-    
-    -- Restore settings
-    if char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = CONFIG.walkSpeed
-        char.Humanoid.JumpPower = CONFIG.jumpPower
+-- Function to check if player is admin
+local function isAdmin(plr)
+    for _, adminName in pairs(ADMIN_DATA.admins) do
+        if plr.Name:lower() == adminName:lower() then
+            return true
+        end
+    end
+    return false
+end
+
+-- Function to add admin
+local function addAdmin(plr)
+    if not isAdmin(plr) then
+        table.insert(ADMIN_DATA.admins, plr.Name)
+        notify("Added " .. plr.Name .. " as admin", "success")
+        return true
+    end
+    return false
+end
+
+-- Function to remove admin
+local function removeAdmin(plr)
+    for i, adminName in pairs(ADMIN_DATA.admins) do
+        if adminName:lower() == plr.Name:lower() then
+            table.remove(ADMIN_DATA.admins, i)
+            notify("Removed " .. plr.Name .. " from admin", "info")
+            return true
+        end
+    end
+    return false
+end
+
+-- Admin command handler
+local function handleAdminCommand(adminPlayer, command, args)
+    if not isAdmin(adminPlayer) then
+        return false
     end
     
-    -- Re-enable active features
-    if STATE.god and char:FindFirstChild("pvp") then
-        char.pvp:Destroy()
+    local cmd = command:lower()
+    local targetName = args[1] and args[1]:lower() or ""
+    
+    if cmd == "kill" then
+        if targetName == "me" then
+            -- Kill the admin themselves
+            if adminPlayer.Character and adminPlayer.Character:FindFirstChild("Humanoid") then
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    handle.dmg.RemoteEvent:FireServer(adminPlayer.Character.Humanoid, math.huge)
+                end
+            end
+        elseif targetName == "all" then
+            -- Kill all players
+            local handle = getSwordHandle()
+            if handle and handle:FindFirstChild("dmg") then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                        handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
+                        wait(0.1)
+                    end
+                end
+            end
+        else
+            -- Kill specific player
+            local target = findPlayer(targetName)
+            if target and target.Character and target.Character:FindFirstChild("Humanoid") then
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    handle.dmg.RemoteEvent:FireServer(target.Character.Humanoid, math.huge)
+                end
+            end
+        end
+        return true
+    elseif cmd == "god" then
+        if targetName == "me" then
+            -- God the admin themselves
+            if adminPlayer.Character and adminPlayer.Character:FindFirstChild("Humanoid") then
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    for i = 1, 5 do
+                        handle.dmg.RemoteEvent:FireServer(adminPlayer.Character.Humanoid, -math.huge)
+                        wait(0.02)
+                    end
+                end
+            end
+        elseif targetName == "all" then
+            -- God all players
+            local handle = getSwordHandle()
+            if handle and handle:FindFirstChild("dmg") then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                        for i = 1, 5 do
+                            handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
+                            wait(0.02)
+                        end
+                    end
+                end
+            end
+        else
+            -- God specific player
+            local target = findPlayer(targetName)
+            if target and target.Character and target.Character:FindFirstChild("Humanoid") then
+                local handle = getSwordHandle()
+                if handle and handle:FindFirstChild("dmg") then
+                    for i = 1, 5 do
+                        handle.dmg.RemoteEvent:FireServer(target.Character.Humanoid, -math.huge)
+                        wait(0.1)
+                    end
+                end
+            end
+        end
+        return true
+    elseif cmd == "killall" then
+        -- Kill all players including admin
+        local handle = getSwordHandle()
+        if handle and handle:FindFirstChild("dmg") then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                    handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
+                    wait(0.1)
+                end
+            end
+        end
+        return true
+    elseif cmd == "godall" then
+        -- God all players including admin
+        local handle = getSwordHandle()
+        if handle and handle:FindFirstChild("dmg") then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                    for i = 1, 5 do
+                        handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
+                        wait(0.1)
+                    end
+                end
+            end
+        end
+        return true
     end
     
-    if STATE.noclip then
-        runCommand("noclip")
-    end
+    return false
+end
+
+-- Listen to all player chats for admin commands
+Players.PlayerAdded:Connect(function(plr)
+    plr.Chatted:Connect(function(message)
+        if message:sub(1, 1) == ";" then
+            local command = message:sub(2)
+            local args = command:split(" ")
+            local cmd = args[1]:lower()
+            
+            -- Check if it's an admin command
+            for _, adminCmd in pairs(ADMIN_DATA.adminCommands) do
+                if cmd == adminCmd then
+                    spawn(function()
+                        handleAdminCommand(plr, cmd, {args[2]})
+                    end)
+                    break
+                end
+            end
+        end
+    end)
 end)
 
--- Startup animation
-createTween(UI.container, {Position = UDim2.new(0.5, -200, 0.5, -225)}, 0.5, Enum.EasingStyle.Back):Play()
+-- Handle existing players
+for _, plr in pairs(Players:GetPlayers()) do
+    if plr ~= player then
+        plr.Chatted:Connect(function(message)
+            if message:sub(1, 1) == ";" then
+                local command = message:sub(2)
+                local args = command:split(" ")
+                local cmd = args[1]:lower()
+                
+                -- Check if it's an admin command
+                for _, adminCmd in pairs(ADMIN_DATA.adminCommands) do
+                    if cmd == adminCmd then
+                        spawn(function()
+                            handleAdminCommand(plr, cmd, {args[2]})
+                        end)
+                        break
+                    end
+                end
+            end
+        end)
+    end
+end
+
+-- Add admin commands to the main command handler
+local originalRunCommand = runCommand
+runCommand = function(cmd)
+    local args = cmd:lower():split(" ")
+    local command = args[1]
+    
+    -- Admin management commands (only for script owner)
+    if command == "admin" then
+        local target = findPlayer(args[2])
+        if target then
+            if addAdmin(target) then
+                notify("Added " .. target.Name .. " as admin", "success")
+            else
+                notify(target.Name .. " is already an admin", "warning")
+            end
+        else
+            notify("Player not found", "error")
+        end
+        return
+    end
+    
+    if command == "unadmin" then
+        local target = findPlayer(args[2])
+        if target then
+            if removeAdmin(target) then
+                notify("Removed " .. target.Name .. " from admin", "success")
+            else
+                notify(target.Name .. " is not an admin", "warning")
+            end
+        else
+            notify("Player not found", "error")
+        end
+        return
+    end
+    
+    if command == "admins" then
+        if #ADMIN_DATA.admins == 0 then
+            notify("No admins currently", "info")
+        else
+            notify("Admins: " .. table.concat(ADMIN_DATA.admins, ", "), "info")
+        end
+        return
+    end
+    
+    -- Call original command handler
+    originalRunCommand(cmd)
+end
 
 -- Welcome notification
 task.wait(0.5)
 notify("Sword Sim GUI v5.1 loaded!", "success")
 task.wait(1)
 notify("Press ';' to open command bar", "info")
+task.wait(0.5)
+notify("Admin system enabled! Use ';admin [player]' to give admin", "info")
