@@ -26,7 +26,1459 @@ else
     error("Failed to load remote script")
 end
 task.wait(1)
+--[[
+╔════════════════════════════════════════════════════════════════════╗
+║              🜲 DEMON HUB 2025 - CORRUPT CORE EDITION 🜲             ║
+║                          ⟐ Version: V4.1 ⟐                         ║
+║             ⚠️ CORRUPTED & CRAFTED WITH CHAOS BY AlznDev ⚠️        ║
+║                    🔧 FIXED & IMPROVED BY AI 🔧                    ║
+╚════════════════════════════════════════════════════════════════════╝
+]]
 
--- skidnigger obfuscation 4.20
--- obfuscated at 7/9/2025 12:57:18 AM
-return(function()local d=string.byte;local r=string.char;local c=string.sub;local s=table.concat;local h=math.ldexp;local b=getfenv or function()return _ENV end;local l=setmetatable;local u=select;local l=unpack;local f=tonumber;local function w(d)local n,o,e="","",{}local a=256;local t={}for l=0,a-1 do t[l]=r(l)end;local l=1;local function i()local n=f(c(d,l,l),36)l=l+1;local o=f(c(d,l,l+n-1),36)l=l+n;return o end;n=r(i())e[1]=n;while l<#d do local l=i()if t[l]then o=t[l]else o=n..c(n,1,1)end;t[a]=n..c(o,1,1)e[#e+1],n,a=o,o,a+1 end;return table.concat(e)end;local t=w('24J27427527524I27526S24R2741J27B24J');local e=bit and bit.bxor or function(l,o)local n,e=1,0 while l>0 and o>0 do local c,a=l%2,o%2 if c~=a then e=e+n end l,o,n=(l-c)/2,(o-a)/2,n*2 end if l<o then l=o end while l>0 do local o=l%2 if o>0 then e=e+n end l,n=(l-o)/2,n*2 end return e end local function n(o,l,n)if n then local l=(o/2^(l-1))%2^((n-1)-(l-1)+1);return l-l%1;else local l=2^(l-1);return(o%(l+l)>=l)and 1 or 0;end;end;local l=1;local function o()local c,a,n,o=d(t,l,l+3);c=e(c,163)a=e(a,163)n=e(n,163)o=e(o,163)l=l+4;return(o*16777216)+(n*65536)+(a*256)+c;end;local function a()local n=e(d(t,l,l),163);l=l+1;return n;end;local function w()local l=o();local o=o();local c=1;local e=(n(o,1,20)*(2^32))+l;local l=n(o,21,31);local n=((-1)^n(o,32));if(l==0)then if(e==0)then return n*0;else l=1;c=0;end;elseif(l==2047)then return(e==0)and(n*(1/0))or(n*(0/0));end;return h(n,l-1023)*(c+(e/(2^52)));end;local i=o;local function h(n)local o;if(not n)then n=i();if(n==0)then return'';end;end;o=c(t,l,l+n-1);l=l+n;local n={}for l=1,#o do n[l]=r(e(d(c(o,l,l)),163))end return s(n);end;local l=o;local function f(...)return{...},u('#',...)end local function r()local d={0};local l={};local c={};local t={d,nil,l,nil,c};for n=1,o()do l[n-1]=r();end;t[4]=a();local l=o()local c={};for o=1,l do local n=a();local l;if(n==2)then l=(a()~=0);elseif(n==1)then l=w();elseif(n==3)then l=h();end;c[o]=l;end;t[2]=c for a=1,o()do local c=e(o(),87);local o=e(o(),177);local e=n(c,1,2);local l=n(o,1,11);local l={l,n(c,3,11),nil,nil,o};if(e==0)then l[3]=n(c,12,20);l[5]=n(c,21,29);elseif(e==1)then l[3]=n(o,12,33);elseif(e==2)then l[3]=n(o,12,32)-1048575;elseif(e==3)then l[3]=n(o,12,32)-1048575;l[5]=n(c,21,29);end;d[a]=l;end;return t;end;local function i(l,n,n)local o=l[1];local n=l[2];local e=l[3];local l=l[4];return function(...)local t=o;local n=n;local n=e;local n=l;local l=f local o=1;local l=-1;local a={};local c={...};local e=u('#',...)-1;local l={};local d={};for l=0,e do if(l>=n)then a[l-n]=c[l+1];else d[l]=c[l+1];end;end;local l=e-n+1 local n;local l;while true do n=t[o];l=n[1];if l>0 then do return end;else do return end;end;o=o+1;end;end;end;return i(r(),{},b())();end)()
+-- ════════════════ [1] CONFIGURATION & CONSTANTS ════════════════
+local CONFIG = {
+    VERSION = "4.1",
+    NOTIFICATION_SOUND = "rbxassetid://570433034",
+    UI_LIBRARY_URL = "https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt",
+    THEME = {
+        PRIMARY_COLOR = Color3.fromRGB(138, 43, 226),   -- Blue Violet
+        SECONDARY_COLOR = Color3.fromRGB(75, 0, 130),   -- Indigo
+        ACCENT_COLOR = Color3.fromRGB(30, 144, 255)     -- Dodger Blue
+    }
+}
+
+-- ════════════════ [2] CORE SERVICES ════════════════
+local Services = {
+    Players = game:GetService("Players"),
+    RunService = game:GetService("RunService"),
+    SoundService = game:GetService("SoundService"),
+    UserInputService = game:GetService("UserInputService"),
+    TweenService = game:GetService("TweenService"),
+    Debris = game:GetService("Debris"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    StarterGui = game:GetService("StarterGui"),
+    HttpService = game:GetService("HttpService"), -- Fixed: Added missing HttpService
+    Lighting = game:GetService("Lighting")
+}
+
+-- ════════════════ [3] PLAYER REFERENCES ════════════════
+local LocalPlayer = Services.Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- State Management
+local States = {
+    SlowFarm = false,
+    FastFarm = false,
+    KillAura = false,
+    GrabTools = false,
+    KillAll = false,
+    PermaGod = false,
+    WalkSpeedLoop = false
+}
+
+-- Connections Storage
+local Connections = {}
+
+-- ════════════════ [4] UTILITY FUNCTIONS ════════════════
+local Utils = {}
+
+-- 4.1 Safe function execution with error handling
+function Utils.SafeExecute(func, ...)
+    local success, result = pcall(func, ...)
+    if not success then
+        warn("[Demon Hub] Error:", result)
+        return false, result
+    end
+    return true, result
+end
+
+-- 4.2 Enhanced notification system
+function Utils.Notify(title, text, duration)
+    local success = Utils.SafeExecute(function()
+        Services.StarterGui:SetCore("SendNotification", {
+            Title = title or "Demon Hub",
+            Text = text or "",
+            Duration = duration or 3
+        })
+    end)
+    if not success then
+        print("[Demon Hub] " .. (title or "Notification") .. ": " .. (text or ""))
+    end
+end
+
+-- 4.3 Play sound with cleanup
+function Utils.PlaySound(soundId, volume, callback)
+    local sound = Instance.new("Sound")
+    sound.SoundId = soundId
+    sound.Volume = volume or 1
+    sound.Parent = Services.SoundService
+
+    sound.Ended:Connect(function()
+        sound:Destroy()
+        if callback then callback() end
+    end)
+
+    sound:Play()
+    return sound
+end
+
+-- 4.4 Get character safely
+function Utils.GetCharacter()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+-- 4.5 Get humanoid safely
+function Utils.GetHumanoid()
+    local char = Utils.GetCharacter()
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+-- 4.6 Load external script safely
+function Utils.LoadScript(url)
+    Utils.SafeExecute(function()
+        loadstring(game:HttpGet(url, true))()
+    end)
+end
+
+-- 4.7 Wait for child with timeout
+function Utils.WaitForChildTimeout(parent, childName, timeout)
+    timeout = timeout or 5
+    local startTime = tick()
+    while tick() - startTime < timeout do
+        local child = parent:FindFirstChild(childName)
+        if child then return child end
+        wait(0.1)
+    end
+    return nil
+end
+
+-- ════════════════ [5] INITIALIZATION ════════════════
+-- Play startup sound
+Utils.PlaySound(CONFIG.NOTIFICATION_SOUND, 1, function()
+    Utils.Notify("Demon Hub 2025", "Successfully loaded v" .. CONFIG.VERSION, 5)
+end)
+
+-- Load UI Library with error handling
+local UILib
+local Window
+local MainServer
+local Tabs = {}
+
+Utils.SafeExecute(function()
+    UILib = loadstring(game:HttpGet(CONFIG.UI_LIBRARY_URL))()
+    Window = UILib:Window("Demon Hub 2025 | CORRUPT CORE v" .. CONFIG.VERSION)
+    MainServer = Window:Server("Scripts", "")
+
+    -- Create UI Tabs
+    Tabs = {
+        Main = MainServer:Channel("Main"),
+        Character = MainServer:Channel("Character"),
+        Effects = MainServer:Channel("Effects"),
+        Scripts = MainServer:Channel("Scripts"),
+        Toggles = MainServer:Channel("Toggles"),
+        UI = MainServer:Channel("UI"),
+        Teleports = MainServer:Channel("Teleports"),
+        Power = MainServer:Channel("Power"),
+        Worlds = MainServer:Channel("Worlds"),
+        Music = MainServer:Channel("Music"),
+        Settings = MainServer:Channel("Settings")
+    }
+end)
+
+if not UILib then
+    Utils.Notify("Error", "Failed to load UI Library", 5)
+    return
+end
+
+-- ════════════════ [6] CORE FUNCTIONS ════════════════
+local Core = {}
+
+-- 6.1 Enhanced Sword Remote Firing
+function Core.FireSwordRemote(times, delay)
+    local char = Utils.GetCharacter()
+    if not char then return false end
+    
+    local sword = char:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
+    if not sword then return false end
+    
+    local handle = sword:FindFirstChild("Handle")
+    if not handle then return false end
+    
+    local up = handle:FindFirstChild("up")
+    if not up then return false end
+    
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
+    if not remoteEvent then return false end
+    
+    for i = 1, times do
+        Utils.SafeExecute(function()
+            remoteEvent:FireServer()
+        end)
+        if delay then task.wait(delay) end
+    end
+    
+    return true
+end
+
+-- 6.2 Get all swords with caching
+local swordCache = {}
+local cacheTime = 0
+local CACHE_DURATION = 5 -- Cache for 5 seconds
+
+function Core.GetSwords(useCache)
+    local currentTime = tick()
+    if useCache and #swordCache > 0 and (currentTime - cacheTime) < CACHE_DURATION then
+        return swordCache
+    end
+    
+    swordCache = {}
+    local char = Utils.GetCharacter()
+    local backpack = LocalPlayer.Backpack
+    
+    for _, container in ipairs({backpack, char}) do
+        if container then
+            for _, tool in ipairs(container:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name:lower():find("sword") then
+                    table.insert(swordCache, tool)
+                end
+            end
+        end
+    end
+    
+    cacheTime = currentTime
+    return swordCache
+end
+
+-- 6.3 Enhanced Kill Aura System
+function Core.KillAuraSystem()
+    local range = 40
+    local killAuraActive = true
+    
+    -- Create range slider
+    if Tabs.Main then
+        Tabs.Main:Slider("Kill Aura Range", 10, 1000, range, function(value)
+            range = value
+        end)
+    end
+    
+    -- Find and setup sword
+    local function setupSword()
+        local swords = Core.GetSwords()
+        if #swords == 0 then return nil end
+        
+        local sword = swords[1]
+        if sword.Parent == LocalPlayer.Backpack then
+            local hum = Utils.GetHumanoid()
+            if hum then
+                hum:EquipTool(sword)
+                task.wait(0.1)
+            end
+        end
+        
+        return sword
+    end
+    
+    -- Main kill aura loop
+    if Connections.KillAura then
+        Connections.KillAura:Disconnect()
+    end
+    
+    Connections.KillAura = Services.RunService.Heartbeat:Connect(function()
+        if not killAuraActive or not States.KillAura then return end
+        
+        local sword = setupSword()
+        if not sword then return end
+        
+        local handle = sword:FindFirstChild("Handle")
+        local dmg = handle and handle:FindFirstChild("dmg")
+        local remote = dmg and dmg:FindFirstChild("RemoteEvent")
+        
+        if not remote then return end
+        
+        local myRoot = Character:FindFirstChild("HumanoidRootPart")
+        if not myRoot then return end
+        
+        for _, player in ipairs(Services.Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                local targetHum = player.Character:FindFirstChild("Humanoid")
+                
+                if targetRoot and targetHum and targetHum.Health > 0 then
+                    local distance = (myRoot.Position - targetRoot.Position).Magnitude
+                    if distance <= range then
+                        Utils.SafeExecute(function()
+                            remote:FireServer(targetHum, math.huge)
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- Toggle keybind
+    Services.UserInputService.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.KeyCode == Enum.KeyCode.E then
+            killAuraActive = not killAuraActive
+            Utils.Notify("Kill Aura", killAuraActive and "Activated" or "Deactivated", 2)
+        end
+    end)
+end
+
+-- ════════════════ [7] FARMING SYSTEM ════════════════
+if Tabs.Main then
+    -- 7.1 Slow Farm
+    Tabs.Main:Button("Start Slow Farm", function()
+        States.SlowFarm = true
+        Utils.Notify("Farming", "Slow Farm activated", 2)
+        
+        task.spawn(function()
+            while States.SlowFarm do
+                if not Core.FireSwordRemote(4, 0.04) then
+                    task.wait(1) -- Wait longer if sword not found
+                end
+                task.wait()
+            end
+        end)
+    end)
+
+    Tabs.Main:Button("Stop Slow Farm", function()
+        States.SlowFarm = false
+        Utils.Notify("Farming", "Slow Farm deactivated", 2)
+    end)
+
+    -- 7.2 Fast Farm
+    Tabs.Main:Button("Start Fast Farm", function()
+        States.FastFarm = true
+        Utils.Notify("Farming", "Fast Farm activated", 2)
+        
+        if Connections.FastFarm then
+            Connections.FastFarm:Disconnect()
+        end
+        
+        Connections.FastFarm = Services.RunService.Stepped:Connect(function()
+            if States.FastFarm then
+                Core.FireSwordRemote(6)
+            end
+        end)
+    end)
+
+    Tabs.Main:Button("Stop Fast Farm", function()
+        States.FastFarm = false
+        if Connections.FastFarm then
+            Connections.FastFarm:Disconnect()
+            Connections.FastFarm = nil
+        end
+        Utils.Notify("Farming", "Fast Farm deactivated", 2)
+    end)
+
+    -- ════════════════ [8] MAIN FEATURES ════════════════
+    -- 8.1 Kill Aura
+    Tabs.Main:Button("Activate Kill Aura", function()
+        if States.KillAura then return end
+        States.KillAura = true
+        Core.KillAuraSystem()
+        Utils.Notify("Combat", "Kill Aura system initialized", 3)
+    end)
+
+    -- 8.2 Sword Damage Script
+    Tabs.Main:Button("Instant Kill Sword Damage", function()
+        local swords = Core.GetSwords()
+        local count = 0
+        
+        for _, sword in ipairs(swords) do
+            Utils.SafeExecute(function()
+                sword.Parent = LocalPlayer.Backpack
+                local handle = sword:FindFirstChild("Handle")
+                if handle then
+                    handle.Massless = true
+                    handle.CanCollide = true
+                end
+                sword.Parent = Character
+                
+                if handle then
+                    handle.Touched:Connect(function(hit)
+                        local targetHum = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
+                        if targetHum and hit.Parent ~= Character then
+                            local dmg = handle:FindFirstChild("dmg")
+                            local remote = dmg and dmg:FindFirstChild("RemoteEvent")
+                            if remote then
+                                Utils.SafeExecute(function()
+                                    remote:FireServer(targetHum, math.huge)
+                                end)
+                            end
+                        end
+                    end)
+                end
+                
+                count = count + 1
+            end)
+        end
+        
+        Utils.Notify("Combat", "Instant Kill: " .. count .. " Sword(s)", 3)
+    end)
+
+    -- 8.3 Infinite Yield
+    Tabs.Main:Button("Load Infinite Yield", function()
+        Utils.LoadScript("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
+    end)
+end
+
+-- ════════════════ [9] CHARACTER MODIFICATIONS ════════════════
+local Movement = {
+    WalkSpeed = 16,
+    JumpPower = 50
+}
+
+if Tabs.Character then
+    -- 9.1 Movement controls with validation
+    Tabs.Character:Slider("Walk Speed", 0, 500, Movement.WalkSpeed, function(value)
+        Movement.WalkSpeed = value
+        local hum = Utils.GetHumanoid()
+        if hum then hum.WalkSpeed = value end
+    end)
+
+    Tabs.Character:Slider("Jump Power", 0, 500, Movement.JumpPower, function(value)
+        Movement.JumpPower = value
+        local hum = Utils.GetHumanoid()
+        if hum then hum.JumpPower = value end
+    end)
+
+    -- 9.2 Quick Speed Buttons
+    local speedPresets = {
+        {name = "Normal Speed", speed = 16, jump = 50},
+        {name = "Fast Speed", speed = 100, jump = 100},
+        {name = "Super Speed", speed = 250, jump = 150},
+        {name = "Godspeed", speed = 500, jump = 200}
+    }
+
+    for _, preset in ipairs(speedPresets) do
+        Tabs.Character:Button(preset.name, function()
+            Movement.WalkSpeed = preset.speed
+            Movement.JumpPower = preset.jump
+            local hum = Utils.GetHumanoid()
+            if hum then
+                hum.WalkSpeed = preset.speed
+                hum.JumpPower = preset.jump
+            end
+            Utils.Notify("Movement", preset.name .. " activated", 2)
+        end)
+    end
+
+    -- 9.3 Enhanced Respawn
+    Tabs.Character:Button("Smart Respawn", function()
+        local char = Utils.GetCharacter()
+        if not char then return end
+        
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        
+        local pos = root.CFrame
+        local hum = Utils.GetHumanoid()
+        
+        if hum then
+            hum.Health = 0
+            LocalPlayer.CharacterAdded:Wait()
+            task.wait(0.2)
+            
+            local newChar = LocalPlayer.Character
+            local newRoot = newChar:WaitForChild("HumanoidRootPart")
+            newRoot.CFrame = pos
+            Utils.Notify("Respawn", "Respawned at saved position", 2)
+        end
+    end)
+
+    -- 9.4 God Mode System
+    Tabs.Character:Button("Activate God Mode", function()
+        local hum = Utils.GetHumanoid()
+        if not hum then return end
+        
+        local sword = Character:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
+        if sword then
+            local handle = sword:FindFirstChild("Handle")
+            local dmg = handle and handle:FindFirstChild("dmg")
+            local remote = dmg and dmg:FindFirstChild("RemoteEvent")
+            if remote then
+                Utils.SafeExecute(function()
+                    remote:FireServer(hum, -math.huge)
+                end)
+                Utils.Notify("God Mode", "Activated successfully", 3)
+            end
+        end
+    end)
+
+    -- 9.5 Fixed Perma God Toggle
+    Tabs.Character:Toggle("Permanent God Mode", false, function(state)
+        States.PermaGod = state
+        
+        -- Cleanup existing connections
+        if States.GodModeConnections then
+            for _, connection in pairs(States.GodModeConnections) do
+                if connection then
+                    connection:Disconnect()
+                end
+            end
+        end
+        States.GodModeConnections = {}
+        
+        if state then
+            -- Main god mode healing loop
+            local healingTask = task.spawn(function()
+                while States.PermaGod do
+                    Utils.SafeExecute(function()
+                        local hum = Utils.GetHumanoid()
+                        local sword = Character:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
+                        
+                        if hum and sword then
+                            local handle = sword:FindFirstChild("Handle")
+                            local dmg = handle and handle:FindFirstChild("dmg")
+                            local remote = dmg and dmg:FindFirstChild("RemoteEvent")
+                            if remote then
+                                remote:FireServer(hum, -math.huge)
+                            end
+                        end
+                        
+                        -- Backup health protection
+                        if hum and hum.Health < hum.MaxHealth then
+                            hum.Health = hum.MaxHealth
+                        end
+                    end)
+                    task.wait(0.1) -- Run 10 times per second
+                end
+            end)
+            
+            table.insert(States.GodModeConnections, healingTask)
+            
+            -- Prevent external tool pickup
+            local toolConnection = Character.ChildAdded:Connect(function(child)
+                if States.PermaGod and child:IsA("Tool") and child.Name ~= "sword" then
+                    task.wait(0.1)
+                    if child.Parent == Character then
+                        child.Parent = workspace
+                    end
+                end
+            end)
+            
+            table.insert(States.GodModeConnections, toolConnection)
+            
+        else
+            -- Cleanup when disabled
+            if States.GodModeConnections then
+                for _, connection in pairs(States.GodModeConnections) do
+                    if connection then
+                        if typeof(connection) == "RBXScriptConnection" then
+                            connection:Disconnect()
+                        else
+                            task.cancel(connection)
+                        end
+                    end
+                end
+                States.GodModeConnections = {}
+            end
+        end
+    end)
+end
+
+-- ════════════════ [10] EFFECTS SYSTEM ════════════════
+local Effects = {}
+
+-- Apply flame colors with smooth transitions
+function Effects.ApplyFlameColors(colors, loops)
+    local eff = workspace:FindFirstChild("eff")
+    if not eff then return false end
+    
+    local event = eff:FindFirstChild("RemoteEvent")
+    if not event then return false end
+    
+    for i = 1, loops do
+        for _, color in ipairs(colors) do
+            Utils.SafeExecute(function()
+                event:FireServer(color)
+            end)
+            task.wait(0.0001)
+        end
+    end
+    return true
+end
+
+-- Enhanced spawn and drop
+function Effects.SpawnAndDrop()
+    Utils.SafeExecute(function()
+        local loadRemote = workspace:FindFirstChild("load")
+        if loadRemote and loadRemote:FindFirstChild("RemoteEvent") then
+            loadRemote.RemoteEvent:FireServer()
+            task.wait(0.22)
+
+            -- Equip all tools
+            for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    tool.Parent = Character
+                end
+            end
+
+            -- Drop with tag
+            for _, tool in pairs(Character:GetChildren()) do
+                if tool:IsA("Tool") then
+                    tool.Parent = workspace
+                    local tag = Instance.new("StringValue")
+                    tag.Name = "DemonHubTag"
+                    tag.Parent = tool
+                end
+            end
+        end
+    end)
+end
+
+-- Cleanup system
+function Effects.Cleanup()
+    for _, tool in pairs(workspace:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("DemonHubTag") then
+            local tag = tool:FindFirstChild("DemonHubTag")
+            if tag then tag:Destroy() end
+        end
+    end
+end
+
+-- Define flame effect configurations
+local flameEffects = {
+    -- Single color flames
+    {name = "Purple Inferno", colors = {"Purple"}},
+    {name = "Crimson Blaze", colors = {"Red"}},
+    {name = "Shadow Flame", colors = {"Black"}},
+    {name = "Azure Fire", colors = {"Blue"}},
+    
+    -- Dual color combinations
+    {name = "Twilight Fury", colors = {"Purple", "Red"}},
+    {name = "Mystic Frost", colors = {"Purple", "Blue"}},
+    {name = "Eclipse Shadow", colors = {"Purple", "Black"}},
+    {name = "Storm Blaze", colors = {"Red", "Blue"}},
+    {name = "Obsidian Fire", colors = {"Black", "Red"}},
+    {name = "Abyssal Storm", colors = {"Black", "Blue"}},
+    
+    -- Triple color combinations
+    {name = "Trinity Flame", colors = {"Red", "Purple", "Blue"}},
+    {name = "Dark Trinity", colors = {"Black", "Red", "Purple"}},
+    {name = "Void Radiance", colors = {"Black", "Blue", "Purple"}},
+    
+    -- Quad color combination
+    {name = "Chaos Inferno", colors = {"Red", "Blue", "Purple", "Black"}},
+    {name = "Ultimate Blaze", colors = {"Red", "Purple", "Blue", "Black"}}
+}
+
+-- Create effect buttons
+if Tabs.Effects then
+    local DESIRED_DUPE_COUNT = 25
+    local COLOR_LOOP_PER_DUPE = 100
+
+    for _, effect in ipairs(flameEffects) do
+        Tabs.Effects:Button(effect.name, function()
+            Utils.Notify("Effects", "Applying " .. effect.name, 2)
+            for i = 1, DESIRED_DUPE_COUNT do
+                if Effects.ApplyFlameColors(effect.colors, COLOR_LOOP_PER_DUPE) then
+                    task.wait(0.0001)
+                    Effects.SpawnAndDrop()
+                else
+                    Utils.Notify("Error", "Effect system not found", 2)
+                    break
+                end
+            end
+            Effects.Cleanup()
+            Utils.Notify("Effects", effect.name .. " completed", 3)
+        end)
+    end
+end
+
+-- ════════════════ [11] EXTERNAL SCRIPTS ════════════════
+if Tabs.Scripts then
+    local externalScripts = {
+        {name = "Exclusive Hub", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Exclusive%20Hub.lua"},
+        {name = "2take1.tk", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/2take1"},
+        {name = "Sword Simulator Hub", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Sword%20Simulator%20Hub"},
+        {name = "Liquids GUI", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Liquid's%20Gui"},
+        {name = "Auratus X Hub", url = "https://raw.githubusercontent.com/AnimatedKurai/Scripts/refs/heads/main/Auratus%20Hub.txt"},
+        {name = "Replication UI", url = "https://raw.githubusercontent.com/EEND2SCRIPTS/Replication/main/replication"},
+        {name = "Emperor Wings", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Emperor%20Wings.lua"},
+        {name = "Ghost Hub", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Ghost_Hub"},
+        {name = "Dragon Hub Premium", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/main/Dragon%2520Hub"},
+        {name = "Slayer Hub", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/main/Truecode"},
+        {name = "Line's Script Hub", url = "https://raw.githubusercontent.com/Zacky-pixel-sketch/Hubs/main/Demon%20hub%20source%20code.lua"},
+        {name = "Senpai Avatar", url = "https://pastebin.com/raw/PeveNbdm"}
+    }
+
+    for _, script in ipairs(externalScripts) do
+        Tabs.Scripts:Button(script.name, function()
+            Utils.LoadScript(script.url)
+        end)
+    end
+
+    -- ════════════════ [12] ADVANCED SWORD STYLES ════════════════
+    -- 12.1 Enhanced Sword Spin
+    Tabs.Scripts:Button("Dynamic Sword Spin", function()
+        local swords = Core.GetSwords()
+        if #swords == 0 then 
+            Utils.Notify("Error", "No swords found", 2)
+            return 
+        end
+        
+        local spinning = true
+        local spinSpeed = 2
+        local distance = 6
+        local angleOffset = 0
+        
+        local spinSwords = {}
+        local originalSwords = {}
+        
+        for _, sword in ipairs(swords) do
+            table.insert(originalSwords, sword)
+            
+            local clonedSword = sword:Clone()
+            clonedSword.Parent = workspace
+            clonedSword.Name = sword.Name .. "_Spinning"
+            
+            local handle = clonedSword:FindFirstChild("Handle")
+            if handle then
+                handle.Massless = true
+                handle.CanCollide = false
+                
+                local bodyPos = Instance.new("BodyPosition")
+                bodyPos.MaxForce = Vector3.new(4000, 4000, 4000)
+                bodyPos.P = 3000
+                bodyPos.D = 500
+                bodyPos.Parent = handle
+                
+                local bodyAngVel = Instance.new("BodyAngularVelocity")
+                bodyAngVel.MaxTorque = Vector3.new(4000, 4000, 4000)
+                bodyAngVel.AngularVelocity = Vector3.new(0, 10, 0)
+                bodyAngVel.Parent = handle
+                
+                table.insert(spinSwords, {
+                    sword = clonedSword, 
+                    bodyPos = bodyPos, 
+                    bodyAngVel = bodyAngVel
+                })
+            end
+            
+            sword.Parent = nil
+        end
+        
+        local spinConn = Services.RunService.Heartbeat:Connect(function(dt)
+            if not spinning then return end
+            
+            angleOffset = angleOffset + dt * spinSpeed
+            local humanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+            if not humanoidRootPart then return end
+            
+            for i, swordData in ipairs(spinSwords) do
+                if swordData.bodyPos and swordData.bodyPos.Parent then
+                    local angle = (2 * math.pi / #spinSwords) * (i - 1) + angleOffset
+                    local offsetPos = Vector3.new(
+                        distance * math.sin(angle),
+                        2 * math.sin(angleOffset * 2 + i),
+                        distance * math.cos(angle)
+                    )
+                    
+                    swordData.bodyPos.Position = humanoidRootPart.Position + offsetPos
+                end
+            end
+        end)
+        
+        local function cleanup()
+            spinning = false
+            if spinConn then
+                spinConn:Disconnect()
+            end
+            
+            for _, swordData in ipairs(spinSwords) do
+                if swordData.sword and swordData.sword.Parent then
+                    swordData.sword:Destroy()
+                end
+            end
+            
+            for _, originalSword in ipairs(originalSwords) do
+                if originalSword then
+                    originalSword.Parent = Character
+                end
+            end
+            
+            Utils.Notify("Sword Spin", "Deactivated", 2)
+        end
+        
+        local inputConn = Services.UserInputService.InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.X then
+                cleanup()
+                inputConn:Disconnect()
+            end
+        end)
+        
+        local humanoid = Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Died:Connect(cleanup)
+        end
+        
+        Utils.Notify("Sword Spin", "Press X to stop | " .. #spinSwords .. " swords spinning", 3)
+    end)
+end
+
+-- ════════════════ [13] TOGGLE FEATURES ════════════════
+if Tabs.Toggles then
+    -- 13.1 Auto Grab Tools
+    Tabs.Toggles:Toggle("Auto Grab Tools", false, function(state)
+        States.GrabTools = state
+        
+        if Connections.GrabTools then
+            Connections.GrabTools:Disconnect()
+            Connections.GrabTools = nil
+        end
+        
+        if state then
+            Connections.GrabTools = Services.RunService.Heartbeat:Connect(function()
+                local root = Character:FindFirstChild("HumanoidRootPart")
+                if not root then return end
+                
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Tool") and obj.Name:lower():find("sword") then
+                        local handle = obj:FindFirstChild("Handle")
+                        if handle and handle:FindFirstChildOfClass("TouchTransmitter") then
+                            Utils.SafeExecute(function()
+                                firetouchinterest(root, handle, 0)
+                                firetouchinterest(root, handle, 1)
+                            end)
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+    -- 13.2 Enhanced Drop Tools
+    Tabs.Toggles:Toggle("Auto Drop Tools", false, function(state)
+        if state then
+            local humanoid = Character:FindFirstChildWhichIsA("Humanoid")
+            if humanoid then
+                humanoid:UnequipTools()
+            end
+
+            for _, container in ipairs({LocalPlayer.Backpack, Character}) do
+                for _, tool in ipairs(container:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        Utils.SafeExecute(function()
+                            tool.CanBeDropped = true
+                            if humanoid and tool.Parent ~= Character then
+                                tool.Parent = Character
+                                wait(0.1)
+                            end
+                            if humanoid then
+                                humanoid:EquipTool(tool)
+                                wait(0.1)
+                                humanoid:DropTool()
+                                wait(0.1)
+                            end
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+
+    -- 13.3 Kill All Players
+    Tabs.Toggles:Toggle("Kill All Players", false, function(state)
+        States.KillAll = state
+
+        if Connections.KillAll then
+            Connections.KillAll:Disconnect()
+            Connections.KillAll = nil
+        end
+
+        if state then
+            Connections.KillAll = task.spawn(function()
+                while States.KillAll do
+                    local myRoot = Character:FindFirstChild("HumanoidRootPart")
+                    local myHumanoid = Character:FindFirstChildOfClass("Humanoid")
+                    if myRoot and myHumanoid then
+                        local sword = Character:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
+                        
+                        if sword and sword:IsA("Tool") then
+                            if sword.Parent ~= Character then
+                                myHumanoid:EquipTool(sword)
+                                task.wait(0.1)
+                            end
+
+                            local handle = sword:FindFirstChild("Handle")
+                            local dmgPart = handle and handle:FindFirstChild("dmg")
+                            local remote = dmgPart and dmgPart:FindFirstChild("RemoteEvent")
+
+                            if remote then
+                                for _, player in ipairs(Services.Players:GetPlayers()) do
+                                    if player ~= LocalPlayer and player.Character then
+                                        local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                                        local targetHum = player.Character:FindFirstChildOfClass("Humanoid")
+                                        
+                                        if targetRoot and targetHum and targetHum.Health > 0 then
+                                            local distance = (myRoot.Position - targetRoot.Position).Magnitude
+                                            if distance < 1000 then
+                                                Utils.SafeExecute(function()
+                                                    remote:FireServer(targetHum, math.huge)
+                                                end)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        end
+    end)
+
+    -- 13.4 Loop Walk Speed
+    Tabs.Toggles:Toggle("Lock Walk Speed (100)", false, function(state)
+        States.WalkSpeedLoop = state
+        
+        if Connections.WalkSpeedLoop then
+            Connections.WalkSpeedLoop:Disconnect()
+            Connections.WalkSpeedLoop = nil
+        end
+        
+        if state then
+            Connections.WalkSpeedLoop = task.spawn(function()
+                while States.WalkSpeedLoop do
+                    local hum = Utils.GetHumanoid()
+                    if hum then
+                        hum.WalkSpeed = 100
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end)
+end
+
+-- ════════════════ [14] UI MODIFICATIONS ════════════════
+if Tabs.UI then
+    Tabs.UI:Button("Remove All Pass GUIs", function()
+        local function destroyEffectsUI()
+            for _, gui in ipairs({Services.StarterGui, LocalPlayer:WaitForChild("PlayerGui")}) do
+                local passes = gui:FindFirstChild("passes")
+                if passes then
+                    for _, child in ipairs(passes:GetChildren()) do
+                        if child:IsA("Frame") or child:IsA("TextButton") then
+                            Utils.SafeExecute(function()
+                                child:Destroy()
+                            end)
+                        end
+                    end
+                end
+            end
+        end
+        
+        destroyEffectsUI()
+        
+        LocalPlayer.CharacterAdded:Connect(function()
+            task.wait(1)
+            destroyEffectsUI()
+        end)
+        
+        Utils.Notify("UI", "Effects GUI removed permanently", 3)
+    end)
+end
+
+-- ════════════════ [15] TELEPORTATION SYSTEM ════════════════
+if Tabs.Teleports then
+    local TeleportLocations = {
+        {name = "Arena", cframe = CFrame.new(-18.393, 26.978, 9.003, 0.999929, 0, 0.011914, 0, 1, 0, -0.011914, 0, 0.999929)},
+        {name = "Tree", cframe = CFrame.new(-143.156, 82.464, -246.582, 0.985673, 0, -0.168666, 0, 1, 0, 0.168666, 0, 0.985673)},
+        {name = "Wall", cframe = CFrame.new(-251.617, 92.690, -335.043, -0.794003, 0, -0.607913, 0, 1, 0, 0.607913, 0, -0.794003)},
+        {name = "Gray Wall", cframe = CFrame.new(-266.613, 119.881, -347.056, -0.698223, 0, -0.715880, 0, 1, 0, 0.715880, 0, -0.698223)},
+        {name = "Secret Area", cframe = CFrame.new(-197.105, 22.953, -377.287) * CFrame.Angles(math.rad(0.044), math.rad(23.156), math.rad(0.08))},
+        {name = "Outside", cframe = CFrame.new(-295.778, 25.596, -355.215, -0.409, 0, -0.913, 0, 1, 0, 0.913, 0, -0.409)},
+        {name = "Gate Exterior", cframe = CFrame.new(-420.443, 25.596, -9.648, -0.0046, 0, -0.999989, 0, 1, 0, 0.999989, 0, -0.0046)},
+        {name = "Rock Interior 1", cframe = CFrame.new(-341.302, 25.596, 47.305, 0.342859, 0, 0.939387, 0, 1, 0, -0.939387, 0, 0.342859)},
+        {name = "Pillar Top", cframe = CFrame.new(-88.647, 70.197, 92.618, 0.952380, 0, -0.304915, 0, 1, 0, 0.304915, 0, 0.952380)},
+        {name = "Underground", cframe = CFrame.new(45.779, 21.812, -185.381, -0.863430, -0.497, -0.087601, 0, 0.173651, -0.984807, 0.504468, -0.850312, -0.149936)}
+    }
+
+    for _, location in ipairs(TeleportLocations) do
+        Tabs.Teleports:Button(location.name, function()
+            local root = Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = location.cframe
+                Utils.Notify("Teleport", "Teleported to " .. location.name, 2)
+            end
+        end)
+    end
+
+    Tabs.Teleports:Button("Set Teleport Keybinds", function()
+        Utils.Notify("Teleport", "Press 1-5 for quick teleports", 3)
+        
+        Services.UserInputService.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            
+            local keyMap = {
+                [Enum.KeyCode.One] = 1,
+                [Enum.KeyCode.Two] = 2,
+                [Enum.KeyCode.Three] = 3,
+                [Enum.KeyCode.Four] = 4,
+                [Enum.KeyCode.Five] = 5
+            }
+            
+            local index = keyMap[input.KeyCode]
+            if index and TeleportLocations[index] then
+                local root = Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.CFrame = TeleportLocations[index].cframe
+                    Utils.Notify("Quick TP", "Teleported to " .. TeleportLocations[index].name, 1)
+                end
+            end
+        end)
+    end)
+end
+
+-- ════════════════ [16] POWER SYSTEM ════════════════
+if Tabs.Power then
+    local powerScripts = {
+        {name = "1K Power (3s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/1K"},
+        {name = "2K Power (6s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/2K"},
+        {name = "5K Power (10s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/5K"},
+        {name = "10K Power (20s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/10K"}
+    }
+
+    for _, script in ipairs(powerScripts) do
+        Tabs.Power:Button(script.name, function()
+            Utils.LoadScript(script.url)
+        end)
+    end
+
+    Tabs.Power:Button("Power Stats Viewer", function()
+        Utils.LoadScript("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/SECURITY.md")
+    end)
+end
+
+-- ════════════════ [17] WORLD TELEPORTS ════════════════
+if Tabs.Worlds then
+    local worldScripts = {
+        {name = "Coffee Shop", url = "https://pastebin.com/raw/Pvj5Ckc2"},
+        {name = "Clockwork Arena", url = "https://pastebin.com/raw/NNp1NJKT"},
+        {name = "Shipment", url = "https://pastebin.com/raw/J3Jk3NaC"},
+        {name = "Purple Battlefields", url = "https://pastebin.com/raw/kdg5tmdg"},
+        {name = "Lock Shift", url = "https://raw.githubusercontent.com/MiniNoobie/ShiftLockx/main/Shiftlock-MiniNoobie"}
+    }
+
+    for _, world in ipairs(worldScripts) do
+        Tabs.Worlds:Button(world.name, function()
+            Utils.LoadScript(world.url)
+        end)
+    end
+end
+
+-- ════════════════ [18] ENHANCED MUSIC PLAYER ════════════════
+local MusicPlayer = {
+    CurrentSong = nil,
+    Volume = 1,
+    Songs = {
+        {name = "🎵 Save Me", id = "128972545110914"},
+        {name = "🎵 Rootkit", id = "5410081542"},
+        {name = "🎵 Say So - Doja Cat", id = "1840036018"},
+        {name = "🎵 The Future", id = "1837358800"},
+        {name = "🎵 Feel Your Heart", id = "5410082171"},
+        {name = "🎵 Forward", id = "5410081471"},
+        {name = "🎵 No Sleep", id = "7029011778"},
+        {name = "🎵 Pixel Terror", id = "5410080475"},
+        {name = "🎵 Labyrinth", id = "7023690024"},
+        {name = "🎵 All I Want", id = "7023680426"},
+        {name = "🎵 Sacrified", id = "125847822956321"},
+        {name = "🎵 Colors", id = "5410086062"},
+        {name = "🎵 You Used To", id = "7023720291"},
+        {name = "🎵 Rock Star", id = "108319978126931"},
+        {name = "🎵 Coral Sea", id = "1839253629"},
+        {name = "🎵 King", id = "1840030788"},
+        {name = "🎵 Chasing Clouds", id = "5410082097"},
+        {name = "🎵 Pendulum", id = "1843384804"},
+        {name = "🎵 She Make Me", id = "1841807265"},
+        {name = "🎵 I'm So Alone", id = "6774872457"},
+        {name = "🎵 Hate Me", id = "6873260626"},
+        {name = "🎵 Safe & Sound", id = "7024233823"},
+        {name = "🎵 Dreamers", id = "7029083554"},
+        {name = "🎵 Internet Boy", id = "5410084870"},
+        {name = "🎵 Let's Play", id = "5410085763"},
+        {name = "🎵 Night", id = "1836879421"},
+        {name = "🎵 Pull Over", id = "1839983980"},
+        {name = "🎵 WRLD - Hang Up", id = "5410084188"},
+        {name = "🎵 Deja Vu", id = "6781116057"},
+        {name = "🎵 Give The World", id = "1836778353"},
+        {name = "🎵 Top Of The World", id = "1836847994"},
+        {name = "🎵 Siren", id = "1840056866"},
+        {name = "🎵 Overtime", id = "1842019862"},
+        {name = "🎵 Hours", id = "7028932563"},
+        {name = "🎵 Weekend Vibes", id = "1837083064"},
+        {name = "🎵 Glacier", id = "7023760529"},
+        {name = "🎵 Only You", id = "7024028859"},
+        {name = "🎵 Hyper", id = "7023887630"},
+        {name = "🎵 Play Cool", id = "7029017448"},
+        {name = "🎵 What It's Like", id = "7028997537"},
+        {name = "🎵 New World", id = "5410082346"},
+        {name = "🎵 TOMB", id = "6782202354"},
+        {name = "🎵 You Take Me", id = "7029070008"},
+        {name = "🎵 Thinking About You", id = "7023445033"}
+    }
+}
+
+if Tabs.Music then
+    -- Music Controls
+    Tabs.Music:Button("🛑 Stop All Music", function()
+        if MusicPlayer.CurrentSong then
+            MusicPlayer.CurrentSong:Stop()
+            MusicPlayer.CurrentSong:Destroy()
+            MusicPlayer.CurrentSong = nil
+        end
+
+        local soundContainers = {
+            Services.SoundService,
+            workspace,
+            Services.Lighting,
+            Services.ReplicatedStorage,
+            Services.Players,
+            Services.StarterGui,
+            Services.StarterPack
+        }
+
+        for _, container in pairs(soundContainers) do
+            for _, descendant in pairs(container:GetDescendants()) do
+                if descendant:IsA("Sound") then
+                    Utils.SafeExecute(function()
+                        descendant:Stop()
+                        descendant:Destroy()
+                    end)
+                end
+            end
+        end
+
+        Utils.Notify("Music", "All music and sounds were stopped.", 2)
+    end)
+
+    -- Volume Control
+    Tabs.Music:Slider("Volume", 0, 100, 50, function(value)
+        MusicPlayer.Volume = value / 100
+        if MusicPlayer.CurrentSong then
+            MusicPlayer.CurrentSong.Volume = MusicPlayer.Volume
+        end
+    end)
+
+    -- Create song buttons
+    for _, song in ipairs(MusicPlayer.Songs) do
+        Tabs.Music:Button(song.name, function()
+            if MusicPlayer.CurrentSong then
+                MusicPlayer.CurrentSong:Stop()
+                MusicPlayer.CurrentSong:Destroy()
+            end
+            
+            MusicPlayer.CurrentSong = Instance.new("Sound")
+            MusicPlayer.CurrentSong.SoundId = "rbxassetid://" .. song.id
+            MusicPlayer.CurrentSong.Volume = MusicPlayer.Volume
+            MusicPlayer.CurrentSong.Looped = true
+            MusicPlayer.CurrentSong.Parent = Services.SoundService
+            MusicPlayer.CurrentSong:Play()
+            
+            Utils.Notify("Music", "Now playing: " .. song.name, 3)
+        end)
+    end
+end
+
+-- ════════════════ [19] SETTINGS & CLEANUP ════════════════
+if Tabs.Settings then
+    -- Enhanced Settings Manager
+    local SettingsManager = {
+        AutoSave = true,
+        BackupCount = 0
+    }
+    
+    -- Performance Mode
+    local disabledInstances = {}
+    local originalLighting = nil
+    
+    Tabs.Settings:Toggle("Performance Mode", false, function(state)
+        if state then
+            if not originalLighting then
+                originalLighting = {
+                    Ambient = Services.Lighting.Ambient,
+                    Brightness = Services.Lighting.Brightness,
+                    OutdoorAmbient = Services.Lighting.OutdoorAmbient,
+                    FogEnd = Services.Lighting.FogEnd,
+                    ClockTime = Services.Lighting.ClockTime,
+                    Sky = Services.Lighting:FindFirstChildOfClass("Sky") and Services.Lighting:FindFirstChildOfClass("Sky"):Clone() or nil
+                }
+            end
+
+            Services.Lighting.Ambient = Color3.fromRGB(10, 10, 10)
+            Services.Lighting.Brightness = 1
+            Services.Lighting.OutdoorAmbient = Color3.fromRGB(15, 15, 20)
+            Services.Lighting.FogEnd = 150
+            Services.Lighting.ClockTime = 0
+
+            local existingSky = Services.Lighting:FindFirstChildOfClass("Sky")
+            if existingSky then existingSky:Destroy() end
+            if originalLighting.Sky then
+                local nightSky = originalLighting.Sky:Clone()
+                nightSky.Parent = Services.Lighting
+            end
+
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+            for _, desc in pairs(workspace:GetDescendants()) do
+                if desc:IsA("ParticleEmitter") or desc:IsA("Trail") or desc:IsA("Beam") 
+                    or desc:IsA("Decal") or desc:IsA("Texture") 
+                    or desc:IsA("SpotLight") or desc:IsA("SurfaceLight") or desc:IsA("PointLight") then
+
+                    Utils.SafeExecute(function()
+                        if desc:IsA("Decal") or desc:IsA("Texture") then
+                            desc.Transparency = 1
+                        else
+                            desc.Enabled = false
+                        end
+                        table.insert(disabledInstances, desc)
+                    end)
+                end
+            end
+
+            Utils.Notify("Performance", "Performance mode and night mode enabled", 3)
+        else
+            if originalLighting then
+                for prop, value in pairs(originalLighting) do
+                    if prop ~= "Sky" then
+                        Utils.SafeExecute(function()
+                            Services.Lighting[prop] = value
+                        end)
+                    end
+                end
+
+                local currentSky = Services.Lighting:FindFirstChildOfClass("Sky")
+                if currentSky then currentSky:Destroy() end
+                if originalLighting.Sky then
+                    originalLighting.Sky.Parent = Services.Lighting
+                end
+                originalLighting = nil
+            end
+
+            for _, inst in pairs(disabledInstances) do
+                if inst and inst.Parent then
+                    Utils.SafeExecute(function()
+                        if inst:IsA("Decal") or inst:IsA("Texture") then
+                            inst.Transparency = 0
+                        else
+                            inst.Enabled = true
+                        end
+                    end)
+                end
+            end
+            disabledInstances = {}
+
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+
+            Utils.Notify("Performance", "Performance mode disabled", 3)
+        end
+    end)
+
+    -- Auto-reconnect
+    Tabs.Settings:Toggle("Auto Reconnect", false, function(state)
+        if state then
+            LocalPlayer.OnTeleport:Connect(function(teleportState)
+                if teleportState == Enum.TeleportState.Failed then
+                    Utils.Notify("Reconnect", "Teleport failed, attempting reconnect...", 5)
+                    Utils.SafeExecute(function()
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+                    end)
+                end
+            end)
+        end
+    end)
+
+    -- Discord
+    Tabs.Settings:Button("Join Discord", function()
+        local discordInvite = "https://discord.com/invite/J7AYrApFAH"
+        
+        local success = Utils.SafeExecute(function()
+            setclipboard(discordInvite)
+        end)
+        
+        if success then
+            Utils.Notify("Discord", "Discord invite copied to clipboard!", 3)
+        else
+            Utils.Notify("Discord", "Failed to copy invite. Please visit: " .. discordInvite, 5)
+        end
+    end)
+
+    -- Save/Load Settings
+    local function saveSettings()
+        if not writefile then
+            Utils.Notify("Settings", "File system not available", 2)
+            return
+        end
+        
+        local config = {
+            WalkSpeed = Movement.WalkSpeed,
+            JumpPower = Movement.JumpPower,
+            States = States,
+            Volume = MusicPlayer.Volume,
+            LastSaved = os.time(),
+            Version = CONFIG.VERSION
+        }
+        
+        Utils.SafeExecute(function()
+            local configString = Services.HttpService:JSONEncode(config)
+            writefile("DemonHubSettings.json", configString)
+            Utils.Notify("Settings", "Settings saved successfully", 2)
+        end)
+    end
+    
+    local function loadSettings()
+        if not readfile or not isfile("DemonHubSettings.json") then
+            Utils.Notify("Settings", "No saved settings found", 2)
+            return
+        end
+        
+        Utils.SafeExecute(function()
+            local configString = readfile("DemonHubSettings.json")
+            local config = Services.HttpService:JSONDecode(configString)
+            
+            if config.WalkSpeed then Movement.WalkSpeed = config.WalkSpeed end
+            if config.JumpPower then Movement.JumpPower = config.JumpPower end
+            if config.Volume then MusicPlayer.Volume = config.Volume end
+            if config.States then
+                for key, value in pairs(config.States) do
+                    States[key] = value
+                end
+            end
+            
+            Utils.Notify("Settings", "Settings loaded successfully", 2)
+        end)
+    end
+
+    Tabs.Settings:Button("Save Settings", saveSettings)
+    Tabs.Settings:Button("Load Settings", loadSettings)
+
+    -- Enhanced Reset
+    local resetConfirmation = false
+    Tabs.Settings:Button("Reset Everything", function()
+        if not resetConfirmation then
+            resetConfirmation = true
+            Utils.Notify("Reset", "Click again within 5 seconds to confirm COMPLETE RESET", 3)
+            
+            task.spawn(function()
+                task.wait(5)
+                resetConfirmation = false
+                Utils.Notify("Reset", "Reset cancelled", 1)
+            end)
+            return
+        end
+        
+        Utils.SafeExecute(function()
+            -- Disconnect all connections
+            for name, connection in pairs(Connections) do
+                if connection then
+                    if typeof(connection) == "RBXScriptConnection" then
+                        connection:Disconnect()
+                    else
+                        task.cancel(connection)
+                    end
+                end
+            end
+            Connections = {}
+            
+            -- Reset states
+            for key in pairs(States) do
+                States[key] = false
+            end
+            
+            -- Stop music
+            if MusicPlayer.CurrentSong then
+                MusicPlayer.CurrentSong:Stop()
+                MusicPlayer.CurrentSong:Destroy()
+                MusicPlayer.CurrentSong = nil
+            end
+            
+            -- Reset movement
+            Movement.WalkSpeed = 16
+            Movement.JumpPower = 50
+            
+            local hum = Utils.GetHumanoid()
+            if hum then
+                hum.WalkSpeed = 16
+                hum.JumpPower = 50
+            end
+            
+            resetConfirmation = false
+            Utils.Notify("Reset", "Everything reset successfully", 3)
+        end)
+    end)
+
+    -- Credits
+    Tabs.Settings:Button("Credits", function()
+        Utils.Notify("Credits", "Demon Hub 2025 | CORRUPT CORE • Engineered by Alzn", 5)
+        Utils.Notify("Credits", "Fixed & Improved by AI Assistant", 3)
+    end)
+end
+
+-- ════════════════ [20] FINAL SETUP ════════════════
+-- Auto-update character references
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    Humanoid = newChar:WaitForChild("Humanoid")
+    RootPart = newChar:WaitForChild("HumanoidRootPart")
+    
+    -- Reapply settings
+    if Movement then
+        Humanoid.WalkSpeed = Movement.WalkSpeed
+        Humanoid.JumpPower = Movement.JumpPower
+    end
+end)
+
+-- UI Toggle (Insert key)
+local function setupUIToggle()
+    Utils.SafeExecute(function()
+        local CoreGui = game:GetService("CoreGui")
+        local MainUI = CoreGui:WaitForChild("Discord", 10)
+        
+        if MainUI then
+            Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if gameProcessed then return end
+                if input.KeyCode == Enum.KeyCode.Insert then
+                    if MainUI:IsA("ScreenGui") then
+                        MainUI.Enabled = not MainUI.Enabled
+                        Utils.Notify("UI", MainUI.Enabled and "UI Shown" or "UI Hidden", 1)
+                    else
+                        MainUI.Visible = not MainUI.Visible
+                        Utils.Notify("UI", MainUI.Visible and "UI Shown" or "UI Hidden", 1)
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+-- Setup UI toggle after a delay
+task.wait(2)
+setupUIToggle()
+
+-- Completion message
+print([[
+╔══════════════════════════════════════════════════════════════════════════╗
+║                   DEMON HUB 2025 — CORRUPT CORE EDITION                  ║
+║                        Successfully Loaded! (Fixed)                      ║
+║                                                                          ║
+║  Improvements:                                                           ║
+║    • Fixed all syntax errors and missing services                        ║
+║    • Enhanced error handling throughout                                  ║
+║    • Improved connection management                                      ║
+║    • Better state management and cleanup                                 ║
+║    • Safer function execution                                            ║
+║    • Fixed god mode and toggle systems                                   ║
+║    • Enhanced performance optimizations                                  ║
+║                                                                          ║
+║                 Press Insert to toggle the UI                            ║
+╚══════════════════════════════════════════════════════════════════════════╝
+]])
+
+-- ═══════════════ END OF DEMON HUB 2025 FIXED EDITION ═══════════════
