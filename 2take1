@@ -1013,22 +1013,38 @@ GUI = createGUI()
 -- Create UI Elements
 createToggle("Fast Farm", GUI.contentFrame, function(enabled)
     State.fastFarm = enabled
-    executeCommand(enabled and "ff" or "ff", player)
+    if enabled then
+        notification("Fast farm enabled", "success")
+    else
+        notification("Fast farm disabled", "info")
+    end
 end)
 
 createToggle("Slow Farm", GUI.contentFrame, function(enabled)
     State.slowFarm = enabled
-    executeCommand(enabled and "sf" or "sf", player)
+    if enabled then
+        notification("Slow farm enabled", "success")
+    else
+        notification("Slow farm disabled", "info")
+    end
 end)
 
 createToggle("God Mode", GUI.contentFrame, function(enabled)
     State.godMode = enabled
-    executeCommand(enabled and "godmode" or "godmode", player)
+    if enabled then
+        notification("God mode enabled", "success")
+    else
+        notification("God mode disabled", "info")
+    end
 end)
 
 createToggle("Kill Aura", GUI.contentFrame, function(enabled)
     State.killAura = enabled
-    executeCommand(enabled and "kaura" or "kaura", player)
+    if enabled then
+        notification("Kill aura enabled", "success")
+    else
+        notification("Kill aura disabled", "info")
+    end
 end)
 
 createToggle("Fly", GUI.contentFrame, function(enabled)
@@ -1153,12 +1169,36 @@ end)
 
 -- Hotkeys
 local hotkeys = {
-    [Enum.KeyCode.F1] = function() executeCommand("ff", player) end,
-    [Enum.KeyCode.F2] = function() executeCommand("sf", player) end,
-    [Enum.KeyCode.F3] = function() executeCommand("godmode", player) end,
-    [Enum.KeyCode.F4] = function() executeCommand("kaura", player) end,
-    [Enum.KeyCode.F5] = function() executeCommand("fly", player) end,
-    [Enum.KeyCode.F6] = function() executeCommand("noclip", player) end,
+    [Enum.KeyCode.F1] = function() 
+        State.fastFarm = not State.fastFarm
+        notification("Fast farm " .. (State.fastFarm and "enabled" or "disabled"), State.fastFarm and "success" or "info")
+    end,
+    [Enum.KeyCode.F2] = function() 
+        State.slowFarm = not State.slowFarm
+        notification("Slow farm " .. (State.slowFarm and "enabled" or "disabled"), State.slowFarm and "success" or "info")
+    end,
+    [Enum.KeyCode.F3] = function() 
+        State.godMode = not State.godMode
+        notification("God mode " .. (State.godMode and "enabled" or "disabled"), State.godMode and "success" or "info")
+    end,
+    [Enum.KeyCode.F4] = function() 
+        State.killAura = not State.killAura
+        notification("Kill aura " .. (State.killAura and "enabled" or "disabled"), State.killAura and "success" or "info")
+    end,
+    [Enum.KeyCode.F5] = function() 
+        if not State.flying then
+            executeCommand("fly", player)
+        else
+            executeCommand("unfly", player)
+        end
+    end,
+    [Enum.KeyCode.F6] = function() 
+        if not State.noclip then
+            executeCommand("noclip", player)
+        else
+            executeCommand("clip", player)
+        end
+    end,
     [Enum.KeyCode.Delete] = function() executeCommand("kill all", player) end,
     [Enum.KeyCode.Insert] = function() executeCommand("god all", player) end,
 }
