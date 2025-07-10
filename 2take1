@@ -1,188 +1,279 @@
--- 2take1 Hub - Fixed Sword Simulator GUI
--- Ultra-compact version with full functionality
+-- 2take1 Hub - Complete Working Script
+-- Fixed and optimized for modern Roblox
 
 repeat wait() until game.Players.LocalPlayer
 
-local Players, UIS, TS, RS, VU, CoreGui = game:GetService("Players"), game:GetService("UserInputService"), game:GetService("TweenService"), game:GetService("RunService"), game:GetService("VirtualUser"), game:GetService("CoreGui")
-local player, mouse = Players.LocalPlayer, Players.LocalPlayer:GetMouse()
+-- Services
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+-- Variables
+local player = Players.LocalPlayer
 local load = workspace:WaitForChild("load"):WaitForChild("RemoteEvent")
 
--- Compact Configuration
-local cfg = {multi = 2, min = 5500, max = 9000, speed = 5, cooldown = 100, range = 10, ws = 16, jp = 50, fs = 50}
-local state = {focused = false, open = true, ff = false, sf = false, god = false, ka = false, ak = false, fly = false, nc = false, esp = false, min = false}
-local data = {admins = {}, pw = 0, lpw = 0, gain = 0, counter = 0, flyObjs = {}, espObjs = {}, cmdHistory = {}, historyIdx = 0}
-
--- Theme
-local theme = {
-    bg = Color3.fromRGB(25, 25, 25), sec = Color3.fromRGB(35, 35, 35), ter = Color3.fromRGB(45, 45, 45),
-    accent = Color3.fromRGB(88, 101, 242), text = Color3.fromRGB(255, 255, 255), dim = Color3.fromRGB(180, 180, 180),
-    success = Color3.fromRGB(87, 242, 135), danger = Color3.fromRGB(237, 66, 69), warning = Color3.fromRGB(255, 193, 7)
+-- Configuration
+local Config = {
+    speed = 5,
+    range = 10,
+    walkSpeed = 16,
+    jumpPower = 50,
+    flySpeed = 50
 }
 
--- Global UI variable
-local UI = {}
+-- State Management
+local State = {
+    fastFarm = false,
+    slowFarm = false,
+    godMode = false,
+    killAura = false,
+    flying = false,
+    noclip = false,
+    guiOpen = true,
+    focused = false
+}
+
+-- Data Storage
+local Data = {
+    admins = {},
+    commandHistory = {},
+    historyIndex = 0,
+    flyObjects = {}
+}
+
+-- Theme
+local Theme = {
+    background = Color3.fromRGB(25, 25, 25),
+    secondary = Color3.fromRGB(35, 35, 35),
+    tertiary = Color3.fromRGB(45, 45, 45),
+    accent = Color3.fromRGB(88, 101, 242),
+    text = Color3.fromRGB(255, 255, 255),
+    textDim = Color3.fromRGB(180, 180, 180),
+    success = Color3.fromRGB(87, 242, 135),
+    danger = Color3.fromRGB(237, 66, 69),
+    warning = Color3.fromRGB(255, 193, 7)
+}
+
+-- UI Variable
+local GUI = {}
 
 -- Utility Functions
-local function tween(obj, props, time) return TS:Create(obj, TweenInfo.new(time or 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), props) end
+local function createTween(object, properties, duration)
+    return TweenService:Create(object, TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), properties)
+end
 
-local function notify(text, type)
-    local colors = {info = theme.accent, success = theme.success, error = theme.danger, warning = theme.warning}
+local function notification(text, notificationType)
+    notificationType = notificationType or "info"
+    local colors = {
+        info = Theme.accent,
+        success = Theme.success,
+        error = Theme.danger,
+        warning = Theme.warning
+    }
+    
+    -- Create notification
     local notif = Instance.new("Frame")
-    notif.Size, notif.Position = UDim2.new(0, 250, 0, 50), UDim2.new(0.5, -125, 0, -60)
-    notif.BackgroundColor3, notif.BorderSizePixel = theme.sec, 0
-    notif.Parent = UI.screenGui
+    notif.Size = UDim2.new(0, 300, 0, 50)
+    notif.Position = UDim2.new(1, -320, 0, 20)
+    notif.BackgroundColor3 = Theme.secondary
+    notif.BorderSizePixel = 0
     
-    local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0, 8) corner.Parent = notif
-    local stroke = Instance.new("UIStroke") stroke.Color, stroke.Thickness = colors[type or "info"], 2 stroke.Parent = notif
+    if GUI.screenGui then
+        notif.Parent = GUI.screenGui
+    else
+        return
+    end
     
-    local label = Instance.new("TextLabel")
-    label.Size, label.Position = UDim2.new(1, -20, 1, 0), UDim2.new(0, 10, 0, 0)
-    label.BackgroundTransparency, label.Text = 1, text
-    label.TextColor3, label.TextSize, label.Font = theme.text, 12, Enum.Font.Gotham
-    label.TextWrapped, label.TextXAlignment = true, Enum.TextXAlignment.Left
-    label.Parent = notif
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = notif
     
-    tween(notif, {Position = UDim2.new(0.5, -125, 0, 10)}):Play()
-    task.spawn(function() wait(2.5) tween(notif, {Position = UDim2.new(0.5, -125, 0, -60)}):Play() wait(0.3) notif:Destroy() end)
+    -- Border
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = colors[notificationType]
+    stroke.Thickness = 2
+    stroke.Parent = notif
+    
+    -- Text
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, -20, 1, 0)
+    textLabel.Position = UDim2.new(0, 10, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = Theme.text
+    textLabel.TextSize = 12
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.TextWrapped = true
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Parent = notif
+    
+    -- Animate in
+    createTween(notif, {Position = UDim2.new(1, -320, 0, 20)}):Play()
+    
+    -- Auto remove
+    task.spawn(function()
+        wait(3)
+        createTween(notif, {Position = UDim2.new(1, 20, 0, 20)}):Play()
+        wait(0.5)
+        notif:Destroy()
+    end)
 end
 
 local function findPlayer(name)
     if not name or name == "" then return nil end
     name = name:lower()
+    
     if name == "me" then return player end
     if name == "all" then return Players:GetPlayers() end
     if name == "others" then
         local others = {}
-        for _, p in pairs(Players:GetPlayers()) do if p ~= player then table.insert(others, p) end end
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player then
+                table.insert(others, p)
+            end
+        end
         return others
     end
+    
+    -- Find by partial name match
     for _, p in pairs(Players:GetPlayers()) do
-        if p.Name:lower():sub(1, #name) == name or p.DisplayName:lower():sub(1, #name) == name then return p end
+        if p.Name:lower():find(name) or p.DisplayName:lower():find(name) then
+            return p
+        end
     end
+    
     return nil
 end
 
-local function getSword()
-    local sword = player.Backpack:FindFirstChildOfClass("Tool") or (player.Character and player.Character:FindFirstChildOfClass("Tool"))
-    if not sword then load:FireServer() wait(0.1) sword = player.Backpack:WaitForChild("sword", 3) end
+local function getSwordHandle()
+    -- Check if sword is equipped
+    local sword = player.Character and player.Character:FindFirstChildOfClass("Tool")
+    if not sword then
+        -- Try to get sword from backpack
+        sword = player.Backpack:FindFirstChildOfClass("Tool")
+        if sword then
+            -- Equip the sword
+            player.Character.Humanoid:EquipTool(sword)
+        else
+            -- Request new sword
+            load:FireServer()
+            wait(0.5)
+            sword = player.Backpack:WaitForChild("sword", 5)
+            if sword then
+                player.Character.Humanoid:EquipTool(sword)
+            end
+        end
+    end
+    
     return sword and sword:FindFirstChild("Handle")
 end
 
 -- Admin System
-local function isAdmin(plr) 
-    for _, name in pairs(data.admins) do if plr.Name:lower() == name:lower() then return true end end 
-    return false 
-end
-
-local function addAdmin(plr)
-    if not isAdmin(plr) then
-        table.insert(data.admins, plr.Name)
-        notify("Added " .. plr.Name .. " as admin", "success")
-        return true
-    end
-    return false
-end
-
-local function removeAdmin(plr)
-    for i, name in pairs(data.admins) do
-        if name:lower() == plr.Name:lower() then
-            table.remove(data.admins, i)
-            notify("Removed " .. plr.Name .. " from admin", "info")
+local function isAdmin(plr)
+    for _, adminName in pairs(Data.admins) do
+        if plr.Name:lower() == adminName:lower() then
             return true
         end
     end
     return false
 end
 
--- Command Handler
-local function runCommand(cmd, executor)
-    local args = cmd:lower():split(" ")
-    local command, target = args[1], findPlayer(args[2])
-    
-    -- Admin Management (Owner Only)
-    if command == "admin" and executor == player then
-        if target then 
-            if addAdmin(target) then
-                wait(0.5)
-                notify(target.Name .. " can now use admin commands", "success")
-            else 
-                notify(target.Name .. " is already an admin", "warning")
-            end
-        else 
-            notify("Player not found. Usage: admin [playername]", "error") 
+local function addAdmin(plr)
+    if not isAdmin(plr) then
+        table.insert(Data.admins, plr.Name)
+        notification("Added " .. plr.Name .. " as admin", "success")
+        return true
+    end
+    return false
+end
+
+local function removeAdmin(plr)
+    for i, adminName in pairs(Data.admins) do
+        if adminName:lower() == plr.Name:lower() then
+            table.remove(Data.admins, i)
+            notification("Removed " .. plr.Name .. " from admin", "info")
+            return true
         end
-        return
-    elseif command == "unadmin" and executor == player then
-        if target then 
-            if removeAdmin(target) then
-                wait(0.5)
-                notify(target.Name .. " admin access revoked", "success")
-            else
-                notify(target.Name .. " is not an admin", "warning")
-            end
-        else 
-            notify("Player not found. Usage: unadmin [playername]", "error") 
-        end
-        return
-    elseif command == "admins" then
-        if #data.admins == 0 then
-            notify("No admins currently", "info")
-        else
-            notify("Admins (" .. #data.admins .. "): " .. table.concat(data.admins, ", "), "info")
-        end
-        return
-    elseif command == "adminlist" or command == "listadmins" then
-        if #data.admins == 0 then
-            notify("No admins currently active", "info")
-        else
-            local adminInfo = {}
-            for _, adminName in pairs(data.admins) do
-                local adminPlayer = Players:FindFirstChild(adminName)
-                if adminPlayer then
-                    table.insert(adminInfo, adminName .. " (Online)")
-                else
-                    table.insert(adminInfo, adminName .. " (Offline)")
-                end
-            end
-            notify("Admin List (" .. #data.admins .. "):", "info")
-            wait(0.5)
-            notify(table.concat(adminInfo, " | "), "info")
-        end
-        return
-    elseif command == "clearadmins" and executor == player then
-        local count = #data.admins
-        data.admins = {}
-        notify("Cleared " .. count .. " admins", "success")
-        return
+    end
+    return false
+end
+
+-- Command System
+local function executeCommand(command, executor)
+    local args = {}
+    for word in command:gmatch("%S+") do
+        table.insert(args, word:lower())
     end
     
-    -- Check admin permissions for protected commands
-    local protectedCmds = {kill = true, god = true, bring = true, tp = true, dmg = true, damage = true}
-    if protectedCmds[command] and executor ~= player and not isAdmin(executor) then
-        if executor == player then
-            notify("You don't have permission for this command", "error")
+    if #args == 0 then return end
+    
+    local cmd = args[1]
+    local target = args[2] and findPlayer(args[2])
+    
+    -- Admin management commands (owner only)
+    if cmd == "admin" and executor == player then
+        if target then
+            addAdmin(target)
         else
-            notify(executor.Name .. " tried to use admin command", "warning")
+            notification("Player not found", "error")
         end
         return
     end
     
-    -- Combat Commands
-    if command == "kill" then
-        local handle = getSword()
-        if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
+    if cmd == "unadmin" and executor == player then
+        if target then
+            removeAdmin(target)
+        else
+            notification("Player not found", "error")
+        end
+        return
+    end
+    
+    if cmd == "admins" then
+        if #Data.admins == 0 then
+            notification("No admins currently", "info")
+        else
+            notification("Admins: " .. table.concat(Data.admins, ", "), "info")
+        end
+        return
+    end
+    
+    -- Check permissions for protected commands
+    local protectedCommands = {"kill", "god", "tp", "bring", "dmg", "damage"}
+    local isProtected = false
+    for _, protectedCmd in pairs(protectedCommands) do
+        if cmd == protectedCmd then
+            isProtected = true
+            break
+        end
+    end
+    
+    if isProtected and executor ~= player and not isAdmin(executor) then
+        notification(executor.Name .. " tried to use admin command", "warning")
+        return
+    end
+    
+    -- Execute commands
+    if cmd == "kill" then
+        local handle = getSwordHandle()
+        if not handle or not handle:FindFirstChild("dmg") then
+            notification("No sword equipped", "error")
+            return
+        end
         
         task.spawn(function()
             local targets = {}
             
             if args[2] == "all" then
-                -- Kill others first, then self to prevent script bugs
+                -- Kill others first, then self
                 for _, plr in pairs(Players:GetPlayers()) do
                     if plr ~= executor then
                         table.insert(targets, plr)
                     end
                 end
-                -- Add executor last
                 table.insert(targets, executor)
             elseif args[2] == "others" then
                 for _, plr in pairs(Players:GetPlayers()) do
@@ -191,28 +282,28 @@ local function runCommand(cmd, executor)
                     end
                 end
             elseif target then
-                targets = type(target) == "table" and target or {target}
+                targets = {target}
+            else
+                notification("Usage: kill [player/all/others]", "error")
+                return
             end
             
-            local killed = 0
             for _, plr in pairs(targets) do
                 if plr.Character and plr.Character:FindFirstChild("Humanoid") then
                     handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
-                    killed = killed + 1
-                    wait(0.15) -- Slightly longer delay to prevent issues
+                    wait(0.1)
                 end
             end
             
-            if killed > 0 then
-                notify("Killed " .. killed .. " players", "success")
-            else
-                notify("No valid targets found", "warning")
-            end
+            notification("Killed " .. #targets .. " players", "success")
         end)
         
-    elseif command == "god" then
-        local handle = getSword()
-        if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
+    elseif cmd == "god" then
+        local handle = getSwordHandle()
+        if not handle or not handle:FindFirstChild("dmg") then
+            notification("No sword equipped", "error")
+            return
+        end
         
         task.spawn(function()
             local targets = {}
@@ -226,35 +317,35 @@ local function runCommand(cmd, executor)
                     end
                 end
             elseif target then
-                targets = type(target) == "table" and target or {target}
+                targets = {target}
+            else
+                notification("Usage: god [player/all/others]", "error")
+                return
             end
             
-            local godded = 0
             for _, plr in pairs(targets) do
                 if plr.Character and plr.Character:FindFirstChild("Humanoid") then
                     for i = 1, 5 do
                         handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
-                        wait(0.03) -- Slightly longer delay
+                        wait(0.05)
                     end
-                    godded = godded + 1
-                    wait(0.1) -- Delay between players
+                    wait(0.1)
                 end
             end
             
-            if godded > 0 then
-                notify("Godded " .. godded .. " players", "success")
-            else
-                notify("No valid targets found", "warning")
-            end
+            notification("Godded " .. #targets .. " players", "success")
         end)
         
-    elseif command == "dmg" or command == "damage" then
-        local handle = getSword()
-        if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
+    elseif cmd == "dmg" or cmd == "damage" then
+        local handle = getSwordHandle()
+        if not handle or not handle:FindFirstChild("dmg") then
+            notification("No sword equipped", "error")
+            return
+        end
         
         task.spawn(function()
-            local percentage = tonumber(args[3]) or 50 -- Default to 50% if no percentage specified
-            percentage = math.clamp(percentage, 1, 99) -- Clamp between 1-99% (can't do 100% damage)
+            local percentage = tonumber(args[3]) or 50
+            percentage = math.clamp(percentage, 1, 99)
             
             local targets = {}
             
@@ -271,205 +362,211 @@ local function runCommand(cmd, executor)
                     end
                 end
             elseif target then
-                targets = type(target) == "table" and target or {target}
+                targets = {target}
             else
-                notify("Usage: dmg [player/all/others] [percentage]", "error")
+                notification("Usage: dmg [player/all/others] [percentage]", "error")
                 return
             end
             
-            local damaged = 0
+            -- Get player's power for damage calculation
+            local power = 1000 -- Default power
+            if player.leaderstats and player.leaderstats:FindFirstChild("Power") then
+                power = player.leaderstats.Power.Value
+            end
+            
+            local damageAmount = (power * percentage) / 100
+            
             for _, plr in pairs(targets) do
-                if plr.Character and plr.Character:FindFirstChild("Humanoid") and player.leaderstats and player.leaderstats:FindFirstChild("Power") then
-                    local humanoid = plr.Character.Humanoid
-                    local power = player.leaderstats.Power.Value
-                    
-                    -- Calculate damage amount based on percentage
-                    local damageAmount = (power * percentage) / 100
-                    
-                    -- Use the sword's damage system to deal specific damage
-                    handle.dmg.RemoteEvent:FireServer(humanoid, damageAmount)
-                    damaged = damaged + 1
-                    wait(0.1) -- Small delay between players
+                if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                    handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, damageAmount)
+                    wait(0.1)
                 end
             end
             
-            if damaged > 0 then
-                notify("Damaged " .. damaged .. " players (" .. percentage .. "%)", "success")
-            else
-                notify("No valid targets found", "warning")
-            end
+            notification("Damaged " .. #targets .. " players (" .. percentage .. "%)", "success")
         end)
         
-    -- Movement Commands
-    elseif command == "tp" or command == "goto" then
-        if target and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+    elseif cmd == "tp" or cmd == "goto" then
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and 
+           player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-            notify("Teleported to " .. target.Name, "success")
+            notification("Teleported to " .. target.Name, "success")
         else
-            notify("Cannot teleport", "error")
+            notification("Cannot teleport to target", "error")
         end
         
-    elseif command == "bring" then
-        if target and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+    elseif cmd == "bring" then
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and 
+           player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             target.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
-            notify("Brought " .. target.Name, "success")
+            notification("Brought " .. target.Name, "success")
         else
-            notify("Cannot bring", "error")
+            notification("Cannot bring target", "error")
         end
         
-    elseif command == "fly" then
-        if not state.fly then
-            state.fly = true
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local root = char.HumanoidRootPart
-                local bv = Instance.new("BodyVelocity") bv.MaxForce, bv.Velocity = Vector3.new(4000, 4000, 4000), Vector3.new(0, 0, 0) bv.Parent = root
-                local bg = Instance.new("BodyGyro") bg.MaxTorque, bg.D, bg.P = Vector3.new(4000, 4000, 4000), 500, 5000 bg.Parent = root
-                data.flyObjs = {bv, bg}
-                notify("Fly enabled", "success")
+    elseif cmd == "fly" then
+        if not State.flying then
+            State.flying = true
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = character.HumanoidRootPart
+                
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                bodyVelocity.Parent = rootPart
+                
+                local bodyGyro = Instance.new("BodyGyro")
+                bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bodyGyro.D = 2000
+                bodyGyro.P = 10000
+                bodyGyro.Parent = rootPart
+                
+                Data.flyObjects = {bodyVelocity, bodyGyro}
+                
+                notification("Fly enabled", "success")
                 
                 task.spawn(function()
-                    while state.fly do
-                        if not char or not char:FindFirstChild("HumanoidRootPart") or not bv.Parent then state.fly = false break end
-                        local cam = workspace.CurrentCamera
-                        local move = Vector3.new(0, 0, 0)
-                        if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
-                        if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
-                        if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
-                        if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
-                        if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
-                        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then move = move - Vector3.new(0, 1, 0) end
-                        bv.Velocity, bg.CFrame = move * cfg.fs, cam.CFrame
+                    while State.flying and character.Parent do
+                        local camera = workspace.CurrentCamera
+                        local moveVector = Vector3.new(0, 0, 0)
+                        
+                        if UIS:IsKeyDown(Enum.KeyCode.W) then
+                            moveVector = moveVector + camera.CFrame.LookVector
+                        end
+                        if UIS:IsKeyDown(Enum.KeyCode.S) then
+                            moveVector = moveVector - camera.CFrame.LookVector
+                        end
+                        if UIS:IsKeyDown(Enum.KeyCode.A) then
+                            moveVector = moveVector - camera.CFrame.RightVector
+                        end
+                        if UIS:IsKeyDown(Enum.KeyCode.D) then
+                            moveVector = moveVector + camera.CFrame.RightVector
+                        end
+                        if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                            moveVector = moveVector + Vector3.new(0, 1, 0)
+                        end
+                        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
+                            moveVector = moveVector - Vector3.new(0, 1, 0)
+                        end
+                        
+                        if bodyVelocity and bodyVelocity.Parent then
+                            bodyVelocity.Velocity = moveVector * Config.flySpeed
+                        end
+                        if bodyGyro and bodyGyro.Parent then
+                            bodyGyro.CFrame = camera.CFrame
+                        end
+                        
                         wait()
                     end
                 end)
             end
+        else
+            notification("Fly is already enabled", "warning")
         end
         
-    elseif command == "unfly" then
-        state.fly = false
-        for _, obj in pairs(data.flyObjs) do if obj and obj.Parent then obj:Destroy() end end
-        data.flyObjs = {}
-        notify("Fly disabled", "success")
+    elseif cmd == "unfly" then
+        State.flying = false
+        for _, obj in pairs(Data.flyObjects) do
+            if obj and obj.Parent then
+                obj:Destroy()
+            end
+        end
+        Data.flyObjects = {}
+        notification("Fly disabled", "success")
         
-    elseif command == "noclip" then
-        state.nc = true
-        notify("Noclip enabled", "success")
+    elseif cmd == "noclip" then
+        State.noclip = true
+        notification("Noclip enabled", "success")
+        
         task.spawn(function()
-            while state.nc do
+            while State.noclip do
                 if player.Character then
                     for _, part in pairs(player.Character:GetDescendants()) do
-                        if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
                     end
                 end
                 wait(0.1)
             end
         end)
         
-    elseif command == "clip" then
-        state.nc = false
-        notify("Noclip disabled", "success")
+    elseif cmd == "clip" then
+        State.noclip = false
+        notification("Noclip disabled", "success")
         
-    -- Character Commands
-    elseif command == "speed" or command == "ws" then
+    elseif cmd == "speed" or cmd == "ws" then
         local speed = tonumber(args[2]) or 16
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             player.Character.Humanoid.WalkSpeed = speed
-            cfg.ws = speed
-            notify("Speed set to " .. speed, "success")
+            Config.walkSpeed = speed
+            notification("Walk speed set to " .. speed, "success")
         end
         
-    elseif command == "jumppower" or command == "jp" then
+    elseif cmd == "jp" or cmd == "jumppower" then
         local power = tonumber(args[2]) or 50
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             player.Character.Humanoid.JumpPower = power
-            cfg.jp = power
-            notify("Jump power set to " .. power, "success")
+            Config.jumpPower = power
+            notification("Jump power set to " .. power, "success")
         end
         
-    elseif command == "reset" then
+    elseif cmd == "reset" then
         load:FireServer()
-        notify("Character reset", "success")
+        notification("Character reset", "success")
         
-    -- Farm Commands
-    elseif command == "ff" or command == "fastfarm" then
-        state.ff = not state.ff
-        notify("Fast farm " .. (state.ff and "enabled" or "disabled"), state.ff and "success" or "info")
+    elseif cmd == "ff" or cmd == "fastfarm" then
+        State.fastFarm = not State.fastFarm
+        notification("Fast farm " .. (State.fastFarm and "enabled" or "disabled"), State.fastFarm and "success" or "info")
         
-    elseif command == "sf" or command == "slowfarm" then
-        state.sf = not state.sf
-        notify("Slow farm " .. (state.sf and "enabled" or "disabled"), state.sf and "success" or "info")
+    elseif cmd == "sf" or cmd == "slowfarm" then
+        State.slowFarm = not State.slowFarm
+        notification("Slow farm " .. (State.slowFarm and "enabled" or "disabled"), State.slowFarm and "success" or "info")
         
-    elseif command == "godmode" then
-        state.god = not state.god
-        notify("God mode " .. (state.god and "enabled" or "disabled"), state.god and "success" or "info")
+    elseif cmd == "godmode" then
+        State.godMode = not State.godMode
+        notification("God mode " .. (State.godMode and "enabled" or "disabled"), State.godMode and "success" or "info")
         
-    elseif command == "kaura" or command == "killaura" then
-        state.ka = not state.ka
-        notify("Kill aura " .. (state.ka and "enabled" or "disabled"), state.ka and "success" or "info")
+    elseif cmd == "kaura" or cmd == "killaura" then
+        State.killAura = not State.killAura
+        notification("Kill aura " .. (State.killAura and "enabled" or "disabled"), State.killAura and "success" or "info")
         
-    -- Utility Commands
-    elseif command == "rejoin" then
-        notify("Rejoining...", "info")
+    elseif cmd == "rejoin" then
+        notification("Rejoining server...", "info")
         wait(1)
         game:GetService("TeleportService"):Teleport(game.PlaceId, player)
         
-    elseif command == "cmds" then
-        if executor == player or isAdmin(executor) then
-            notify("Admin Commands: kill, god, tp, bring, dmg, broadcast, kick, freeze, invisible, admin, adminlist", "info")
-            wait(0.5)
-            notify("User Commands: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
-        else
-            notify("Available Commands: ff, sf, godmode, kaura, speed, reset, fly, noclip, rejoin", "info")
-        end
+    elseif cmd == "cmds" or cmd == "commands" then
+        notification("Commands: kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura, admin, rejoin", "info")
         
     else
-        notify("Unknown command: " .. command, "error")
+        notification("Unknown command: " .. cmd, "error")
     end
 end
 
--- Modern Chat System Handler
+-- Chat Handler
 local function setupChatHandler()
-    local function processCommand(plr, msg)
-        if msg:sub(1, 1) == ";" then
-            local cmd = msg:sub(2)
-            if cmd ~= "" then
-                cmd = cmd:gsub("^%s*", ""):gsub("%s*$", "") -- Trim whitespace
-                
-                if plr == player then
-                    table.insert(data.cmdHistory, cmd)
-                    if #data.cmdHistory > 50 then
-                        table.remove(data.cmdHistory, 1)
-                    end
-                    data.historyIdx = #data.cmdHistory + 1
-                end
-                
-                task.spawn(function()
-                    local success, err = pcall(function()
-                        runCommand(cmd, plr)
-                    end)
-                    
-                    if not success then
-                        warn("Command error for " .. plr.Name .. ": " .. tostring(err))
-                        if plr == player then
-                            notify("Command failed: " .. cmd, "error")
-                        end
-                    end
-                end)
+    -- Handle player's own chat
+    player.Chatted:Connect(function(message)
+        if message:sub(1, 1) == ";" then
+            local command = message:sub(2)
+            if command ~= "" then
+                executeCommand(command, player)
             end
         end
-    end
-    
-    -- Handle local player chat
-    player.Chatted:Connect(function(msg)
-        processCommand(player, msg)
     end)
     
     -- Handle other players' chat
     local function connectPlayer(plr)
         if plr ~= player then
-            plr.Chatted:Connect(function(msg)
-                processCommand(plr, msg)
+            plr.Chatted:Connect(function(message)
+                if message:sub(1, 1) == ";" then
+                    local command = message:sub(2)
+                    if command ~= "" then
+                        executeCommand(command, plr)
+                    end
+                end
             end)
         end
     end
@@ -483,256 +580,452 @@ local function setupChatHandler()
     Players.PlayerAdded:Connect(connectPlayer)
 end
 
--- UI Creation
-local function createUI()
-    local sg = Instance.new("ScreenGui")
-    sg.Name, sg.ResetOnSpawn = "2take1Hub", false
-    pcall(function() sg.Parent = CoreGui end)
-    if not sg.Parent then sg.Parent = player:WaitForChild("PlayerGui") end
+-- Create GUI
+local function createGUI()
+    -- Main ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "2take1Hub"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    local main = Instance.new("Frame")
-    main.Size, main.Position = UDim2.new(0, 400, 0, 450), UDim2.new(0.5, -200, 0.5, -225)
-    main.BackgroundColor3, main.BorderSizePixel = theme.bg, 0
-    main.Parent = sg
+    -- Try CoreGui first, fallback to PlayerGui
+    local success, _ = pcall(function()
+        screenGui.Parent = game:GetService("CoreGui")
+    end)
+    if not success then
+        screenGui.Parent = player:WaitForChild("PlayerGui")
+    end
     
-    local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0, 12) corner.Parent = main
+    -- Main Frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 400, 0, 500)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+    mainFrame.BackgroundColor3 = Theme.background
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+    
+    -- Corner radius
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 12)
+    mainCorner.Parent = mainFrame
     
     -- Header
     local header = Instance.new("Frame")
-    header.Size, header.BackgroundColor3 = UDim2.new(1, 0, 0, 40), theme.sec
+    header.Name = "Header"
+    header.Size = UDim2.new(1, 0, 0, 40)
+    header.BackgroundColor3 = Theme.secondary
     header.BorderSizePixel = 0
-    header.Parent = main
+    header.Parent = mainFrame
     
-    local hCorner = Instance.new("UICorner") hCorner.CornerRadius = UDim.new(0, 12) hCorner.Parent = header
-    local hFix = Instance.new("Frame") hFix.Size, hFix.Position = UDim2.new(1, 0, 0, 12), UDim2.new(0, 0, 1, -12)
-    hFix.BackgroundColor3, hFix.BorderSizePixel = theme.sec, 0 hFix.Parent = header
+    local headerCorner = Instance.new("UICorner")
+    headerCorner.CornerRadius = UDim.new(0, 12)
+    headerCorner.Parent = header
     
+    -- Header fix (bottom corners)
+    local headerFix = Instance.new("Frame")
+    headerFix.Size = UDim2.new(1, 0, 0, 12)
+    headerFix.Position = UDim2.new(0, 0, 1, -12)
+    headerFix.BackgroundColor3 = Theme.secondary
+    headerFix.BorderSizePixel = 0
+    headerFix.Parent = header
+    
+    -- Title
     local title = Instance.new("TextLabel")
-    title.Size, title.Position = UDim2.new(0.7, -10, 1, 0), UDim2.new(0, 15, 0, 0)
-    title.BackgroundTransparency, title.Text = 1, "2take1 Hub"
-    title.TextColor3, title.TextSize, title.Font = theme.text, 16, Enum.Font.GothamBold
+    title.Name = "Title"
+    title.Size = UDim2.new(1, -50, 1, 0)
+    title.Position = UDim2.new(0, 15, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "2take1 Hub"
+    title.TextColor3 = Theme.text
+    title.TextSize = 16
+    title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
     
     -- Close Button
-    local close = Instance.new("TextButton")
-    close.Size, close.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -40, 0, 5)
-    close.BackgroundColor3, close.Text = theme.danger, "×"
-    close.TextColor3, close.TextSize, close.Font = theme.text, 20, Enum.Font.Gotham
-    close.Parent = header
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -40, 0, 5)
+    closeButton.BackgroundColor3 = Theme.danger
+    closeButton.Text = "×"
+    closeButton.TextColor3 = Theme.text
+    closeButton.TextSize = 18
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.Parent = header
     
-    local cCorner = Instance.new("UICorner") cCorner.CornerRadius = UDim.new(0, 6) cCorner.Parent = close
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 6)
+    closeCorner.Parent = closeButton
     
-    -- Content
-    local content = Instance.new("ScrollingFrame")
-    content.Size, content.Position = UDim2.new(1, -20, 1, -60), UDim2.new(0, 10, 0, 50)
-    content.BackgroundColor3, content.BorderSizePixel = theme.sec, 0
-    content.ScrollBarThickness = 3
-    content.ScrollBarImageColor3 = theme.accent
-    content.CanvasSize = UDim2.new(0, 0, 0, 0)
-    content.Parent = main
+    -- Content Frame
+    local contentFrame = Instance.new("ScrollingFrame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, -20, 1, -60)
+    contentFrame.Position = UDim2.new(0, 10, 0, 50)
+    contentFrame.BackgroundColor3 = Theme.secondary
+    contentFrame.BorderSizePixel = 0
+    contentFrame.ScrollBarThickness = 6
+    contentFrame.ScrollBarImageColor3 = Theme.accent
+    contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    contentFrame.Parent = mainFrame
     
-    local cCorner2 = Instance.new("UICorner") cCorner2.CornerRadius = UDim.new(0, 10) cCorner2.Parent = content
+    local contentCorner = Instance.new("UICorner")
+    contentCorner.CornerRadius = UDim.new(0, 10)
+    contentCorner.Parent = contentFrame
     
-    local layout = Instance.new("UIListLayout")
-    layout.SortOrder, layout.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 8)
-    layout.Parent = content
+    -- Layout for content
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
+    listLayout.Parent = contentFrame
+    
+    -- Padding for content
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.Parent = contentFrame
     
     -- Command Bar
-    local cmdBar = Instance.new("Frame")
-    cmdBar.Size, cmdBar.Position = UDim2.new(0, 400, 0, 40), UDim2.new(0.5, -200, 0, -50)
-    cmdBar.BackgroundColor3, cmdBar.BorderSizePixel = theme.sec, 0
-    cmdBar.Visible = false
-    cmdBar.Parent = sg
+    local commandBar = Instance.new("Frame")
+    commandBar.Name = "CommandBar"
+    commandBar.Size = UDim2.new(0, 400, 0, 45)
+    commandBar.Position = UDim2.new(0.5, -200, 0, -60)
+    commandBar.BackgroundColor3 = Theme.secondary
+    commandBar.BorderSizePixel = 0
+    commandBar.Visible = false
+    commandBar.Parent = screenGui
     
-    local cbCorner = Instance.new("UICorner") cbCorner.CornerRadius = UDim.new(0, 8) cbCorner.Parent = cmdBar
-    local cbStroke = Instance.new("UIStroke") cbStroke.Color, cbStroke.Thickness = theme.accent, 2 cbStroke.Parent = cmdBar
+    local cmdCorner = Instance.new("UICorner")
+    cmdCorner.CornerRadius = UDim.new(0, 10)
+    cmdCorner.Parent = commandBar
     
-    local prefix = Instance.new("TextLabel")
-    prefix.Size, prefix.BackgroundTransparency = UDim2.new(0, 30, 1, 0), 1
-    prefix.Text, prefix.TextColor3, prefix.TextSize, prefix.Font = ">", theme.accent, 16, Enum.Font.GothamBold
-    prefix.Parent = cmdBar
+    local cmdStroke = Instance.new("UIStroke")
+    cmdStroke.Color = Theme.accent
+    cmdStroke.Thickness = 2
+    cmdStroke.Parent = commandBar
     
-    local input = Instance.new("TextBox")
-    input.Size, input.Position = UDim2.new(1, -40, 1, -10), UDim2.new(0, 35, 0, 5)
-    input.BackgroundTransparency, input.PlaceholderText = 1, "Enter command..."
-    input.PlaceholderColor3, input.TextColor3 = theme.dim, theme.text
-    input.TextSize, input.Font = 14, Enum.Font.Gotham
-    input.TextXAlignment, input.ClearTextOnFocus = Enum.TextXAlignment.Left, false
-    input.Parent = cmdBar
+    -- Command prefix
+    local cmdPrefix = Instance.new("TextLabel")
+    cmdPrefix.Size = UDim2.new(0, 40, 1, 0)
+    cmdPrefix.BackgroundTransparency = 1
+    cmdPrefix.Text = "2t1>"
+    cmdPrefix.TextColor3 = Theme.accent
+    cmdPrefix.TextSize = 14
+    cmdPrefix.Font = Enum.Font.GothamBold
+    cmdPrefix.Parent = commandBar
     
-    return {screenGui = sg, main = main, header = header, content = content, close = close, cmdBar = cmdBar, input = input}
+    -- Command input
+    local commandInput = Instance.new("TextBox")
+    commandInput.Name = "CommandInput"
+    commandInput.Size = UDim2.new(1, -50, 1, -10)
+    commandInput.Position = UDim2.new(0, 45, 0, 5)
+    commandInput.BackgroundTransparency = 1
+    commandInput.Text = ""
+    commandInput.PlaceholderText = "Enter command (try 'cmds' for help)..."
+    commandInput.PlaceholderColor3 = Theme.textDim
+    commandInput.TextColor3 = Theme.text
+    commandInput.TextSize = 14
+    commandInput.Font = Enum.Font.Gotham
+    commandInput.TextXAlignment = Enum.TextXAlignment.Left
+    commandInput.ClearTextOnFocus = false
+    commandInput.Parent = commandBar
+    
+    return {
+        screenGui = screenGui,
+        mainFrame = mainFrame,
+        header = header,
+        closeButton = closeButton,
+        contentFrame = contentFrame,
+        commandBar = commandBar,
+        commandInput = commandInput
+    }
 end
 
--- Create toggles and buttons
-local function createToggle(name, parent, callback)
-    local frame = Instance.new("Frame")
-    frame.Size, frame.BackgroundColor3 = UDim2.new(1, 0, 0, 35), theme.ter
-    frame.BorderSizePixel = 0
-    frame.Parent = parent
+-- Create UI Elements
+local function createToggle(text, parent, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(1, 0, 0, 40)
+    toggleFrame.BackgroundColor3 = Theme.tertiary
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.Parent = parent
     
-    local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0, 6) corner.Parent = frame
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 8)
+    toggleCorner.Parent = toggleFrame
     
     local label = Instance.new("TextLabel")
-    label.Size, label.Position = UDim2.new(1, -60, 1, 0), UDim2.new(0, 12, 0, 0)
-    label.BackgroundTransparency, label.Text = 1, name
-    label.TextColor3, label.TextSize, label.Font = theme.text, 12, Enum.Font.Gotham
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Theme.text
+    label.TextSize = 14
+    label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
+    label.Parent = toggleFrame
     
-    local btn = Instance.new("TextButton")
-    btn.Size, btn.Position = UDim2.new(0, 40, 0, 20), UDim2.new(1, -50, 0.5, -10)
-    btn.BackgroundColor3, btn.Text = theme.bg, ""
-    btn.Parent = frame
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 50, 0, 25)
+    toggleButton.Position = UDim2.new(1, -60, 0.5, -12.5)
+    toggleButton.BackgroundColor3 = Theme.background
+    toggleButton.Text = ""
+    toggleButton.Parent = toggleFrame
     
-    local bCorner = Instance.new("UICorner") bCorner.CornerRadius = UDim.new(0, 10) bCorner.Parent = btn
+    local toggleBtnCorner = Instance.new("UICorner")
+    toggleBtnCorner.CornerRadius = UDim.new(0, 12)
+    toggleBtnCorner.Parent = toggleButton
     
     local indicator = Instance.new("Frame")
-    indicator.Size, indicator.Position = UDim2.new(0, 16, 0, 16), UDim2.new(0, 2, 0, 2)
-    indicator.BackgroundColor3, indicator.BorderSizePixel = theme.text, 0
-    indicator.Parent = btn
+    indicator.Size = UDim2.new(0, 20, 0, 20)
+    indicator.Position = UDim2.new(0, 2.5, 0, 2.5)
+    indicator.BackgroundColor3 = Theme.text
+    indicator.BorderSizePixel = 0
+    indicator.Parent = toggleButton
     
-    local iCorner = Instance.new("UICorner") iCorner.CornerRadius = UDim.new(0, 8) iCorner.Parent = indicator
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(0, 10)
+    indicatorCorner.Parent = indicator
     
-    local active = false
-    btn.MouseButton1Click:Connect(function()
-        active = not active
-        tween(btn, {BackgroundColor3 = active and theme.success or theme.bg}):Play()
-        tween(indicator, {Position = active and UDim2.new(1, -18, 0, 2) or UDim2.new(0, 2, 0, 2)}):Play()
-        callback(active)
+    local toggled = false
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        
+        local newButtonColor = toggled and Theme.success or Theme.background
+        local newIndicatorPos = toggled and UDim2.new(1, -22.5, 0, 2.5) or UDim2.new(0, 2.5, 0, 2.5)
+        
+        createTween(toggleButton, {BackgroundColor3 = newButtonColor}):Play()
+        createTween(indicator, {Position = newIndicatorPos}):Play()
+        
+        callback(toggled)
     end)
     
-    return frame
+    return toggleFrame
 end
 
-local function createButton(name, parent, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size, btn.BackgroundColor3 = UDim2.new(1, 0, 0, 35), theme.accent
-    btn.Text, btn.TextColor3, btn.TextSize, btn.Font = name, theme.text, 12, Enum.Font.GothamBold
-    btn.Parent = parent
+local function createButton(text, parent, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 40)
+    button.BackgroundColor3 = Theme.accent
+    button.Text = text
+    button.TextColor3 = Theme.text
+    button.TextSize = 14
+    button.Font = Enum.Font.GothamBold
+    button.BorderSizePixel = 0
+    button.Parent = parent
     
-    local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0, 6) corner.Parent = btn
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.Parent = button
     
-    btn.MouseButton1Click:Connect(callback)
-    return btn
+    button.MouseButton1Click:Connect(callback)
+    
+    -- Hover effects
+    button.MouseEnter:Connect(function()
+        createTween(button, {BackgroundColor3 = Theme.accent:lerp(Color3.new(1, 1, 1), 0.1)}):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        createTween(button, {BackgroundColor3 = Theme.accent}):Play()
+    end)
+    
+    return button
 end
 
--- Initialize UI
-UI = createUI()
+-- Initialize GUI
+GUI = createGUI()
 
--- Create UI elements
-createToggle("Fast Farm", UI.content, function(val) state.ff = val end)
-createToggle("Slow Farm", UI.content, function(val) state.sf = val end)
-createToggle("God Mode", UI.content, function(val) state.god = val end)
-createToggle("Kill Aura", UI.content, function(val) state.ka = val end)
-createToggle("Fly", UI.content, function(val) if val then runCommand("fly", player) else runCommand("unfly", player) end end)
-createToggle("Noclip", UI.content, function(val) if val then runCommand("noclip", player) else runCommand("clip", player) end end)
-
-createButton("Kill All", UI.content, function() runCommand("kill all", player) end)
-createButton("God All", UI.content, function() runCommand("god all", player) end)
-createButton("Damage All 50%", UI.content, function() runCommand("dmg all 50", player) end)
-createButton("Damage All 25%", UI.content, function() runCommand("dmg all 25", player) end)
-createButton("Reset Character", UI.content, function() runCommand("reset", player) end)
-createButton("Rejoin Server", UI.content, function() runCommand("rejoin", player) end)
-
--- Update canvas size
-UI.content.CanvasSize = UDim2.new(0, 0, 0, UI.content.UIListLayout.AbsoluteContentSize.Y)
-
--- Events
-UI.close.MouseButton1Click:Connect(function()
-    tween(UI.main, {Position = UDim2.new(0.5, -200, 0, -500)}, 0.5):Play()
-    wait(0.5)
-    UI.screenGui:Destroy()
-    state.open = false
+-- Create UI Elements
+createToggle("Fast Farm", GUI.contentFrame, function(enabled)
+    State.fastFarm = enabled
+    notification("Fast farm " .. (enabled and "enabled" or "disabled"), enabled and "success" or "info")
 end)
 
--- Dragging
-local dragging, dragStart, startPos = false, nil, nil
-UI.header.InputBegan:Connect(function(input)
+createToggle("Slow Farm", GUI.contentFrame, function(enabled)
+    State.slowFarm = enabled
+    notification("Slow farm " .. (enabled and "enabled" or "disabled"), enabled and "success" or "info")
+end)
+
+createToggle("God Mode", GUI.contentFrame, function(enabled)
+    State.godMode = enabled
+    notification("God mode " .. (enabled and "enabled" or "disabled"), enabled and "success" or "info")
+end)
+
+createToggle("Kill Aura", GUI.contentFrame, function(enabled)
+    State.killAura = enabled
+    notification("Kill aura " .. (enabled and "enabled" or "disabled"), enabled and "success" or "info")
+end)
+
+createToggle("Fly", GUI.contentFrame, function(enabled)
+    if enabled then
+        executeCommand("fly", player)
+    else
+        executeCommand("unfly", player)
+    end
+end)
+
+createToggle("Noclip", GUI.contentFrame, function(enabled)
+    if enabled then
+        executeCommand("noclip", player)
+    else
+        executeCommand("clip", player)
+    end
+end)
+
+-- Action Buttons
+createButton("Kill All Players", GUI.contentFrame, function()
+    executeCommand("kill all", player)
+end)
+
+createButton("God All Players", GUI.contentFrame, function()
+    executeCommand("god all", player)
+end)
+
+createButton("Damage All 50%", GUI.contentFrame, function()
+    executeCommand("dmg all 50", player)
+end)
+
+createButton("Damage All 25%", GUI.contentFrame, function()
+    executeCommand("dmg all 25", player)
+end)
+
+createButton("Reset Character", GUI.contentFrame, function()
+    executeCommand("reset", player)
+end)
+
+createButton("Rejoin Server", GUI.contentFrame, function()
+    executeCommand("rejoin", player)
+end)
+
+-- Update content size
+local function updateContentSize()
+    GUI.contentFrame.CanvasSize = UDim2.new(0, 0, 0, GUI.contentFrame.UIListLayout.AbsoluteContentSize.Y + 20)
+end
+
+updateContentSize()
+
+-- GUI Events
+GUI.closeButton.MouseButton1Click:Connect(function()
+    createTween(GUI.mainFrame, {Position = UDim2.new(0.5, -200, 0, -600)}, 0.5):Play()
+    wait(0.5)
+    GUI.screenGui:Destroy()
+    State.guiOpen = false
+end)
+
+-- Dragging functionality
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+GUI.header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging, dragStart, startPos = true, input.Position, UI.main.Position
+        dragging = true
+        dragStart = input.Position
+        startPos = GUI.mainFrame.Position
     end
 end)
 
 UIS.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
-        UI.main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        GUI.mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
     end
 end)
 
 UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-end)
-
--- Command bar handling
-UIS.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if input.KeyCode == Enum.KeyCode.Semicolon and state.open then
-        UI.cmdBar.Visible = true
-        tween(UI.cmdBar, {Position = UDim2.new(0.5, -200, 0, 80)}):Play()
-        task.wait(0.3)
-        UI.input:CaptureFocus()
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
     end
 end)
 
-UI.input.Focused:Connect(function() state.focused = true end)
-UI.input.FocusLost:Connect(function(enter)
-    state.focused = false
-    if enter and UI.input.Text ~= "" then
-        table.insert(data.cmdHistory, UI.input.Text)
-        runCommand(UI.input.Text, player)
-        UI.input.Text = ""
+-- Command Bar functionality
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.Semicolon and State.guiOpen then
+        GUI.commandBar.Visible = true
+        createTween(GUI.commandBar, {Position = UDim2.new(0.5, -200, 0, 100)}):Play()
+        wait(0.3)
+        GUI.commandInput:CaptureFocus()
     end
-    tween(UI.cmdBar, {Position = UDim2.new(0.5, -200, 0, -50)}):Play()
-    task.wait(0.3)
-    UI.cmdBar.Visible = false
 end)
 
--- Setup chat handler
-setupChatHandler()
+GUI.commandInput.Focused:Connect(function()
+    State.focused = true
+end)
 
--- Enhanced keybinds
-local keyBinds = {
-    [Enum.KeyCode.F1] = function() runCommand("ff", player) end,
-    [Enum.KeyCode.F2] = function() runCommand("sf", player) end,
-    [Enum.KeyCode.F3] = function() runCommand("godmode", player) end,
-    [Enum.KeyCode.F4] = function() runCommand("kaura", player) end,
-    [Enum.KeyCode.F5] = function() runCommand("fly", player) end,
-    [Enum.KeyCode.F6] = function() runCommand("noclip", player) end,
-    [Enum.KeyCode.Delete] = function() runCommand("kill all", player) end,
-    [Enum.KeyCode.Insert] = function() runCommand("god all", player) end,
+GUI.commandInput.FocusLost:Connect(function(enterPressed)
+    State.focused = false
+    
+    if enterPressed and GUI.commandInput.Text ~= "" then
+        local command = GUI.commandInput.Text
+        table.insert(Data.commandHistory, command)
+        Data.historyIndex = #Data.commandHistory + 1
+        
+        executeCommand(command, player)
+        GUI.commandInput.Text = ""
+    end
+    
+    createTween(GUI.commandBar, {Position = UDim2.new(0.5, -200, 0, -60)}):Play()
+    wait(0.3)
+    GUI.commandBar.Visible = false
+end)
+
+-- Hotkeys
+local hotkeys = {
+    [Enum.KeyCode.F1] = function() executeCommand("ff", player) end,
+    [Enum.KeyCode.F2] = function() executeCommand("sf", player) end,
+    [Enum.KeyCode.F3] = function() executeCommand("godmode", player) end,
+    [Enum.KeyCode.F4] = function() executeCommand("kaura", player) end,
+    [Enum.KeyCode.F5] = function() executeCommand("fly", player) end,
+    [Enum.KeyCode.F6] = function() executeCommand("noclip", player) end,
+    [Enum.KeyCode.Delete] = function() executeCommand("kill all", player) end,
+    [Enum.KeyCode.Insert] = function() executeCommand("god all", player) end,
 }
 
-UIS.InputBegan:Connect(function(input, processed)
-    if processed or state.focused then return end
-    if keyBinds[input.KeyCode] then
-        keyBinds[input.KeyCode]()
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or State.focused then return end
+    
+    if hotkeys[input.KeyCode] then
+        hotkeys[input.KeyCode]()
     end
 end)
 
--- Main loop
+-- Main Loop
 local frameCount = 0
-RS.Heartbeat:Connect(function()
+RunService.Heartbeat:Connect(function()
     frameCount = frameCount + 1
-    if not state.open or not player.Character then return end
     
-    local char, humanoid, root = player.Character, player.Character:FindFirstChild("Humanoid"), player.Character:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root then return end
+    if not State.guiOpen or not player.Character then return end
+    
+    local character = player.Character
+    local humanoid = character:FindFirstChild("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    
+    if not humanoid or not rootPart then return end
     
     -- Fast Farm
-    if state.ff then
-        local handle = getSword()
+    if State.fastFarm then
+        local handle = getSwordHandle()
         if handle and handle:FindFirstChild("up") then
-            for i = 1, math.min(cfg.speed, 10) do -- Cap at 10 for performance
+            for i = 1, Config.speed do
                 handle.up.RemoteEvent:FireServer()
             end
         end
     end
     
     -- Slow Farm
-    if state.sf then
-        local handle = getSword()
+    if State.slowFarm then
+        local handle = getSwordHandle()
         if handle and handle:FindFirstChild("up") then
             for i = 1, 3 do
                 handle.up.RemoteEvent:FireServer()
@@ -741,26 +1034,30 @@ RS.Heartbeat:Connect(function()
     end
     
     -- God Mode
-    if state.god then
-        local pvp = char:FindFirstChild("pvp")
+    if State.godMode then
+        local pvp = character:FindFirstChild("pvp")
         if pvp then
             pvp:Destroy()
         end
     end
     
     -- Kill Aura
-    if state.ka and frameCount % 15 == 0 then
-        local handle = getSword()
-        if handle and handle:FindFirstChild("dmg") and player.leaderstats and player.leaderstats:FindFirstChild("Power") then
-            local power = player.leaderstats.Power.Value
+    if State.killAura and frameCount % 15 == 0 then
+        local handle = getSwordHandle()
+        if handle and handle:FindFirstChild("dmg") then
+            local power = 1000
+            if player.leaderstats and player.leaderstats:FindFirstChild("Power") then
+                power = player.leaderstats.Power.Value
+            end
+            
             for _, target in pairs(workspace:GetChildren()) do
                 if target:FindFirstChild("Humanoid") and target:FindFirstChild("HumanoidRootPart") and target.Name ~= player.Name then
                     local targetHumanoid = target.Humanoid
                     local targetRoot = target.HumanoidRootPart
                     
                     if targetHumanoid.Health > 0 then
-                        local distance = (root.Position - targetRoot.Position).Magnitude
-                        if distance <= cfg.range then
+                        local distance = (rootPart.Position - targetRoot.Position).Magnitude
+                        if distance <= Config.range then
                             handle.dmg.RemoteEvent:FireServer(targetHumanoid, power)
                         end
                     end
@@ -768,42 +1065,57 @@ RS.Heartbeat:Connect(function()
             end
         end
     end
-    
-    -- Anti-Kick
-    if state.ak and frameCount % 600 == 0 then
-        VU:CaptureController()
-        VU:ClickButton2(Vector2.new())
-    end
 end)
 
 -- Character respawn handling
-player.CharacterAdded:Connect(function(char)
+player.CharacterAdded:Connect(function(character)
     wait(1)
-    if char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed, char.Humanoid.JumpPower = cfg.ws, cfg.jp
+    
+    -- Restore settings
+    if character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = Config.walkSpeed
+        character.Humanoid.JumpPower = Config.jumpPower
     end
-    if state.god and char:FindFirstChild("pvp") then char.pvp:Destroy() end
-    if state.nc then runCommand("noclip", player) end
+    
+    -- Re-enable god mode if it was on
+    if State.godMode then
+        local pvp = character:FindFirstChild("pvp")
+        if pvp then
+            pvp:Destroy()
+        end
+    end
+    
+    -- Re-enable noclip if it was on
+    if State.noclip then
+        executeCommand("noclip", player)
+    end
 end)
 
--- Auto-remove admins when they leave
+-- Admin cleanup when players leave
 Players.PlayerRemoving:Connect(function(plr)
-    for i, name in pairs(data.admins) do
-        if name:lower() == plr.Name:lower() then
-            table.remove(data.admins, i)
-            notify(plr.Name .. " (admin) left the game", "info")
+    for i, adminName in pairs(Data.admins) do
+        if adminName:lower() == plr.Name:lower() then
+            table.remove(Data.admins, i)
+            notification(plr.Name .. " (admin) left the server", "info")
             break
         end
     end
 end)
 
--- Startup animation and notifications
+-- Setup chat handler
+setupChatHandler()
+
+-- Startup
 task.spawn(function()
-    tween(UI.main, {Position = UDim2.new(0.5, -200, 0.5, -225)}, 0.5):Play()
-    task.wait(0.5)
-    notify("2take1 Hub loaded!", "success")
-    task.wait(1)
-    notify("Press ';' for commands | F1-F6 for quick toggles", "info")
-    task.wait(0.5)
-    notify("Chat ';admin [player]' to give admin access", "info")
+    -- Animate GUI in
+    createTween(GUI.mainFrame, {Position = UDim2.new(0.5, -200, 0.5, -250)}, 0.8):Play()
+    
+    wait(1)
+    notification("2take1 Hub loaded successfully!", "success")
+    
+    wait(1.5)
+    notification("Press ';' to open command bar | F1-F6 for quick toggles", "info")
+    
+    wait(1.5)
+    notification("Type ';cmds' for all commands | ';admin [player]' to give admin", "info")
 end)
