@@ -319,13 +319,8 @@ local function executeCommand(command, executor)
     end
     
     if cmd == "cmds" then
-        if executor == player then
-            sendPrivateMessage(executor, "OWNER COMMANDS: kill, god, dmg, tp, bring, admin, fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
-        elseif isAdmin(executor) then
-            sendPrivateMessage(executor, "ADMIN COMMANDS: kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura")
-        else
-            sendPrivateMessage(executor, "USER COMMANDS: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
-        end
+        -- This is now handled in setupChatHandler to prevent duplication
+        -- Don't add any code here to avoid duplicate execution
         return
     end
     
@@ -455,21 +450,32 @@ local function executeCommand(command, executor)
                 return
             end
             
-            local power = 1000
-            if player.leaderstats and player.leaderstats:FindFirstChild("Power") then
-                power = player.leaderstats.Power.Value
-            end
-            
-            local damageAmount = (power * percentage) / 100
-            
             for _, plr in pairs(targets) do
                 if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                    handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, damageAmount)
+                    local humanoid = plr.Character.Humanoid
+                    local currentHealth = humanoid.Health
+                    local maxHealth = humanoid.MaxHealth
+                    
+                    -- Calculate damage as percentage of their current health
+                    local damageAmount = (currentHealth * percentage) / 100
+                    local newHealth = math.max(1, currentHealth - damageAmount) -- Keep at least 1 health
+                    
+                    -- Method 1: Try using sword damage system with calculated damage
+                    local calculatedDamage = damageAmount
+                    handle.dmg.RemoteEvent:FireServer(humanoid, calculatedDamage)
+                    
+                    wait(0.1)
+                    
+                    -- Method 2: If sword damage didn't work, try setting health directly
+                    if humanoid.Health > newHealth + 10 then -- If health didn't change much
+                        humanoid.Health = newHealth
+                    end
+                    
                     wait(0.1)
                 end
             end
             
-            sendSystemMessage(executor.Name .. " damaged " .. #targets .. " players " .. percentage .. "%")
+            sendSystemMessage(executor.Name .. " damaged " .. #targets .. " players " .. percentage .. "% of their health")
         end)
         
     elseif cmd == "tp" or cmd == "goto" then
@@ -624,28 +630,58 @@ local function executeCommand(command, executor)
     end
 end
 
--- Chat Handler
+-- Enhanced Chat Handler
 local function setupChatHandler()
-    -- Handle local player chat
-    player.Chatted:Connect(function(message)
+    local function handleCommand(executor, message)
         if message:sub(1, 1) == ";" then
             local command = message:sub(2):gsub("^%s*", ""):gsub("%s*$", "")
             if command ~= "" then
-                executeCommand(command, player)
+                -- Special handling for cmds command to prevent duplication
+                if command:lower() == "cmds" then
+                    if executor == player then
+                        notification("OWNER COMMANDS: kill, god, dmg, tp, bring, admin, fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
+                    elseif isAdmin(executor) then
+                        -- Send private chat message for admins
+                        pcall(function()
+                            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                            if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+                                chatEvents.SayMessageRequest:FireServer("[PRIVATE TO " .. executor.Name .. "] ADMIN COMMANDS: kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura", "All")
+                            else
+                                -- Fallback to system message
+                                sendSystemMessage("ADMIN COMMANDS for " .. executor.Name .. ": kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura")
+                            end
+                        end)
+                    else
+                        -- Send private chat message for regular users
+                        pcall(function()
+                            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                            if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+                                chatEvents.SayMessageRequest:FireServer("[PRIVATE TO " .. executor.Name .. "] USER COMMANDS: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "All")
+                            else
+                                -- Fallback to system message
+                                sendSystemMessage("USER COMMANDS for " .. executor.Name .. ": fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
+                            end
+                        end)
+                    end
+                    return -- Don't call executeCommand for cmds to prevent duplication
+                end
+                
+                -- Execute all other commands normally
+                executeCommand(command, executor)
             end
         end
+    end
+    
+    -- Handle local player chat
+    player.Chatted:Connect(function(message)
+        handleCommand(player, message)
     end)
     
     -- Handle other players' chat
     local function connectPlayer(plr)
         if plr ~= player then
             plr.Chatted:Connect(function(message)
-                if message:sub(1, 1) == ";" then
-                    local command = message:sub(2):gsub("^%s*", ""):gsub("%s*$", "")
-                    if command ~= "" then
-                        executeCommand(command, plr)
-                    end
-                end
+                handleCommand(plr, message)
             end)
         end
     end
