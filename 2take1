@@ -398,10 +398,13 @@ local function executeCommand(command, executor)
                         table.insert(targets, plr)
                     end
                 end
+            elseif args[2] == "me" then
+                -- God the person who said the command, not the script owner
+                targets = {executor}
             elseif target then
                 targets = {target}
             else
-                notification("Usage: god [player/all/others]", "error")
+                notification("Usage: god [player/all/others/me]", "error")
                 return
             end
             
@@ -415,7 +418,18 @@ local function executeCommand(command, executor)
                 end
             end
             
-            sendSystemMessage(executor.Name .. " used god command on " .. #targets .. " players")
+            local targetInfo = ""
+            if args[2] == "me" then
+                targetInfo = "themselves"
+            elseif args[2] == "all" then
+                targetInfo = "everyone"
+            elseif args[2] == "others" then
+                targetInfo = "all other players"
+            else
+                targetInfo = target and target.Name or "unknown target"
+            end
+            
+            sendSystemMessage(executor.Name .. " godded " .. targetInfo)
         end)
         
     elseif cmd == "dmg" or cmd == "damage" then
@@ -475,7 +489,18 @@ local function executeCommand(command, executor)
                 end
             end
             
-            sendSystemMessage(executor.Name .. " damaged " .. #targets .. " players " .. percentage .. "% of their health")
+            local targetInfo = ""
+            if args[2] == "me" then
+                targetInfo = "themselves"
+            elseif args[2] == "all" then
+                targetInfo = "everyone"
+            elseif args[2] == "others" then
+                targetInfo = "all other players"
+            else
+                targetInfo = target and target.Name or "unknown target"
+            end
+            
+            sendSystemMessage(executor.Name .. " damaged " .. targetInfo .. " " .. percentage .. "% of their health")
         end)
         
     elseif cmd == "tp" or cmd == "goto" then
