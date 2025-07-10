@@ -95,7 +95,7 @@ local function addAdmin(plr)
         
         task.spawn(function()
             local percentage = tonumber(args[3]) or 50 -- Default to 50% if no percentage specified
-            percentage = math.clamp(percentage, 1, 100) -- Clamp between 1-100%
+            percentage = math.clamp(percentage, 1, 99) -- Clamp between 1-99% (can't do 100% damage)
             
             local targets = {}
             
@@ -122,15 +122,13 @@ local function addAdmin(plr)
             for _, plr in pairs(targets) do
                 if plr.Character and plr.Character:FindFirstChild("Humanoid") then
                     local humanoid = plr.Character.Humanoid
-                    local currentHealth = humanoid.Health
                     local maxHealth = humanoid.MaxHealth
                     
-                    -- Calculate damage based on percentage
+                    -- Calculate damage amount based on percentage of max health
                     local damageAmount = (maxHealth * percentage) / 100
-                    local newHealth = math.max(1, currentHealth - damageAmount) -- Keep at least 1 health
                     
-                    -- Apply damage by setting health directly
-                    humanoid.Health = newHealth
+                    -- Use the sword's damage system to deal specific damage
+                    handle.dmg.RemoteEvent:FireServer(humanoid, damageAmount)
                     damaged = damaged + 1
                     wait(0.1) -- Small delay between players
                 end
@@ -499,30 +497,110 @@ local function createUI()
     layout.SortOrder, layout.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 8)
     layout.Parent = content
     
-    -- Command Bar
+    -- Enhanced Command Bar with autocomplete and history
+local function createCommandBar()
     local cmdBar = Instance.new("Frame")
-    cmdBar.Size, cmdBar.Position = UDim2.new(0, 400, 0, 40), UDim2.new(0.5, -200, 0, -50)
+    cmdBar.Size, cmdBar.Position = UDim2.new(0, 420, 0, 45), UDim2.new(0.5, -210, 0, -55)
     cmdBar.BackgroundColor3, cmdBar.BorderSizePixel = theme.sec, 0
     cmdBar.Visible = false
-    cmdBar.Parent = sg
+    cmdBar.Parent = UI.screenGui
     
-    local cbCorner = Instance.new("UICorner") cbCorner.CornerRadius = UDim.new(0, 8) cbCorner.Parent = cmdBar
+    local cbCorner = Instance.new("UICorner") cbCorner.CornerRadius = UDim.new(0, 10) cbCorner.Parent = cmdBar
     local cbStroke = Instance.new("UIStroke") cbStroke.Color, cbStroke.Thickness = theme.accent, 2 cbStroke.Parent = cmdBar
     
+    -- Animated gradient background
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.0, theme.sec),
+        ColorSequenceKeypoint.new(1.0, theme.ter)
+    }
+    gradient.Parent = cmdBar
+    
     local prefix = Instance.new("TextLabel")
-    prefix.Size, prefix.BackgroundTransparency = UDim2.new(0, 30, 1, 0), 1
-    prefix.Text, prefix.TextColor3, prefix.TextSize, prefix.Font = ">", theme.accent, 16, Enum.Font.GothamBold
+    prefix.Size, prefix.BackgroundTransparency = UDim2.new(0, 35, 1, 0), 1
+    prefix.Text, prefix.TextColor3, prefix.TextSize, prefix.Font = "2t1>", theme.accent, 14, Enum.Font.GothamBold
     prefix.Parent = cmdBar
     
     local input = Instance.new("TextBox")
-    input.Size, input.Position = UDim2.new(1, -40, 1, -10), UDim2.new(0, 35, 0, 5)
-    input.BackgroundTransparency, input.PlaceholderText = 1, "Enter command..."
+    input.Size, input.Position = UDim2.new(1, -45, 1, -10), UDim2.new(0, 40, 0, 5)
+    input.BackgroundTransparency, input.PlaceholderText = 1, "Enter command... (try 'cmds' for help)"
     input.PlaceholderColor3, input.TextColor3 = theme.dim, theme.text
     input.TextSize, input.Font = 14, Enum.Font.Gotham
     input.TextXAlignment, input.ClearTextOnFocus = Enum.TextXAlignment.Left, false
     input.Parent = cmdBar
     
-    return {screenGui = sg, main = main, header = header, content = content, close = close, cmdBar = cmdBar, input = input}
+    -- Command suggestions
+    local suggestions = Instance.new("Frame")
+    suggestions.Size, suggestions.Position = UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 1, 5)
+    suggestions.BackgroundColor3, suggestions.BorderSizePixel = theme.ter, 0
+    suggestions.Visible = false
+    suggestions.Parent = cmdBar
+    
+    local sugCorner = Instance.new("UICorner") sugCorner.CornerRadius = UDim.new(0, 8) sugCorner.Parent = suggestions
+    
+    local sugLayout = Instance.new("UIListLayout")
+    sugLayout.SortOrder, sugLayout.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 2)
+    sugLayout.Parent = suggestions
+    
+    -- Common commands for suggestions
+    local commonCmds = {"kill all", "kill others", "god all", "god others", "dmg all 50", "tp ", "bring ", "fly", "noclip", "speed 100", "admin ", "broadcast "}
+    
+    input.Changed:Connect(function()
+        local text = input.Text:lower()
+        suggestions:ClearAllChildren()
+        
+        if text ~= "" and #text > 1 then
+            local matches = {}
+            for _, cmd in pairs(commonCmds) do
+                if cmd:sub(1, #text) == text then
+                    table.insert(matches, cmd)
+                end
+            end
+            
+            if #matches > 0 then
+                suggestions.Visible = true
+                suggestions.Size = UDim2.new(1, 0, 0, math.min(#matches * 22, 100))
+                
+                for i, match in pairs(matches) do
+                    if i > 4 then break end -- Limit to 4 suggestions
+                    
+                    local sugBtn = Instance.new("TextButton")
+                    sugBtn.Size = UDim2.new(1, -4, 0, 20)
+                    sugBtn.Position = UDim2.new(0, 2, 0, (i-1) * 22)
+                    sugBtn.BackgroundColor3 = theme.bg
+                    sugBtn.Text = match
+                    sugBtn.TextColor3 = theme.text
+                    sugBtn.TextSize = 12
+                    sugBtn.Font = Enum.Font.Gotham
+                    sugBtn.TextXAlignment = Enum.TextXAlignment.Left
+                    sugBtn.Parent = suggestions
+                    
+                    local sugCorner2 = Instance.new("UICorner") sugCorner2.CornerRadius = UDim.new(0, 4) sugCorner2.Parent = sugBtn
+                    
+                    sugBtn.MouseButton1Click:Connect(function()
+                        input.Text = match
+                        suggestions.Visible = false
+                        input:CaptureFocus()
+                    end)
+                    
+                    sugBtn.MouseEnter:Connect(function()
+                        tween(sugBtn, {BackgroundColor3 = theme.accent}):Play()
+                    end)
+                    
+                    sugBtn.MouseLeave:Connect(function()
+                        tween(sugBtn, {BackgroundColor3 = theme.bg}):Play()
+                    end)
+                end
+            else
+                suggestions.Visible = false
+            end
+        else
+            suggestions.Visible = false
+        end
+    end)
+    
+    return cmdBar, input, suggestions
+end
 end
 
 -- Create toggles and buttons
@@ -581,6 +659,12 @@ end
 -- Initialize UI
 UI = createUI()
 
+-- Create enhanced command bar
+local cmdBar, cmdInput, cmdSuggestions = createCommandBar()
+UI.cmdBar = cmdBar
+UI.input = cmdInput
+UI.suggestions = cmdSuggestions
+
 -- Create UI elements
 createToggle("Fast Farm", UI.content, function(val) state.ff = val end)
 createToggle("Slow Farm", UI.content, function(val) state.sf = val end)
@@ -593,9 +677,9 @@ createButton("Kill All", UI.content, function() runCommand("kill all", player) e
 createButton("God All", UI.content, function() runCommand("god all", player) end)
 createButton("Damage All 50%", UI.content, function() runCommand("dmg all 50", player) end)
 createButton("Damage All 25%", UI.content, function() runCommand("dmg all 25", player) end)
-createButton("Rejoin Server", UI.content, function() runCommand("rejoin", player) end)
+createButton("Reset Character", UI.content, function() runCommand("reset", player) end)
 
--- Update canvas size
+createButton("Rejoin Server", UI.content, function() runCommand("rejoin", player) end)
 UI.content.CanvasSize = UDim2.new(0, 0, 0, UI.content.UIListLayout.AbsoluteContentSize.Y)
 
 -- Events
@@ -848,13 +932,16 @@ runCommand = function(cmd, executor)
     originalRunCommand(cmd, executor)
 end
 
--- Improved chat handling with better command parsing
-local function improvedChatHandler()
+-- Modern Chat System Handler (Compatible with new Roblox chat)
+local function setupModernChatHandler()
+    local TextChatService = game:GetService("TextChatService")
+    local StarterGui = game:GetService("StarterGui")
+    
     local function processCommand(plr, msg)
         if msg:sub(1, 1) == ";" then
             local cmd = msg:sub(2)
             if cmd ~= "" then
-                -- Clean up the command and handle it properly
+                -- Clean up the command
                 cmd = cmd:gsub("^%s*", ""):gsub("%s*$", "") -- Trim whitespace
                 
                 -- Add to command history if it's the local player
@@ -875,7 +962,7 @@ local function improvedChatHandler()
                     if not success then
                         warn("Command error for " .. plr.Name .. ": " .. tostring(err))
                         if plr == player then
-                            notify("Command failed: " .. tostring(err), "error")
+                            notify("Command failed: " .. cmd, "error")
                         end
                     end
                 end)
@@ -883,31 +970,78 @@ local function improvedChatHandler()
         end
     end
     
-    -- Handle local player chat
-    player.Chatted:Connect(function(msg)
-        processCommand(player, msg)
+    -- Try new TextChatService first (modern chat)
+    local success = pcall(function()
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            -- Modern chat system
+            TextChatService.MessageReceived:Connect(function(message)
+                local plr = Players:GetPlayerByUserId(message.TextSource.UserId)
+                if plr then
+                    processCommand(plr, message.Text)
+                end
+            end)
+            
+            -- Handle local player commands separately for modern chat
+            player.Chatted:Connect(function(msg)
+                processCommand(player, msg)
+            end)
+            
+            print("2take1 Hub: Using modern TextChatService")
+            return true
+        end
     end)
     
-    -- Handle other players' chat
-    local function connectPlayer(plr)
-        if plr ~= player then
-            plr.Chatted:Connect(function(msg)
-                processCommand(plr, msg)
-            end)
+    -- Fallback to legacy chat if modern chat fails
+    if not success then
+        print("2take1 Hub: Falling back to legacy chat system")
+        
+        -- Handle local player chat
+        player.Chatted:Connect(function(msg)
+            processCommand(player, msg)
+        end)
+        
+        -- Handle other players' chat
+        local function connectPlayer(plr)
+            if plr ~= player then
+                plr.Chatted:Connect(function(msg)
+                    processCommand(plr, msg)
+                end)
+            end
         end
+        
+        -- Connect existing players
+        for _, plr in pairs(Players:GetPlayers()) do
+            connectPlayer(plr)
+        end
+        
+        -- Connect new players
+        Players.PlayerAdded:Connect(connectPlayer)
     end
     
-    -- Connect existing players
-    for _, plr in pairs(Players:GetPlayers()) do
-        connectPlayer(plr)
-    end
+    -- Additional chat monitoring for better compatibility
+    local chatEvents = {
+        "Chatted",
+        "MessageReceived"
+    }
     
-    -- Connect new players
-    Players.PlayerAdded:Connect(connectPlayer)
+    -- Monitor all possible chat events
+    for _, eventName in pairs(chatEvents) do
+        pcall(function()
+            if player[eventName] then
+                player[eventName]:Connect(function(...)
+                    local args = {...}
+                    local message = args[1]
+                    if type(message) == "string" then
+                        processCommand(player, message)
+                    end
+                end)
+            end
+        end)
+    end
 end
 
 -- Replace the old chat setup
-improvedChatHandler()
+setupModernChatHandler()
 
 -- Enhanced key handling
 local keyBinds = {
