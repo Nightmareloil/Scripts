@@ -1,4 +1,4 @@
--- 2take1 Hub - Optimized Sword Simulator GUI
+-- 2take1 Hub - Fixed Sword Simulator GUI
 -- Ultra-compact version with full functionality
 
 repeat wait() until game.Players.LocalPlayer
@@ -19,8 +19,12 @@ local theme = {
     success = Color3.fromRGB(87, 242, 135), danger = Color3.fromRGB(237, 66, 69), warning = Color3.fromRGB(255, 193, 7)
 }
 
+-- Global UI variable
+local UI = {}
+
 -- Utility Functions
 local function tween(obj, props, time) return TS:Create(obj, TweenInfo.new(time or 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), props) end
+
 local function notify(text, type)
     local colors = {info = theme.accent, success = theme.success, error = theme.danger, warning = theme.warning}
     local notif = Instance.new("Frame")
@@ -70,79 +74,10 @@ local function isAdmin(plr)
     return false 
 end
 
--- Enhanced Admin System with better player management
 local function addAdmin(plr)
     if not isAdmin(plr) then
         table.insert(data.admins, plr.Name)
         notify("Added " .. plr.Name .. " as admin", "success")
-        
-        -- Notify the new admin if they're online
-        if plr and plr.Parent then
-            task.spawn(function()
-                wait(1)
-                if plr.Parent then
-                    pcall(function()
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "2take1 Hub";
-                            Text = "You are now an admin! Use ';' commands.";
-                            Duration = 5;
-                        })
-                    end)
-        
-    elseif command == "dmg" or command == "damage" then
-        local handle = getSword()
-        if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
-        
-        task.spawn(function()
-            local percentage = tonumber(args[3]) or 50 -- Default to 50% if no percentage specified
-            percentage = math.clamp(percentage, 1, 99) -- Clamp between 1-99% (can't do 100% damage)
-            
-            local targets = {}
-            
-            if args[2] == "all" then
-                for _, plr in pairs(Players:GetPlayers()) do
-                    if plr ~= executor then
-                        table.insert(targets, plr)
-                    end
-                end
-            elseif args[2] == "others" then
-                for _, plr in pairs(Players:GetPlayers()) do
-                    if plr ~= executor then
-                        table.insert(targets, plr)
-                    end
-                end
-            elseif target then
-                targets = type(target) == "table" and target or {target}
-            else
-                notify("Usage: dmg [player/all/others] [percentage]", "error")
-                return
-            end
-            
-            local damaged = 0
-            for _, plr in pairs(targets) do
-                if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                    local humanoid = plr.Character.Humanoid
-                    local maxHealth = humanoid.MaxHealth
-                    
-                    -- Calculate damage amount based on percentage of max health
-                    local damageAmount = (maxHealth * percentage) / 100
-                    
-                    -- Use the sword's damage system to deal specific damage
-                    handle.dmg.RemoteEvent:FireServer(humanoid, damageAmount)
-                    damaged = damaged + 1
-                    wait(0.1) -- Small delay between players
-                end
-            end
-            
-            if damaged > 0 then
-                notify("Damaged " .. damaged .. " players (" .. percentage .. "%)", "success")
-            else
-                notify("No valid targets found", "warning")
-            end
-        end)
-                end
-            end)
-        end
         return true
     end
     return false
@@ -153,38 +88,11 @@ local function removeAdmin(plr)
         if name:lower() == plr.Name:lower() then
             table.remove(data.admins, i)
             notify("Removed " .. plr.Name .. " from admin", "info")
-            
-            -- Notify the removed admin if they're online
-            if plr and plr.Parent then
-                task.spawn(function()
-                    wait(1)
-                    if plr.Parent then
-                        pcall(function()
-                            game:GetService("StarterGui"):SetCore("SendNotification", {
-                                Title = "2take1 Hub";
-                                Text = "Your admin access has been revoked.";
-                                Duration = 3;
-                            })
-                        end)
-                    end
-                end)
-            end
             return true
         end
     end
     return false
 end
-
--- Auto-remove admins when they leave
-Players.PlayerRemoving:Connect(function(plr)
-    for i, name in pairs(data.admins) do
-        if name:lower() == plr.Name:lower() then
-            table.remove(data.admins, i)
-            notify(plr.Name .. " (admin) left the game", "info")
-            break
-        end
-    end
-end)
 
 -- Command Handler
 local function runCommand(cmd, executor)
@@ -195,7 +103,6 @@ local function runCommand(cmd, executor)
     if command == "admin" and executor == player then
         if target then 
             if addAdmin(target) then
-                -- Double notification for clarity
                 wait(0.5)
                 notify(target.Name .. " can now use admin commands", "success")
             else 
@@ -218,7 +125,34 @@ local function runCommand(cmd, executor)
         end
         return
     elseif command == "admins" then
-        notify(#data.admins == 0 and "No admins" or "Admins: " .. table.concat(data.admins, ", "), "info")
+        if #data.admins == 0 then
+            notify("No admins currently", "info")
+        else
+            notify("Admins (" .. #data.admins .. "): " .. table.concat(data.admins, ", "), "info")
+        end
+        return
+    elseif command == "adminlist" or command == "listadmins" then
+        if #data.admins == 0 then
+            notify("No admins currently active", "info")
+        else
+            local adminInfo = {}
+            for _, adminName in pairs(data.admins) do
+                local adminPlayer = Players:FindFirstChild(adminName)
+                if adminPlayer then
+                    table.insert(adminInfo, adminName .. " (Online)")
+                else
+                    table.insert(adminInfo, adminName .. " (Offline)")
+                end
+            end
+            notify("Admin List (" .. #data.admins .. "):", "info")
+            wait(0.5)
+            notify(table.concat(adminInfo, " | "), "info")
+        end
+        return
+    elseif command == "clearadmins" and executor == player then
+        local count = #data.admins
+        data.admins = {}
+        notify("Cleared " .. count .. " admins", "success")
         return
     end
     
@@ -309,6 +243,58 @@ local function runCommand(cmd, executor)
             
             if godded > 0 then
                 notify("Godded " .. godded .. " players", "success")
+            else
+                notify("No valid targets found", "warning")
+            end
+        end)
+        
+    elseif command == "dmg" or command == "damage" then
+        local handle = getSword()
+        if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
+        
+        task.spawn(function()
+            local percentage = tonumber(args[3]) or 50 -- Default to 50% if no percentage specified
+            percentage = math.clamp(percentage, 1, 99) -- Clamp between 1-99% (can't do 100% damage)
+            
+            local targets = {}
+            
+            if args[2] == "all" then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+            elseif args[2] == "others" then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+            elseif target then
+                targets = type(target) == "table" and target or {target}
+            else
+                notify("Usage: dmg [player/all/others] [percentage]", "error")
+                return
+            end
+            
+            local damaged = 0
+            for _, plr in pairs(targets) do
+                if plr.Character and plr.Character:FindFirstChild("Humanoid") and player.leaderstats and player.leaderstats:FindFirstChild("Power") then
+                    local humanoid = plr.Character.Humanoid
+                    local power = player.leaderstats.Power.Value
+                    
+                    -- Calculate damage amount based on percentage
+                    local damageAmount = (power * percentage) / 100
+                    
+                    -- Use the sword's damage system to deal specific damage
+                    handle.dmg.RemoteEvent:FireServer(humanoid, damageAmount)
+                    damaged = damaged + 1
+                    wait(0.1) -- Small delay between players
+                end
+            end
+            
+            if damaged > 0 then
+                notify("Damaged " .. damaged .. " players (" .. percentage .. "%)", "success")
             else
                 notify("No valid targets found", "warning")
             end
@@ -442,6 +428,61 @@ local function runCommand(cmd, executor)
     end
 end
 
+-- Modern Chat System Handler
+local function setupChatHandler()
+    local function processCommand(plr, msg)
+        if msg:sub(1, 1) == ";" then
+            local cmd = msg:sub(2)
+            if cmd ~= "" then
+                cmd = cmd:gsub("^%s*", ""):gsub("%s*$", "") -- Trim whitespace
+                
+                if plr == player then
+                    table.insert(data.cmdHistory, cmd)
+                    if #data.cmdHistory > 50 then
+                        table.remove(data.cmdHistory, 1)
+                    end
+                    data.historyIdx = #data.cmdHistory + 1
+                end
+                
+                task.spawn(function()
+                    local success, err = pcall(function()
+                        runCommand(cmd, plr)
+                    end)
+                    
+                    if not success then
+                        warn("Command error for " .. plr.Name .. ": " .. tostring(err))
+                        if plr == player then
+                            notify("Command failed: " .. cmd, "error")
+                        end
+                    end
+                end)
+            end
+        end
+    end
+    
+    -- Handle local player chat
+    player.Chatted:Connect(function(msg)
+        processCommand(player, msg)
+    end)
+    
+    -- Handle other players' chat
+    local function connectPlayer(plr)
+        if plr ~= player then
+            plr.Chatted:Connect(function(msg)
+                processCommand(plr, msg)
+            end)
+        end
+    end
+    
+    -- Connect existing players
+    for _, plr in pairs(Players:GetPlayers()) do
+        connectPlayer(plr)
+    end
+    
+    -- Connect new players
+    Players.PlayerAdded:Connect(connectPlayer)
+end
+
 -- UI Creation
 local function createUI()
     local sg = Instance.new("ScreenGui")
@@ -497,110 +538,30 @@ local function createUI()
     layout.SortOrder, layout.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 8)
     layout.Parent = content
     
-    -- Enhanced Command Bar with autocomplete and history
-local function createCommandBar()
+    -- Command Bar
     local cmdBar = Instance.new("Frame")
-    cmdBar.Size, cmdBar.Position = UDim2.new(0, 420, 0, 45), UDim2.new(0.5, -210, 0, -55)
+    cmdBar.Size, cmdBar.Position = UDim2.new(0, 400, 0, 40), UDim2.new(0.5, -200, 0, -50)
     cmdBar.BackgroundColor3, cmdBar.BorderSizePixel = theme.sec, 0
     cmdBar.Visible = false
-    cmdBar.Parent = UI.screenGui
+    cmdBar.Parent = sg
     
-    local cbCorner = Instance.new("UICorner") cbCorner.CornerRadius = UDim.new(0, 10) cbCorner.Parent = cmdBar
+    local cbCorner = Instance.new("UICorner") cbCorner.CornerRadius = UDim.new(0, 8) cbCorner.Parent = cmdBar
     local cbStroke = Instance.new("UIStroke") cbStroke.Color, cbStroke.Thickness = theme.accent, 2 cbStroke.Parent = cmdBar
     
-    -- Animated gradient background
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0.0, theme.sec),
-        ColorSequenceKeypoint.new(1.0, theme.ter)
-    }
-    gradient.Parent = cmdBar
-    
     local prefix = Instance.new("TextLabel")
-    prefix.Size, prefix.BackgroundTransparency = UDim2.new(0, 35, 1, 0), 1
-    prefix.Text, prefix.TextColor3, prefix.TextSize, prefix.Font = "2t1>", theme.accent, 14, Enum.Font.GothamBold
+    prefix.Size, prefix.BackgroundTransparency = UDim2.new(0, 30, 1, 0), 1
+    prefix.Text, prefix.TextColor3, prefix.TextSize, prefix.Font = ">", theme.accent, 16, Enum.Font.GothamBold
     prefix.Parent = cmdBar
     
     local input = Instance.new("TextBox")
-    input.Size, input.Position = UDim2.new(1, -45, 1, -10), UDim2.new(0, 40, 0, 5)
-    input.BackgroundTransparency, input.PlaceholderText = 1, "Enter command... (try 'cmds' for help)"
+    input.Size, input.Position = UDim2.new(1, -40, 1, -10), UDim2.new(0, 35, 0, 5)
+    input.BackgroundTransparency, input.PlaceholderText = 1, "Enter command..."
     input.PlaceholderColor3, input.TextColor3 = theme.dim, theme.text
     input.TextSize, input.Font = 14, Enum.Font.Gotham
     input.TextXAlignment, input.ClearTextOnFocus = Enum.TextXAlignment.Left, false
     input.Parent = cmdBar
     
-    -- Command suggestions
-    local suggestions = Instance.new("Frame")
-    suggestions.Size, suggestions.Position = UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 1, 5)
-    suggestions.BackgroundColor3, suggestions.BorderSizePixel = theme.ter, 0
-    suggestions.Visible = false
-    suggestions.Parent = cmdBar
-    
-    local sugCorner = Instance.new("UICorner") sugCorner.CornerRadius = UDim.new(0, 8) sugCorner.Parent = suggestions
-    
-    local sugLayout = Instance.new("UIListLayout")
-    sugLayout.SortOrder, sugLayout.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 2)
-    sugLayout.Parent = suggestions
-    
-    -- Common commands for suggestions
-    local commonCmds = {"kill all", "kill others", "god all", "god others", "dmg all 50", "tp ", "bring ", "fly", "noclip", "speed 100", "admin ", "broadcast "}
-    
-    input.Changed:Connect(function()
-        local text = input.Text:lower()
-        suggestions:ClearAllChildren()
-        
-        if text ~= "" and #text > 1 then
-            local matches = {}
-            for _, cmd in pairs(commonCmds) do
-                if cmd:sub(1, #text) == text then
-                    table.insert(matches, cmd)
-                end
-            end
-            
-            if #matches > 0 then
-                suggestions.Visible = true
-                suggestions.Size = UDim2.new(1, 0, 0, math.min(#matches * 22, 100))
-                
-                for i, match in pairs(matches) do
-                    if i > 4 then break end -- Limit to 4 suggestions
-                    
-                    local sugBtn = Instance.new("TextButton")
-                    sugBtn.Size = UDim2.new(1, -4, 0, 20)
-                    sugBtn.Position = UDim2.new(0, 2, 0, (i-1) * 22)
-                    sugBtn.BackgroundColor3 = theme.bg
-                    sugBtn.Text = match
-                    sugBtn.TextColor3 = theme.text
-                    sugBtn.TextSize = 12
-                    sugBtn.Font = Enum.Font.Gotham
-                    sugBtn.TextXAlignment = Enum.TextXAlignment.Left
-                    sugBtn.Parent = suggestions
-                    
-                    local sugCorner2 = Instance.new("UICorner") sugCorner2.CornerRadius = UDim.new(0, 4) sugCorner2.Parent = sugBtn
-                    
-                    sugBtn.MouseButton1Click:Connect(function()
-                        input.Text = match
-                        suggestions.Visible = false
-                        input:CaptureFocus()
-                    end)
-                    
-                    sugBtn.MouseEnter:Connect(function()
-                        tween(sugBtn, {BackgroundColor3 = theme.accent}):Play()
-                    end)
-                    
-                    sugBtn.MouseLeave:Connect(function()
-                        tween(sugBtn, {BackgroundColor3 = theme.bg}):Play()
-                    end)
-                end
-            else
-                suggestions.Visible = false
-            end
-        else
-            suggestions.Visible = false
-        end
-    end)
-    
-    return cmdBar, input, suggestions
-end
+    return {screenGui = sg, main = main, header = header, content = content, close = close, cmdBar = cmdBar, input = input}
 end
 
 -- Create toggles and buttons
@@ -659,12 +620,6 @@ end
 -- Initialize UI
 UI = createUI()
 
--- Create enhanced command bar
-local cmdBar, cmdInput, cmdSuggestions = createCommandBar()
-UI.cmdBar = cmdBar
-UI.input = cmdInput
-UI.suggestions = cmdSuggestions
-
 -- Create UI elements
 createToggle("Fast Farm", UI.content, function(val) state.ff = val end)
 createToggle("Slow Farm", UI.content, function(val) state.sf = val end)
@@ -678,8 +633,9 @@ createButton("God All", UI.content, function() runCommand("god all", player) end
 createButton("Damage All 50%", UI.content, function() runCommand("dmg all 50", player) end)
 createButton("Damage All 25%", UI.content, function() runCommand("dmg all 25", player) end)
 createButton("Reset Character", UI.content, function() runCommand("reset", player) end)
-
 createButton("Rejoin Server", UI.content, function() runCommand("rejoin", player) end)
+
+-- Update canvas size
 UI.content.CanvasSize = UDim2.new(0, 0, 0, UI.content.UIListLayout.AbsoluteContentSize.Y)
 
 -- Events
@@ -733,317 +689,10 @@ UI.input.FocusLost:Connect(function(enter)
     UI.cmdBar.Visible = false
 end)
 
--- Chat command handling
-local function setupChat()
-    local function handleChat(plr, msg)
-        if msg:sub(1, 1) == ";" then
-            runCommand(msg:sub(2), plr)
-        end
-    end
-    
-    player.Chatted:Connect(function(msg) handleChat(player, msg) end)
-    
-    Players.PlayerAdded:Connect(function(plr)
-        plr.Chatted:Connect(function(msg) handleChat(plr, msg) end)
-    end)
-    
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player then
-            plr.Chatted:Connect(function(msg) handleChat(plr, msg) end)
-        end
-    end
-end
+-- Setup chat handler
+setupChatHandler()
 
-setupChat()
-
--- Main loop
-local frameCount = 0
-RS.Heartbeat:Connect(function()
-    frameCount = frameCount + 1
-    if not state.open or not player.Character then return end
-    
-    local char, humanoid, root = player.Character, player.Character:FindFirstChild("Humanoid"), player.Character:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root then return end
-    
-    -- Fast Farm
-    if state.ff then
-        local handle = getSword()
-        if handle and handle:FindFirstChild("up") then
-            for i = 1, cfg.speed do handle.up.RemoteEvent:FireServer() end
-        end
-    end
-    
-    -- Slow Farm
-    if state.sf then
-        local handle = getSword()
-        if handle and handle:FindFirstChild("up") then
-            for i = 1, 3 do handle.up.RemoteEvent:FireServer() end
-        end
-    end
-    
-    -- God Mode
-    if state.god and char:FindFirstChild("pvp") then char.pvp:Destroy() end
-    
-    -- Kill Aura
-    if state.ka and frameCount % 10 == 0 then
-        local handle = getSword()
-        if handle and handle:FindFirstChild("dmg") then
-            for _, target in pairs(workspace:GetChildren()) do
-                if target:FindFirstChild("Humanoid") and target:FindFirstChild("HumanoidRootPart") then
-                    local dist = (root.Position - target.HumanoidRootPart.Position).Magnitude
-                    if dist <= cfg.range and target.Name ~= player.Name and target.Humanoid.Health > 0 then
-                        handle.dmg.RemoteEvent:FireServer(target.Humanoid, player.leaderstats.Power.Value)
-                    end
-                end
-            end
-        end
-    end
-    
-    -- Anti-Kick
-    if state.ak and frameCount % 300 == 0 then
-        VU:CaptureController()
-        VU:ClickButton2(Vector2.new())
-    end
-end)
-
--- Character respawn
-player.CharacterAdded:Connect(function(char)
-    wait(1)
-    if char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed, char.Humanoid.JumpPower = cfg.ws, cfg.jp
-    end
-    if state.god and char:FindFirstChild("pvp") then char.pvp:Destroy() end
-    if state.nc then runCommand("noclip", player) end
-end)
-
--- Additional Admin Commands
-local adminCmds = {
-    ["broadcast"] = function(args, executor)
-        if executor ~= player and not isAdmin(executor) then return false end
-        local msg = table.concat(args, " ", 2)
-        if msg and msg ~= "" then
-            for _, plr in pairs(Players:GetPlayers()) do
-                if plr ~= executor then
-                    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                        Text = "[ADMIN] " .. msg;
-                        Color = Color3.fromRGB(255, 255, 0);
-                    })
-                end
-            end
-            notify("Broadcasted: " .. msg, "success")
-        else
-            notify("Usage: broadcast [message]", "error")
-        end
-        return true
-    end,
-    
-    ["kick"] = function(args, executor)
-        if executor ~= player and not isAdmin(executor) then return false end
-        local target = findPlayer(args[2])
-        if target and target ~= player then
-            target:Kick("Kicked by admin")
-            notify("Kicked " .. target.Name, "success")
-        else
-            notify("Cannot kick target", "error")
-        end
-        return true
-    end,
-    
-    ["freeze"] = function(args, executor)
-        if executor ~= player and not isAdmin(executor) then return false end
-        local target = findPlayer(args[2])
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            local root = target.Character.HumanoidRootPart
-            local anchor = Instance.new("Attachment")
-            anchor.Parent = root
-            root.Anchored = true
-            notify("Froze " .. target.Name, "success")
-        else
-            notify("Cannot freeze target", "error")
-        end
-        return true
-    end,
-    
-    ["unfreeze"] = function(args, executor)
-        if executor ~= player and not isAdmin(executor) then return false end
-        local target = findPlayer(args[2])
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            target.Character.HumanoidRootPart.Anchored = false
-            notify("Unfroze " .. target.Name, "success")
-        else
-            notify("Cannot unfreeze target", "error")
-        end
-        return true
-    end,
-    
-    ["invisible"] = function(args, executor)
-        if executor ~= player and not isAdmin(executor) then return false end
-        local target = findPlayer(args[2]) or executor
-        if target and target.Character then
-            for _, part in pairs(target.Character:GetChildren()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 1
-                elseif part:IsA("Accessory") and part:FindFirstChild("Handle") then
-                    part.Handle.Transparency = 1
-                end
-            end
-            if target.Character:FindFirstChild("Head") and target.Character.Head:FindFirstChild("face") then
-                target.Character.Head.face.Transparency = 1
-            end
-            notify("Made " .. target.Name .. " invisible", "success")
-        end
-        return true
-    end,
-    
-    ["visible"] = function(args, executor)
-        if executor ~= player and not isAdmin(executor) then return false end
-        local target = findPlayer(args[2]) or executor
-        if target and target.Character then
-            for _, part in pairs(target.Character:GetChildren()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 0
-                elseif part:IsA("Accessory") and part:FindFirstChild("Handle") then
-                    part.Handle.Transparency = 0
-                end
-            end
-            if target.Character:FindFirstChild("Head") and target.Character.Head:FindFirstChild("face") then
-                target.Character.Head.face.Transparency = 0
-            end
-            notify("Made " .. target.Name .. " visible", "success")
-        end
-        return true
-    end
-}
-
--- Enhanced runCommand with admin commands
-local originalRunCommand = runCommand
-runCommand = function(cmd, executor)
-    local args = cmd:lower():split(" ")
-    local command = args[1]
-    
-    -- Check for admin commands first
-    if adminCmds[command] then
-        if adminCmds[command](args, executor) then
-            return
-        end
-    end
-    
-    -- Fall back to original command handler
-    originalRunCommand(cmd, executor)
-end
-
--- Modern Chat System Handler (Compatible with new Roblox chat)
-local function setupModernChatHandler()
-    local TextChatService = game:GetService("TextChatService")
-    local StarterGui = game:GetService("StarterGui")
-    
-    local function processCommand(plr, msg)
-        if msg:sub(1, 1) == ";" then
-            local cmd = msg:sub(2)
-            if cmd ~= "" then
-                -- Clean up the command
-                cmd = cmd:gsub("^%s*", ""):gsub("%s*$", "") -- Trim whitespace
-                
-                -- Add to command history if it's the local player
-                if plr == player then
-                    table.insert(data.cmdHistory, cmd)
-                    if #data.cmdHistory > 50 then
-                        table.remove(data.cmdHistory, 1)
-                    end
-                    data.historyIdx = #data.cmdHistory + 1
-                end
-                
-                -- Execute command with proper error handling
-                task.spawn(function()
-                    local success, err = pcall(function()
-                        runCommand(cmd, plr)
-                    end)
-                    
-                    if not success then
-                        warn("Command error for " .. plr.Name .. ": " .. tostring(err))
-                        if plr == player then
-                            notify("Command failed: " .. cmd, "error")
-                        end
-                    end
-                end)
-            end
-        end
-    end
-    
-    -- Try new TextChatService first (modern chat)
-    local success = pcall(function()
-        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-            -- Modern chat system
-            TextChatService.MessageReceived:Connect(function(message)
-                local plr = Players:GetPlayerByUserId(message.TextSource.UserId)
-                if plr then
-                    processCommand(plr, message.Text)
-                end
-            end)
-            
-            -- Handle local player commands separately for modern chat
-            player.Chatted:Connect(function(msg)
-                processCommand(player, msg)
-            end)
-            
-            print("2take1 Hub: Using modern TextChatService")
-            return true
-        end
-    end)
-    
-    -- Fallback to legacy chat if modern chat fails
-    if not success then
-        print("2take1 Hub: Falling back to legacy chat system")
-        
-        -- Handle local player chat
-        player.Chatted:Connect(function(msg)
-            processCommand(player, msg)
-        end)
-        
-        -- Handle other players' chat
-        local function connectPlayer(plr)
-            if plr ~= player then
-                plr.Chatted:Connect(function(msg)
-                    processCommand(plr, msg)
-                end)
-            end
-        end
-        
-        -- Connect existing players
-        for _, plr in pairs(Players:GetPlayers()) do
-            connectPlayer(plr)
-        end
-        
-        -- Connect new players
-        Players.PlayerAdded:Connect(connectPlayer)
-    end
-    
-    -- Additional chat monitoring for better compatibility
-    local chatEvents = {
-        "Chatted",
-        "MessageReceived"
-    }
-    
-    -- Monitor all possible chat events
-    for _, eventName in pairs(chatEvents) do
-        pcall(function()
-            if player[eventName] then
-                player[eventName]:Connect(function(...)
-                    local args = {...}
-                    local message = args[1]
-                    if type(message) == "string" then
-                        processCommand(player, message)
-                    end
-                end)
-            end
-        end)
-    end
-end
-
--- Replace the old chat setup
-setupModernChatHandler()
-
--- Enhanced key handling
+-- Enhanced keybinds
 local keyBinds = {
     [Enum.KeyCode.F1] = function() runCommand("ff", player) end,
     [Enum.KeyCode.F2] = function() runCommand("sf", player) end,
@@ -1055,86 +704,23 @@ local keyBinds = {
     [Enum.KeyCode.Insert] = function() runCommand("god all", player) end,
 }
 
--- Update input handling
 UIS.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    
-    -- Command bar
-    if input.KeyCode == Enum.KeyCode.Semicolon and state.open then
-        UI.cmdBar.Visible = true
-        tween(UI.cmdBar, {Position = UDim2.new(0.5, -200, 0, 80)}):Play()
-        task.wait(0.3)
-        UI.input:CaptureFocus()
-    end
-    
-    -- Keybinds
+    if processed or state.focused then return end
     if keyBinds[input.KeyCode] then
         keyBinds[input.KeyCode]()
     end
-    
-    -- Command history navigation
-    if state.focused and UI.input:IsFocused() then
-        if input.KeyCode == Enum.KeyCode.Up then
-            if data.historyIdx > 1 then
-                data.historyIdx = data.historyIdx - 1
-                UI.input.Text = data.cmdHistory[data.historyIdx] or ""
-            end
-        elseif input.KeyCode == Enum.KeyCode.Down then
-            if data.historyIdx < #data.cmdHistory then
-                data.historyIdx = data.historyIdx + 1
-                UI.input.Text = data.cmdHistory[data.historyIdx] or ""
-            else
-                data.historyIdx = #data.cmdHistory + 1
-                UI.input.Text = ""
-            end
-        end
-    end
 end)
 
--- Status display enhancement
-local function updateStatus()
-    local statusParts = {}
-    
-    if state.ff then table.insert(statusParts, "FF") end
-    if state.sf then table.insert(statusParts, "SF") end
-    if state.god then table.insert(statusParts, "GOD") end
-    if state.ka then table.insert(statusParts, "KA") end
-    if state.fly then table.insert(statusParts, "FLY") end
-    if state.nc then table.insert(statusParts, "NC") end
-    
-    local statusText = #statusParts > 0 and table.concat(statusParts, " | ") or "Ready"
-    
-    -- Add admin count
-    if #data.admins > 0 then
-        statusText = statusText .. " | Admins: " .. #data.admins
-    end
-    
-    -- Add power if available
-    if player.leaderstats and player.leaderstats:FindFirstChild("Power") then
-        statusText = statusText .. " | PWR: " .. player.leaderstats.Power.Value
-    end
-    
-    return statusText
-end
-
--- Performance optimizations
-local lastUpdate = 0
-local updateInterval = 0.5
-
--- Enhanced main loop
+-- Main loop
+local frameCount = 0
 RS.Heartbeat:Connect(function()
     frameCount = frameCount + 1
-    local now = tick()
-    
     if not state.open or not player.Character then return end
     
-    local char = player.Character
-    local humanoid = char:FindFirstChild("Humanoid")
-    local root = char:FindFirstChild("HumanoidRootPart")
-    
+    local char, humanoid, root = player.Character, player.Character:FindFirstChild("Humanoid"), player.Character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
     
-    -- Fast Farm (optimized)
+    -- Fast Farm
     if state.ff then
         local handle = getSword()
         if handle and handle:FindFirstChild("up") then
@@ -1154,7 +740,7 @@ RS.Heartbeat:Connect(function()
         end
     end
     
-    -- God Mode (optimized check)
+    -- God Mode
     if state.god then
         local pvp = char:FindFirstChild("pvp")
         if pvp then
@@ -1162,8 +748,8 @@ RS.Heartbeat:Connect(function()
         end
     end
     
-    -- Kill Aura (optimized)
-    if state.ka and frameCount % 15 == 0 then -- Reduced frequency for better performance
+    -- Kill Aura
+    if state.ka and frameCount % 15 == 0 then
         local handle = getSword()
         if handle and handle:FindFirstChild("dmg") and player.leaderstats and player.leaderstats:FindFirstChild("Power") then
             local power = player.leaderstats.Power.Value
@@ -1183,53 +769,35 @@ RS.Heartbeat:Connect(function()
         end
     end
     
-    -- Anti-Kick (less frequent)
-    if state.ak and frameCount % 600 == 0 then -- Reduced frequency
+    -- Anti-Kick
+    if state.ak and frameCount % 600 == 0 then
         VU:CaptureController()
         VU:ClickButton2(Vector2.new())
     end
-    
-    -- Update status less frequently
-    if now - lastUpdate > updateInterval then
-        lastUpdate = now
-        -- Status updates would go here if we had a status bar
-    end
 end)
 
--- Cleanup function
-local function cleanup()
-    if state.fly then
-        for _, obj in pairs(data.flyObjs) do
-            if obj and obj.Parent then
-                obj:Destroy()
-            end
+-- Character respawn handling
+player.CharacterAdded:Connect(function(char)
+    wait(1)
+    if char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed, char.Humanoid.JumpPower = cfg.ws, cfg.jp
+    end
+    if state.god and char:FindFirstChild("pvp") then char.pvp:Destroy() end
+    if state.nc then runCommand("noclip", player) end
+end)
+
+-- Auto-remove admins when they leave
+Players.PlayerRemoving:Connect(function(plr)
+    for i, name in pairs(data.admins) do
+        if name:lower() == plr.Name:lower() then
+            table.remove(data.admins, i)
+            notify(plr.Name .. " (admin) left the game", "info")
+            break
         end
     end
-    
-    state.nc = false
-    state.fly = false
-    
-    if UI.screenGui then
-        UI.screenGui:Destroy()
-    end
-end
-
--- Handle player leaving
-Players.PlayerRemoving:Connect(function(plr)
-    -- This is handled in the enhanced admin system above
 end)
 
--- Error handling wrapper
-local function safeCall(func, ...)
-    local success, result = pcall(func, ...)
-    if not success then
-        warn("2take1 Hub Error: " .. tostring(result))
-        notify("An error occurred", "error")
-    end
-    return success, result
-end
-
--- Startup sequence
+-- Startup animation and notifications
 task.spawn(function()
     tween(UI.main, {Position = UDim2.new(0.5, -200, 0.5, -225)}, 0.5):Play()
     task.wait(0.5)
@@ -1239,9 +807,3 @@ task.spawn(function()
     task.wait(0.5)
     notify("Chat ';admin [player]' to give admin access", "info")
 end)
-
--- Debug info (remove in production)
-if game:GetService("RunService"):IsStudio() then
-    print("2take1 Hub Debug Mode - Studio Detected")
-    print("Available commands:", table.concat({"kill", "god", "tp", "bring", "fly", "noclip", "speed", "reset", "ff", "sf", "godmode", "kaura", "admin", "broadcast", "kick", "freeze", "invisible"}, ", "))
-end
