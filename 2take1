@@ -219,6 +219,55 @@ local function sendSystemMessage(message)
     end
 end
 
+local function sendPrivateMessage(targetPlayer, message)
+    -- For the script owner (local player)
+    if targetPlayer == player then
+        notification(message, "info")
+        return
+    end
+    
+    -- For other players, we'll try to send them a private system message
+    -- Since we can't actually send private messages to other players directly,
+    -- we'll create a method that attempts various approaches
+    
+    -- Method 1: Try to send via chat with their name prefix (closest to private)
+    pcall(function()
+        local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+            -- Send a message that appears to be directed at them
+            chatEvents.SayMessageRequest:FireServer("[PRIVATE TO " .. targetPlayer.Name .. "] " .. message, "All")
+        end
+    end)
+    
+    -- Method 2: Try TextChatService private channel approach
+    pcall(function()
+        local TextChatService = game:GetService("TextChatService")
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local textChannels = TextChatService:FindFirstChild("TextChannels")
+            if textChannels then
+                -- Try to create or find a private channel
+                local privateChannel = textChannels:FindFirstChild("PrivateChannel_" .. targetPlayer.Name)
+                if not privateChannel then
+                    -- If no private channel exists, send as system message with name
+                    local rbxGeneral = textChannels:FindFirstChild("RBXGeneral")
+                    if rbxGeneral then
+                        rbxGeneral:DisplaySystemMessage("[PRIVATE TO " .. targetPlayer.Name .. "] " .. message)
+                    end
+                else
+                    privateChannel:DisplaySystemMessage(message)
+                end
+            end
+        end
+    end)
+    
+    -- Method 3: Fallback - create a GUI message for them (if they have the script)
+    pcall(function()
+        -- This would only work if the target player also has the script running
+        -- We can't directly send GUI messages to other players
+        print("[2take1 Hub] Would send private message to " .. targetPlayer.Name .. ": " .. message)
+    end)
+end
+
 -- Command System
 local function executeCommand(command, executor)
     local args = {}
@@ -271,11 +320,11 @@ local function executeCommand(command, executor)
     
     if cmd == "cmds" then
         if executor == player then
-            notification("OWNER COMMANDS: kill, god, dmg, tp, bring, admin, fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
+            sendPrivateMessage(executor, "OWNER COMMANDS: kill, god, dmg, tp, bring, admin, fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
         elseif isAdmin(executor) then
-            notification("ADMIN COMMANDS: kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura", "info")
+            sendPrivateMessage(executor, "ADMIN COMMANDS: kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura")
         else
-            notification("USER COMMANDS: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
+            sendPrivateMessage(executor, "USER COMMANDS: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
         end
         return
     end
