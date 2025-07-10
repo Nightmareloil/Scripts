@@ -661,30 +661,77 @@ local function setupChatHandler()
         if message:sub(1, 1) == ";" then
             local command = message:sub(2):gsub("^%s*", ""):gsub("%s*$", "")
             if command ~= "" then
-                -- Special handling for cmds command to prevent duplication
+                -- Special handling for cmds command to send to chat
                 if command:lower() == "cmds" then
                     if executor == player then
+                        -- For owner, show in notification (private)
                         notification("OWNER COMMANDS: kill, god, dmg, tp, bring, admin, fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
                     elseif isAdmin(executor) then
-                        -- Send private chat message for admins
-                        pcall(function()
-                            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-                            if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
-                                chatEvents.SayMessageRequest:FireServer("[PRIVATE TO " .. executor.Name .. "] ADMIN COMMANDS: kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura", "All")
-                            else
-                                -- Fallback to system message
-                                sendSystemMessage("ADMIN COMMANDS for " .. executor.Name .. ": kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura")
+                        -- For admins, send to chat for everyone to see
+                        task.spawn(function()
+                            wait(0.1) -- Small delay to ensure message goes through
+                            local success = false
+                            
+                            -- Try legacy chat first
+                            pcall(function()
+                                local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                                if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+                                    chatEvents.SayMessageRequest:FireServer("[ADMIN COMMANDS FOR " .. executor.Name .. "] kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura", "All")
+                                    success = true
+                                end
+                            end)
+                            
+                            -- Try TextChatService if legacy failed
+                            if not success then
+                                pcall(function()
+                                    local TextChatService = game:GetService("TextChatService")
+                                    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                                        local textChannels = TextChatService:FindFirstChild("TextChannels")
+                                        if textChannels and textChannels:FindFirstChild("RBXGeneral") then
+                                            textChannels.RBXGeneral:DisplaySystemMessage("[ADMIN COMMANDS FOR " .. executor.Name .. "] kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura")
+                                            success = true
+                                        end
+                                    end
+                                end)
+                            end
+                            
+                            -- Fallback to system message
+                            if not success then
+                                sendSystemMessage("ADMIN COMMANDS FOR " .. executor.Name .. ": kill, god, dmg, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura")
                             end
                         end)
                     else
-                        -- Send private chat message for regular users
-                        pcall(function()
-                            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-                            if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
-                                chatEvents.SayMessageRequest:FireServer("[PRIVATE TO " .. executor.Name .. "] USER COMMANDS: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "All")
-                            else
-                                -- Fallback to system message
-                                sendSystemMessage("USER COMMANDS for " .. executor.Name .. ": fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
+                        -- For regular users, send to chat for everyone to see
+                        task.spawn(function()
+                            wait(0.1) -- Small delay to ensure message goes through
+                            local success = false
+                            
+                            -- Try legacy chat first
+                            pcall(function()
+                                local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+                                if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+                                    chatEvents.SayMessageRequest:FireServer("[USER COMMANDS FOR " .. executor.Name .. "] fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "All")
+                                    success = true
+                                end
+                            end)
+                            
+                            -- Try TextChatService if legacy failed
+                            if not success then
+                                pcall(function()
+                                    local TextChatService = game:GetService("TextChatService")
+                                    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                                        local textChannels = TextChatService:FindFirstChild("TextChannels")
+                                        if textChannels and textChannels:FindFirstChild("RBXGeneral") then
+                                            textChannels.RBXGeneral:DisplaySystemMessage("[USER COMMANDS FOR " .. executor.Name .. "] fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
+                                            success = true
+                                        end
+                                    end
+                                end)
+                            end
+                            
+                            -- Fallback to system message
+                            if not success then
+                                sendSystemMessage("USER COMMANDS FOR " .. executor.Name .. ": fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin")
                             end
                         end)
                     end
