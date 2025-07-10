@@ -612,50 +612,431 @@ end
 
 -- Enhanced Chat Handler for Modern Roblox with System Messages
 local function setupChatHandler()
-    -- Function to send system messages to chat
+    -- Function to send system messages to chat for ALL players to see
     local function sendSystemMessage(message)
         local success = false
         
-        -- Method 1: Try new TextChatService
+        -- Method 1: Use ReplicatedStorage for legacy chat (most reliable for visibility)
         pcall(function()
-            local TextChatService = game:GetService("TextChatService")
-            if TextChatService and TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                local textChannel = TextChatService:FindFirstChild("TextChannels")
-                if textChannel then
-                    local rbxGeneral = textChannel:FindFirstChild("RBXGeneral")
-                    if rbxGeneral then
-                        rbxGeneral:DisplaySystemMessage("[2take1 Hub] " .. message)
-                        success = true
-                    end
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+            if chatEvents then
+                local sayMessageRequest = chatEvents:FindFirstChild("SayMessageRequest")
+                if sayMessageRequest then
+                    sayMessageRequest:FireServer("[2take1 Hub] " .. message, "All")
+                    success = true
+                    print("[2take1 Hub] Sent legacy chat message: " .. message)
                 end
             end
         end)
         
-        -- Method 2: Try Legacy Chat
+        -- Method 2: Try TextChatService for new chat
         if not success then
             pcall(function()
-                game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("[2take1 Hub] " .. message, "All")
-                success = true
+                local TextChatService = game:GetService("TextChatService")
+                if TextChatService and TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    local textChannels = TextChatService:FindFirstChild("TextChannels")
+                    if textChannels then
+                        local rbxGeneral = textChannels:FindFirstChild("RBXGeneral")
+                        if rbxGeneral then
+                            -- Try to send as system message
+                            rbxGeneral:DisplaySystemMessage("[2take1 Hub] " .. message)
+                            success = true
+                            print("[2take1 Hub] Sent TextChatService message: " .. message)
+                        end
+                    end
+                end
             end)
         end
         
-        -- Method 3: Try StarterGui SetCore
+        -- Method 3: Alternative TextChatService approach
         if not success then
             pcall(function()
-                game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                    Text = "[2take1 Hub] " .. message;
-                    Color = Color3.fromRGB(88, 101, 242);
-                    Font = Enum.Font.GothamBold;
-                })
-                success = true
+                local TextChatService = game:GetService("TextChatService")
+                local Players = game:GetService("Players")
+                local player = Players.LocalPlayer
+                
+                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    local textChannels = TextChatService:WaitForChild("TextChannels")
+                    local systemChannel = textChannels:WaitForChild("RBXSystem", 5)
+                    if systemChannel then
+                        systemChannel:DisplaySystemMessage("[2take1 Hub] " .. message)
+                        success = true
+                        print("[2take1 Hub] Sent system channel message: " .. message)
+                    end
+                end
             end)
         end
         
-        -- Fallback: Notification
+        -- Method 4: Try Chat service directly
+        if not success then
+            pcall(function()
+                local Chat = game:GetService("Chat")
+                Chat:Chat(player.Character.Head, "[2take1 Hub] " .. message, Enum.ChatColor.Blue)
+                success = true
+                print("[2take1 Hub] Sent Chat service message: " .. message)
+            end)
+        end
+        
+        -- Method 5: Create a fake player message (last resort)
+        if not success then
+            pcall(function()
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local remotes = ReplicatedStorage:GetChildren()
+                
+                -- Look for any chat-related remotes
+                for _, remote in pairs(remotes) do
+                    if remote:IsA("RemoteEvent") and (remote.Name:lower():find("chat") or remote.Name:lower():find("message")) then
+                        remote:FireServer("[2take1 Hub] " .. message)
+                        success = true
+                        print("[2take1 Hub] Sent via remote: " .. remote.Name)
+                        break
+                    end
+                end
+            end)
+        end
+        
+        -- Method 6: Use workspace for message broadcasting
+        if not success then
+            pcall(function()
+                -- Create a temporary part with message for all to see
+                local part = Instance.new("Part")
+                part.Name = "SystemMessage"
+                part.Anchored = true
+                part.CanCollide = false
+                part.Transparency = 1
+                part.Size = Vector3.new(1, 1, 1)
+                part.Position = Vector3.new(0, 1000, 0)
+                part.Parent = workspace
+                
+                local billboardGui = Instance.new("BillboardGui")
+                billboardGui.Size = UDim2.new(0, 400, 0, 50)
+                billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+                billboardGui.Parent = part
+                
+                local textLabel = Instance.new("TextLabel")
+                textLabel.Size = UDim2.new(1, 0, 1, 0)
+                textLabel.BackgroundTransparency = 1
+                textLabel.Text = "[2take1 Hub] " .. message
+                textLabel.TextColor3 = Color3.fromRGB(88, 101, 242)
+                textLabel.TextSize = 14
+                textLabel.Font = Enum.Font.GothamBold
+                textLabel.Parent = billboardGui
+                
+                -- Remove after 5 seconds
+                game:GetService("Debris"):AddItem(part, 5)
+                success = true
+                print("[2take1 Hub] Created billboard message: " .. message)
+            end)
+        end
+        
+        -- Fallback: Notification (only visible to local player)
         if not success then
             notification(message, "info")
+            print("[2take1 Hub] Fallback notification: " .. message)
+        end
+        
+        print("[2take1 Hub] Message send attempt completed, success: " .. tostring(success))
+    end
+    
+    -- Multiple methods to ensure chat commands work
+    local function handleChat(plr, message)
+        if message:sub(1, 1) == ";" then
+            local command = message:sub(2):gsub("^%s*", ""):gsub("%s*$", "") -- Trim whitespace
+            if command ~= "" then
+                print("[2take1 Hub] " .. plr.Name .. " executed: " .. command) -- Debug
+                
+                -- Enhanced command handling with system messages
+                local args = {}
+                for word in command:gmatch("%S+") do
+                    table.insert(args, word:lower())
+                end
+                
+                local cmd = args[1]
+                
+                -- Commands with system messages
+                if message:sub(1, 6) == ";cmds" then
+                    if plr == player then
+                        task.wait(0.2)
+                        sendSystemMessage("OWNER COMMANDS: [1]kill(me/plr/others/all), [2]god(me/plr/others/all), [3]dmg(plr/all/others), [4]admin(all/plr), [5]unadmin(all/plr), [6]tp(plr), [7]bring(plr), [8]fly, [9]noclip, [10]speed(num), [11]reset, [12]ff, [13]sf, [14]godmode, [15]kaura, [16]rejoin")
+                    elseif isAdmin(plr) then
+                        task.wait(0.2)
+                        sendSystemMessage("ADMIN COMMANDS: [1]kill(me/plr/others/all), [2]god(me/plr/others/all), [3]dmg(plr/all/others), [4]tp(plr), [5]bring(plr), [6]fly, [7]noclip, [8]speed(num), [9]reset, [10]ff, [11]sf, [12]godmode, [13]kaura")
+                    else
+                        task.wait(0.2)
+                        sendSystemMessage("USER COMMANDS: [1]fly, [2]noclip, [3]speed(num), [4]reset, [5]ff, [6]sf, [7]godmode, [8]kaura, [9]rejoin")
+                    end
+                    return
+                end
+                
+                if message:sub(1, 7) == ";admin " and (plr == player or isAdmin(plr)) then
+                    local targetName = message:sub(8)
+                    if targetName == "all" and plr == player then
+                        -- Admin all players
+                        for _, targetPlr in ipairs(Players:GetPlayers()) do
+                            if not isAdmin(targetPlr) then
+                                addAdmin(targetPlr)
+                            end
+                        end
+                        task.wait(0.2)
+                        sendSystemMessage("Everyone is now Admin!")
+                    else
+                        -- Admin specific player
+                        local target = findPlayer(targetName)
+                        if target then
+                            if isAdmin(target) then
+                                sendSystemMessage(target.Name .. " is already Admin!")
+                            else
+                                addAdmin(target)
+                                task.wait(0.2)
+                                sendSystemMessage(target.Name .. " is now Admin!")
+                            end
+                        else
+                            sendSystemMessage("Player '" .. targetName .. "' not found!")
+                        end
+                    end
+                    return
+                end
+                
+                if message:sub(1, 9) == ";unadmin " and (plr == player or isAdmin(plr)) then
+                    local targetName = message:sub(10)
+                    if targetName == "all" and plr == player then
+                        -- Remove admin from all players except owner
+                        local count = 0
+                        for i = #Data.admins, 1, -1 do
+                            local adminPlr = Players:FindFirstChild(Data.admins[i])
+                            if adminPlr and adminPlr ~= player then
+                                removeAdmin(adminPlr)
+                                count = count + 1
+                            end
+                        end
+                        task.wait(0.2)
+                        sendSystemMessage("Removed admin from " .. count .. " players!")
+                    else
+                        -- Remove admin from specific player
+                        local target = findPlayer(targetName)
+                        if target then
+                            if target == player then
+                                sendSystemMessage("Error: Cannot remove admin from Owner!")
+                            elseif isAdmin(target) then
+                                removeAdmin(target)
+                                task.wait(0.2)
+                                sendSystemMessage(target.Name .. " is no longer Admin!")
+                            else
+                                sendSystemMessage(target.Name .. " is not an Admin!")
+                            end
+                        else
+                            sendSystemMessage("Player '" .. targetName .. "' not found!")
+                        end
+                    end
+                    return
+                end
+                
+                if message:sub(1, 6) == ";kill " and (plr == player or isAdmin(plr)) then
+                    local targetName = message:sub(7)
+                    executeCommand("kill " .. targetName, plr)
+                    task.wait(0.2)
+                    if targetName == "all" then
+                        sendSystemMessage(plr.Name .. " killed everyone!")
+                    elseif targetName == "others" then
+                        sendSystemMessage(plr.Name .. " killed all other players!")
+                    else
+                        local target = findPlayer(targetName)
+                        if target then
+                            sendSystemMessage(plr.Name .. " killed " .. target.Name .. "!")
+                        end
+                    end
+                    return
+                end
+                
+                if message:sub(1, 5) == ";god " and (plr == player or isAdmin(plr)) then
+                    local targetName = message:sub(6)
+                    executeCommand("god " .. targetName, plr)
+                    task.wait(0.2)
+                    if targetName == "all" then
+                        sendSystemMessage(plr.Name .. " godded everyone!")
+                    elseif targetName == "others" then
+                        sendSystemMessage(plr.Name .. " godded all other players!")
+                    else
+                        local target = findPlayer(targetName)
+                        if target then
+                            sendSystemMessage(plr.Name .. " godded " .. target.Name .. "!")
+                        end
+                    end
+                    return
+                end
+                
+                if message:sub(1, 5) == ";dmg " and (plr == player or isAdmin(plr)) then
+                    local params = message:sub(6)
+                    executeCommand("dmg " .. params, plr)
+                    task.wait(0.2)
+                    local args = params:split(" ")
+                    local targetName = args[1]
+                    local percentage = args[2] or "50"
+                    if targetName == "all" then
+                        sendSystemMessage(plr.Name .. " damaged everyone " .. percentage .. "%!")
+                    elseif targetName == "others" then
+                        sendSystemMessage(plr.Name .. " damaged all others " .. percentage .. "%!")
+                    else
+                        local target = findPlayer(targetName)
+                        if target then
+                            sendSystemMessage(plr.Name .. " damaged " .. target.Name .. " " .. percentage .. "%!")
+                        end
+                    end
+                    return
+                end
+                
+                if message:sub(1, 4) == ";tp " and (plr == player or isAdmin(plr)) then
+                    local targetName = message:sub(5)
+                    executeCommand("tp " .. targetName, plr)
+                    local target = findPlayer(targetName)
+                    if target then
+                        task.wait(0.2)
+                        sendSystemMessage(plr.Name .. " teleported to " .. target.Name .. "!")
+                    end
+                    return
+                end
+                
+                if message:sub(1, 7) == ";bring " and (plr == player or isAdmin(plr)) then
+                    local targetName = message:sub(8)
+                    executeCommand("bring " .. targetName, plr)
+                    local target = findPlayer(targetName)
+                    if target then
+                        task.wait(0.2)
+                        sendSystemMessage(plr.Name .. " brought " .. target.Name .. "!")
+                    end
+                    return
+                end
+                
+                -- Auto farm commands with system messages
+                if cmd == "ff" or cmd == "fastfarm" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " toggled fast farm!")
+                    return
+                end
+                
+                if cmd == "sf" or cmd == "slowfarm" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " toggled slow farm!")
+                    return
+                end
+                
+                if cmd == "godmode" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " toggled god mode!")
+                    return
+                end
+                
+                if cmd == "kaura" or cmd == "killaura" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " toggled kill aura!")
+                    return
+                end
+                
+                if cmd == "fly" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " toggled fly mode!")
+                    return
+                end
+                
+                if cmd == "noclip" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " toggled noclip!")
+                    return
+                end
+                
+                if cmd == "reset" then
+                    executeCommand(command, plr)
+                    task.wait(0.2)
+                    sendSystemMessage(plr.Name .. " reset their character!")
+                    return
+                end
+                
+                -- Default command execution for other commands
+                executeCommand(command, plr)
+            end
         end
     end
+    
+    -- Handle local player chat
+    player.Chatted:Connect(function(message)
+        handleChat(player, message)
+    end)
+    
+    -- Method 2: TextChatService for new chat system
+    local TextChatService = game:GetService("TextChatService")
+    pcall(function()
+        if TextChatService then
+            TextChatService.MessageReceived:Connect(function(message)
+                local sendingPlayer = Players:GetPlayerByUserId(message.TextSource.UserId)
+                if sendingPlayer then
+                    handleChat(sendingPlayer, message.Text)
+                end
+            end)
+        end
+    end)
+    
+    -- Method 3: Chat service compatibility
+    local ChatService = game:GetService("Chat")
+    pcall(function()
+        ChatService.Chatted:Connect(function(part, message, color)
+            local character = part.Parent
+            if character and character:IsA("Model") then
+                local plr = Players:GetPlayerFromCharacter(character)
+                if plr then
+                    handleChat(plr, message)
+                end
+            end
+        end)
+    end)
+    
+    -- Method 4: Direct player connections
+    local function connectPlayer(plr)
+        if plr and plr ~= player then
+            -- Multiple connection attempts
+            pcall(function()
+                plr.Chatted:Connect(function(message)
+                    handleChat(plr, message)
+                end)
+            end)
+            
+            -- Alternative connection method
+            task.spawn(function()
+                wait(1) -- Wait for player to fully load
+                pcall(function()
+                    plr.Chatted:Connect(function(message)
+                        handleChat(plr, message)
+                    end)
+                end)
+            end)
+        end
+    end
+    
+    -- Connect existing players
+    for _, plr in pairs(Players:GetPlayers()) do
+        connectPlayer(plr)
+    end
+    
+    -- Connect new players
+    Players.PlayerAdded:Connect(function(plr)
+        -- Immediate connection
+        connectPlayer(plr)
+        
+        -- Delayed connection for safety
+        task.spawn(function()
+            wait(2)
+            connectPlayer(plr)
+        end)
+    end)
+    
+    print("[2take1 Hub] Enhanced chat handler with system messages initialized")
+end
     
     -- Multiple methods to ensure chat commands work
     local function handleChat(plr, message)
