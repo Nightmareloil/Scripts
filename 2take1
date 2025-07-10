@@ -70,10 +70,81 @@ local function isAdmin(plr)
     return false 
 end
 
+-- Enhanced Admin System with better player management
 local function addAdmin(plr)
     if not isAdmin(plr) then
         table.insert(data.admins, plr.Name)
         notify("Added " .. plr.Name .. " as admin", "success")
+        
+        -- Notify the new admin if they're online
+        if plr and plr.Parent then
+            task.spawn(function()
+                wait(1)
+                if plr.Parent then
+                    pcall(function()
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "2take1 Hub";
+                            Text = "You are now an admin! Use ';' commands.";
+                            Duration = 5;
+                        })
+                    end)
+        
+    elseif command == "dmg" or command == "damage" then
+        local handle = getSword()
+        if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
+        
+        task.spawn(function()
+            local percentage = tonumber(args[3]) or 50 -- Default to 50% if no percentage specified
+            percentage = math.clamp(percentage, 1, 100) -- Clamp between 1-100%
+            
+            local targets = {}
+            
+            if args[2] == "all" then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+            elseif args[2] == "others" then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+            elseif target then
+                targets = type(target) == "table" and target or {target}
+            else
+                notify("Usage: dmg [player/all/others] [percentage]", "error")
+                return
+            end
+            
+            local damaged = 0
+            for _, plr in pairs(targets) do
+                if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                    local humanoid = plr.Character.Humanoid
+                    local currentHealth = humanoid.Health
+                    local maxHealth = humanoid.MaxHealth
+                    
+                    -- Calculate damage based on percentage
+                    local damageAmount = (maxHealth * percentage) / 100
+                    local newHealth = math.max(1, currentHealth - damageAmount) -- Keep at least 1 health
+                    
+                    -- Apply damage by setting health directly
+                    humanoid.Health = newHealth
+                    damaged = damaged + 1
+                    wait(0.1) -- Small delay between players
+                end
+            end
+            
+            if damaged > 0 then
+                notify("Damaged " .. damaged .. " players (" .. percentage .. "%)", "success")
+            else
+                notify("No valid targets found", "warning")
+            end
+        end)
+                end
+            end)
+        end
         return true
     end
     return false
@@ -84,11 +155,38 @@ local function removeAdmin(plr)
         if name:lower() == plr.Name:lower() then
             table.remove(data.admins, i)
             notify("Removed " .. plr.Name .. " from admin", "info")
+            
+            -- Notify the removed admin if they're online
+            if plr and plr.Parent then
+                task.spawn(function()
+                    wait(1)
+                    if plr.Parent then
+                        pcall(function()
+                            game:GetService("StarterGui"):SetCore("SendNotification", {
+                                Title = "2take1 Hub";
+                                Text = "Your admin access has been revoked.";
+                                Duration = 3;
+                            })
+                        end)
+                    end
+                end)
+            end
             return true
         end
     end
     return false
 end
+
+-- Auto-remove admins when they leave
+Players.PlayerRemoving:Connect(function(plr)
+    for i, name in pairs(data.admins) do
+        if name:lower() == plr.Name:lower() then
+            table.remove(data.admins, i)
+            notify(plr.Name .. " (admin) left the game", "info")
+            break
+        end
+    end
+end)
 
 -- Command Handler
 local function runCommand(cmd, executor)
@@ -97,10 +195,29 @@ local function runCommand(cmd, executor)
     
     -- Admin Management (Owner Only)
     if command == "admin" and executor == player then
-        if target then addAdmin(target) else notify("Player not found", "error") end
+        if target then 
+            if addAdmin(target) then
+                -- Double notification for clarity
+                wait(0.5)
+                notify(target.Name .. " can now use admin commands", "success")
+            else 
+                notify(target.Name .. " is already an admin", "warning")
+            end
+        else 
+            notify("Player not found. Usage: admin [playername]", "error") 
+        end
         return
     elseif command == "unadmin" and executor == player then
-        if target then removeAdmin(target) else notify("Player not found", "error") end
+        if target then 
+            if removeAdmin(target) then
+                wait(0.5)
+                notify(target.Name .. " admin access revoked", "success")
+            else
+                notify(target.Name .. " is not an admin", "warning")
+            end
+        else 
+            notify("Player not found. Usage: unadmin [playername]", "error") 
+        end
         return
     elseif command == "admins" then
         notify(#data.admins == 0 and "No admins" or "Admins: " .. table.concat(data.admins, ", "), "info")
@@ -108,9 +225,13 @@ local function runCommand(cmd, executor)
     end
     
     -- Check admin permissions for protected commands
-    local protectedCmds = {kill = true, god = true, bring = true, tp = true}
+    local protectedCmds = {kill = true, god = true, bring = true, tp = true, dmg = true, damage = true}
     if protectedCmds[command] and executor ~= player and not isAdmin(executor) then
-        notify(executor.Name .. " tried to use admin command", "warning")
+        if executor == player then
+            notify("You don't have permission for this command", "error")
+        else
+            notify(executor.Name .. " tried to use admin command", "warning")
+        end
         return
     end
     
@@ -310,7 +431,13 @@ local function runCommand(cmd, executor)
         game:GetService("TeleportService"):Teleport(game.PlaceId, player)
         
     elseif command == "cmds" then
-        notify("Commands: kill, god, tp, bring, fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
+        if executor == player or isAdmin(executor) then
+            notify("Admin Commands: kill, god, tp, bring, dmg, broadcast, kick, freeze, invisible, admin, adminlist", "info")
+            wait(0.5)
+            notify("User Commands: fly, noclip, speed, reset, ff, sf, godmode, kaura, rejoin", "info")
+        else
+            notify("Available Commands: ff, sf, godmode, kaura, speed, reset, fly, noclip, rejoin", "info")
+        end
         
     else
         notify("Unknown command: " .. command, "error")
@@ -464,7 +591,8 @@ createToggle("Noclip", UI.content, function(val) if val then runCommand("noclip"
 
 createButton("Kill All", UI.content, function() runCommand("kill all", player) end)
 createButton("God All", UI.content, function() runCommand("god all", player) end)
-createButton("Reset Character", UI.content, function() runCommand("reset", player) end)
+createButton("Damage All 50%", UI.content, function() runCommand("dmg all 50", player) end)
+createButton("Damage All 25%", UI.content, function() runCommand("dmg all 25", player) end)
 createButton("Rejoin Server", UI.content, function() runCommand("rejoin", player) end)
 
 -- Update canvas size
@@ -720,22 +848,37 @@ runCommand = function(cmd, executor)
     originalRunCommand(cmd, executor)
 end
 
--- Improved chat handling with better admin detection
+-- Improved chat handling with better command parsing
 local function improvedChatHandler()
     local function processCommand(plr, msg)
         if msg:sub(1, 1) == ";" then
             local cmd = msg:sub(2)
             if cmd ~= "" then
+                -- Clean up the command and handle it properly
+                cmd = cmd:gsub("^%s*", ""):gsub("%s*$", "") -- Trim whitespace
+                
                 -- Add to command history if it's the local player
                 if plr == player then
                     table.insert(data.cmdHistory, cmd)
                     if #data.cmdHistory > 50 then
                         table.remove(data.cmdHistory, 1)
                     end
+                    data.historyIdx = #data.cmdHistory + 1
                 end
                 
-                -- Execute command
-                runCommand(cmd, plr)
+                -- Execute command with proper error handling
+                task.spawn(function()
+                    local success, err = pcall(function()
+                        runCommand(cmd, plr)
+                    end)
+                    
+                    if not success then
+                        warn("Command error for " .. plr.Name .. ": " .. tostring(err))
+                        if plr == player then
+                            notify("Command failed: " .. tostring(err), "error")
+                        end
+                    end
+                end)
             end
         end
     end
@@ -939,8 +1082,7 @@ end
 
 -- Handle player leaving
 Players.PlayerRemoving:Connect(function(plr)
-    -- Remove from admin list if they're an admin
-    removeAdmin(plr)
+    -- This is handled in the enhanced admin system above
 end)
 
 -- Error handling wrapper
