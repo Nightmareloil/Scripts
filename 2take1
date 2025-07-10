@@ -120,16 +120,41 @@ local function runCommand(cmd, executor)
         if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
         
         task.spawn(function()
-            local targets = type(target) == "table" and target or (target and {target} or {})
-            if args[2] == "all" then targets = Players:GetPlayers() end
+            local targets = {}
             
+            if args[2] == "all" then
+                -- Kill others first, then self to prevent script bugs
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+                -- Add executor last
+                table.insert(targets, executor)
+            elseif args[2] == "others" then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+            elseif target then
+                targets = type(target) == "table" and target or {target}
+            end
+            
+            local killed = 0
             for _, plr in pairs(targets) do
                 if plr.Character and plr.Character:FindFirstChild("Humanoid") then
                     handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, math.huge)
-                    wait(0.1)
+                    killed = killed + 1
+                    wait(0.15) -- Slightly longer delay to prevent issues
                 end
             end
-            notify("Killed " .. #targets .. " players", "success")
+            
+            if killed > 0 then
+                notify("Killed " .. killed .. " players", "success")
+            else
+                notify("No valid targets found", "warning")
+            end
         end)
         
     elseif command == "god" then
@@ -137,18 +162,37 @@ local function runCommand(cmd, executor)
         if not handle or not handle:FindFirstChild("dmg") then notify("No sword equipped", "error") return end
         
         task.spawn(function()
-            local targets = type(target) == "table" and target or (target and {target} or {})
-            if args[2] == "all" then targets = Players:GetPlayers() end
+            local targets = {}
             
+            if args[2] == "all" then
+                targets = Players:GetPlayers()
+            elseif args[2] == "others" then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= executor then
+                        table.insert(targets, plr)
+                    end
+                end
+            elseif target then
+                targets = type(target) == "table" and target or {target}
+            end
+            
+            local godded = 0
             for _, plr in pairs(targets) do
                 if plr.Character and plr.Character:FindFirstChild("Humanoid") then
                     for i = 1, 5 do
                         handle.dmg.RemoteEvent:FireServer(plr.Character.Humanoid, -math.huge)
-                        wait(0.02)
+                        wait(0.03) -- Slightly longer delay
                     end
+                    godded = godded + 1
+                    wait(0.1) -- Delay between players
                 end
             end
-            notify("Godded " .. #targets .. " players", "success")
+            
+            if godded > 0 then
+                notify("Godded " .. godded .. " players", "success")
+            else
+                notify("No valid targets found", "warning")
+            end
         end)
         
     -- Movement Commands
