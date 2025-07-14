@@ -1,5 +1,3 @@
-
-
 local A_1 = "[loading key system please wait.]"-----message here
 local A_2 = "All"
 local Event = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
