@@ -1,6 +1,4 @@
-
 -- Instances:
-
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
@@ -326,7 +324,7 @@ TextLabel_5.BackgroundTransparency = 1.000
 TextLabel_5.Position = UDim2.new(0.243902445, 0, 0.221854329, 0)
 TextLabel_5.Size = UDim2.new(0, 200, 0, 50)
 TextLabel_5.Font = Enum.Font.SourceSansBold
-TextLabel_5.Text = ":D Alzn#6758"
+TextLabel_5.Text = ":D SpoderMan#8588"
 TextLabel_5.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextLabel_5.TextSize = 20.000
 
@@ -453,7 +451,7 @@ TextButton_13.MouseButton1Down:connect(function()
 	TextLabel.BackgroundTransparency = 1.000
 	TextLabel.Size = UDim2.new(0, 257, 0, 50)
 	TextLabel.Font = Enum.Font.SourceSansBold
-	TextLabel.Text = "Kill Gui By Alzn#6758"
+	TextLabel.Text = "Kill Gui By SpoderMan#8588"
 	TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	TextLabel.TextSize = 20.000
 
@@ -621,7 +619,7 @@ TextButton_14.MouseButton1Down:connect(function()
 	TextLabel.BorderSizePixel = 0
 	TextLabel.Size = UDim2.new(0, 200, 0, 28)
 	TextLabel.Font = Enum.Font.SourceSansBold
-	TextLabel.Text = "Speed Changer By Alzn#6758"
+	TextLabel.Text = "Speed Changer By SpoderMan#8588"
 	TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	TextLabel.TextSize = 14.000
 
