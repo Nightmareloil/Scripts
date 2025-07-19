@@ -27,680 +27,11 @@ else
     error("Failed to load remote script")
 end
 
-local _Wl0OllI01_0 = false
-local _WO1IOOl011 = 0
-local _W0O_I1OOI_0I = false
-local _WIlO__1_10lO0 = nil
-local _Wlll11I__I11O = {}
-
--- Anti-tamper checks
-local _checksum = "10274c5a5a621fe4"
-local _env_check = function()
-    local suspicious = {"debug", "loadstring", "dofile", "load"}
-    for _, v in ipairs(suspicious) do
-        if _G["_DETECT_" .. v] then
-            return false
-        end
-    end
-    return true
-end
-
-if not _env_check() then
-    while true do end
-end
-
-
-local _STRING_TABLE = {}
-_STRING_TABLE["_S0"] = {e="bA==", k="YS4KxEDQ9mi3iaA6"}
-_STRING_TABLE["_S1"] = {e="KDorCxoUUTEjAnhbHQ9FdGxha15bVQA=", k="ZXSjig4EJfBt29uF"}
-_STRING_TABLE["_S2"] = {e="XSBNE0YLTWY4BUB7UDAAO0A2TBBQQwEmJBBSO0N3FzxYe10CQlgGZDkHRTxHLQd8YB0UL1xTEWYnBV47GD0dIFY7SwcQA1IlIwYZIU8t", k="5T9c51bIJd7U7YtS"}
-_STRING_TABLE["_S3"] = {e="JjwLHQMERw==", k="vPjdfv4W674sJmR8"}
-_STRING_TABLE["_S4"] = {e="YU0rCVIEJxsLJw==", k="38EZ7vQrhB11KYLq"}
-_STRING_TABLE["_S5"] = {e="PC1HIzcdVRAPKgsQ", k="oB2MSN0byChuMOmZ"}
-_STRING_TABLE["_S6"] = {e="IUcMOxEtPCEiJBBDHj4rAg==", k="t4iIXCLTVwu1hWHg"}
-_STRING_TABLE["_S7"] = {e="MxYNCDhkUEQCXTtd", k="gahmV756t4X8zZJS"}
-_STRING_TABLE["_S8"] = {e="Miw6OBgy", k="vIXJqACm3pP4G8cZ"}
-_STRING_TABLE["_S9"] = {e="HyMaBg86MC5dUTIbPxtVISg=", k="MFjjfYQZ85aoPi4F"}
-_STRING_TABLE["_S10"] = {e="Yi0ZFTwwGn8DCg==", k="1YxgHUh8vc9kEZgh"}
-_STRING_TABLE["_S11"] = {e="DCcFETQJIkYFMy8=", k="DSqaglP0lPJRZllP"}
-_STRING_TABLE["_S12"] = {e="FAYKCjMYOCo=", k="XombGqVMrGWbNf6Z"}
-_STRING_TABLE["_S13"] = {e="ekcaVwYuATM=", k="22w6hAhWw7gS4Ndo"}
-_STRING_TABLE["_S14"] = {e="HxAUAycuBg0wXlchBAYaOw==", k="WeybIAoib18UTghO"}
-_STRING_TABLE["_S15"] = {e="ChJUBhwrcnlHBCtpdiNHDSNs", k="QV1ksER12fvI3Q5b"}
-_STRING_TABLE["_S16"] = {e="ASsLBSJcMCQ8BVAIAxk5IQ==", k="RNeal3DMZl3iwpVO"}
-_STRING_TABLE["_S17"] = {e="Al04Vz5lJjs7", k="F8U8PEnNYQt33zks"}
-_STRING_TABLE["_S18"] = {e="", k="IFT9eWEypVgwFJod"}
-_STRING_TABLE["_S19"] = {e="AhY2Al5dSjINF2VP", k="YRSo13jzxu8oyCSk"}
-_STRING_TABLE["_S20"] = {e="OB8jAgxZWgAwUBUU", k="vpWkj09aD9zzJjKy"}
-_STRING_TABLE["_S21"] = {e="cRg=", k="K8XIEKYHXzF64BA6"}
-_STRING_TABLE["_S22"] = {e="", k="wP072tFcaCt2WgxZ"}
-_STRING_TABLE["_S23"] = {e="ZVoCFzE=", k="65wyU7VoXGhchAfO"}
-_STRING_TABLE["_S24"] = {e="eS8YAFoiMzM=", k="1Zua4MZWeGqnIm9y"}
-_STRING_TABLE["_S25"] = {e="ESpZCg1lLyQVTFZReQU=", k="UO4ecEgQwldaK0yY"}
-_STRING_TABLE["_S26"] = {e="CwcoMAAUAC9GGjQ0QxpcBzwXL3MT", k="XrKSegsI3vXMcv3f"}
-_STRING_TABLE["_S27"] = {e="KR0+FydoBC0TQ3FIUF9mBk0O", k="mxSxIHLXqcCxbjFz"}
-_STRING_TABLE["_S28"] = {e="GgkEXxoDCw==", k="Ijv6jwx97WnoxzlA"}
-_STRING_TABLE["_S29"] = {e="", k="9xRO1Eswl0HMLver"}
-_STRING_TABLE["_S30"] = {e="HTJRWg==", k="PS84NUGHi0IrZL2y"}
-_STRING_TABLE["_S31"] = {e="ChIURgYhPRAD", k="Izu4gBIuqCTXsO4S"}
-_STRING_TABLE["_S32"] = {e="LSATCDJACg==", k="hFumQ4y1RSMtpMdF"}
-_STRING_TABLE["_S33"] = {e="ICZHIycAKg==", k="sE5JWtY70GTz5cGS"}
-_STRING_TABLE["_S34"] = {e="LjsyUFgEPg==", k="zTU74aM62pveiGuf"}
-_STRING_TABLE["_S35"] = {e="AC8=", k="UfOjYXXRScmLi2Zi"}
-_STRING_TABLE["_S36"] = {e="YClaDgZcQRpA", k="4L6kv33n3bWghjY2"}
-_STRING_TABLE["_S37"] = {e="ZD4SFRU=", k="4Qepg5YUjLkstpEf"}
-_STRING_TABLE["_S38"] = {e="ESlDFjMx", k="FF1zWBZe7FGyy5VA"}
-_STRING_TABLE["_S39"] = {e="fgMVEQw=", k="3vfxo4egSsOl88OB"}
-_STRING_TABLE["_S40"] = {e="PjQDOR0mHjw=", k="mQwMtHyOdrQBvYld"}
-_STRING_TABLE["_S41"] = {e="JxZDWEs=", k="bd179JT4f7IUHnf0"}
-_STRING_TABLE["_S42"] = {e="FyItLwQqVSQ/WThcLzxqbRhjCCoDPBQiKQ==", k="QCDCaNuPPyT3NXJ8"}
-_STRING_TABLE["_S43"] = {e="CUQrNlc=", k="z3DD36B1qs6iCNFH"}
-_STRING_TABLE["_S44"] = {e="BhQ1Qww=", k="ucZ1hnj4bO8dYPxp"}
-_STRING_TABLE["_S45"] = {e="MQAKVlsQ", k="yad27u4t6yi1J5Wg"}
-_STRING_TABLE["_S46"] = {e="JjI=", k="SBYQOR0wH97ph07V"}
-_STRING_TABLE["_S47"] = {e="ZBEmPSFRPE4QVwI=", k="6tKRU4y8u9v9C4z3"}
-_STRING_TABLE["_S48"] = {e="Pis8Fg==", k="jDSzPFFFFsEnym26"}
-_STRING_TABLE["_S49"] = {e="Cxo+CiE=", k="xmQxEX032bGaws64"}
-_STRING_TABLE["_S50"] = {e="Lz85CXAUTCo2aSYxXD0P", k="dVUePU9XWItP2ZjE"}
-_STRING_TABLE["_S51"] = {e="JScjCikv", k="mFMnEJau9FahJRj6"}
-_STRING_TABLE["_S52"] = {e="LxQE", k="KycEIzEyq61TGUdo"}
-_STRING_TABLE["_S53"] = {e="CAwdBjkndjoVHiE=", k="ZipiMB3LppUzsP0U"}
-_STRING_TABLE["_S54"] = {e="EiUpGwssAwohVyIVGjlLAw==", k="ZPDzeCjns8MaJX9w"}
-_STRING_TABLE["_S55"] = {e="BDYpCRsDJgMaKSY2ByM2Gg==", k="LCDhulOgHFIBWBDn"}
-_STRING_TABLE["_S56"] = {e="IxECNzosHzA=", k="kdoVTCvT1YI4R7Fb"}
-_STRING_TABLE["_S57"] = {e="ET0PFW4sDwsM", k="ZTcyNmzymy7Fymh9"}
-_STRING_TABLE["_S58"] = {e="NBo2WgFVIjM8", k="uyB3w4VVX2m3tcsI"}
-_STRING_TABLE["_S59"] = {e="IAFRChVYMSckEVI=", k="dd0ia1GFPt6QWKLa"}
-_STRING_TABLE["_S60"] = {e="A0coNgd6C1k6TnItNDAK", k="P3IDsZX5U9RkUBgE"}
-_STRING_TABLE["_S61"] = {e="cQIeWBwlAg==", k="7cl5uKelSnjnZoeH"}
-_STRING_TABLE["_S62"] = {e="ElQ6BWUcFgYHeiY3O18BMjVdMQ==", k="A8UrEZwtjZGTO6wS"}
-_STRING_TABLE["_S63"] = {e="YjxYChEEGBdOaAoiOgo=", k="1H7z1Wtx9HLCHgFZ"}
-_STRING_TABLE["_S64"] = {e="Ai4YFAobNw==", k="DOjycuPpp20qiBqv"}
-_STRING_TABLE["_S65"] = {e="P10rNBcNBQY9axdVKjA6GBpQMCZT", k="l1DC7KdtPKs0KSNq"}
-_STRING_TABLE["_S66"] = {e="NCMEIxFzEyMyARgpI0A6", k="gWeQeSUBAu8oB2WE"}
-_STRING_TABLE["_S67"] = {e="LwczDA9ZIA==", k="ifAaf7GMrT8CpOXg"}
-_STRING_TABLE["_S68"] = {e="FAcJI1UBGCsJRxYrOyYhFyYDHg==", k="RfzWuGyYdgwHOOWv"}
-_STRING_TABLE["_S69"] = {e="ET8uB3UeO0E+bHMAOCo=", k="BKAwUXZ2JL5aJGfV"}
-_STRING_TABLE["_S70"] = {e="NgsgGQ0dDw==", k="pjRtdshmTkIjR5n3"}
-_STRING_TABLE["_S71"] = {e="PgsfJhEvMCdZdjwvGxAgCw4LGDdV", k="xjlR1iQU4VXJzsTb"}
-_STRING_TABLE["_S72"] = {e="Dw4AOE4lHTRVKjAmP3U2PDwM", k="NmtQ8DiQuaYJSUwI"}
-_STRING_TABLE["_S73"] = {e="KQQjAyw6", k="jkNaMNEuDI3ekV2T"}
-_STRING_TABLE["_S74"] = {e="CF9YWxEuDBgzV0IXCT5ROGNfWl5FBhgGOw1UCg==", k="C6471oyjRw1nzJ4U"}
-_STRING_TABLE["_S75"] = {e="HiEdEFUvHBMKBzQYTAEVCiUrTiBVLAlUJA==", k="WOnd4Ah3AnXtlRbe"}
-_STRING_TABLE["_S76"] = {e="KVABEBgh", k="a1ottDvSLFAuxGdp"}
-_STRING_TABLE["_S77"] = {e="A0YfVBkfGjM=", k="K3r5wpsW7EZhcYwm"}
-_STRING_TABLE["_S78"] = {e="NyYe", k="SKyQhFzDWXHlKo6s"}
-_STRING_TABLE["_S79"] = {e="KAIoOUMgcgwHLAw=", k="zgEV7E7zbBxJQ3IX"}
-_STRING_TABLE["_S80"] = {e="NzoLAA1D", k="tUfbl7DJsVN2I9Jp"}
-_STRING_TABLE["_S81"] = {e="HVcZGBgEM3kBAhYlUFk=", k="T9jlyjGYJkzIjyIT"}
-_STRING_TABLE["_S82"] = {e="ZzpCJThTZSl9", k="Gi5JJ7MZTRPnEvXR"}
-_STRING_TABLE["_S83"] = {e="C14QIWsNHyAvDB5FNVphESJdFQ==", k="G1qEKDqFFbw1Pz8x"}
-_STRING_TABLE["_S84"] = {e="BiQDQj1MVk4/AzxIVC4eWBsyAkErBBoOIxYuCEdpCV8DfzJWKRMwOGILJQBaKQNECykeVyISVgwsET8DQWgZXxsiFFc=", k="nPw2NvyaMbKf3Gj0"}
-_STRING_TABLE["_S85"] = {e="NhgYE2UGRgsxKQ==", k="aytxEU6nTMz4cuJI"}
-_STRING_TABLE["_S86"] = {e="GxQDI01mBT5RPw==", k="QanSm6jI4MFYLGBZ"}
-_STRING_TABLE["_S87"] = {e="CiMHGQgJRDQSLA4C", k="DLutiedgbIkfFTKV"}
-_STRING_TABLE["_S88"] = {e="AVRGJkYGFQkTDA==", k="G55RfUelvhiJbGqT"}
-_STRING_TABLE["_S89"] = {e="AjtGDCsUC0kkUCM=", k="QN6iY4X9A5Gsdof1"}
-_STRING_TABLE["_S90"] = {e="Nz0BKRsnVz8=", k="zRwLvB9KXMRKiOzV"}
-_STRING_TABLE["_S91"] = {e="aRkPDjgCWQIrLg==", k="IxlzQt8vNJwkJu1T"}
-_STRING_TABLE["_S92"] = {e="CyoZKBF1JQZKNwMuGA==", k="XGxZeUwc9GbYvSmM"}
-_STRING_TABLE["_S93"] = {e="GAAXEjYuUQ84Cl46KjYfRw==", k="PuzsXA8kje1NzWm3"}
-_STRING_TABLE["_S94"] = {e="DyYMNQEkKw5kIyhAZjEbMg==", k="GSaToKBj6LG46PiF"}
-_STRING_TABLE["_S95"] = {e="FSMXFig9CQ==", k="GFdfIJgIAHOyV3ap"}
-_STRING_TABLE["_S96"] = {e="IyIgKgk6FjwyGFkEcDouNxQjcyoHPhEtP1dW", k="qGSZhMxYV88pPIOA"}
-_STRING_TABLE["_S97"] = {e="KCFSCgIdFQ==", k="oN6GmypM98XYa1V7"}
-_STRING_TABLE["_S98"] = {e="Hh0kOTE=", k="mjKKUbFcRfi3JcvK"}
-_STRING_TABLE["_S99"] = {e="NEUMMBI=", k="G2cBvMRWmB7HYKJ6"}
-_STRING_TABLE["_S100"] = {e="BSwNXTYX", k="MMc9ZripFNuP4qt8"}
-_STRING_TABLE["_S101"] = {e="EAgU", k="tesHOhdFsTAlDw59"}
-_STRING_TABLE["_S102"] = {e="OgpUFT4nLzsVDDg=", k="ho9zJBjMpbLPt1EI"}
-_STRING_TABLE["_S103"] = {e="CAgCSxc6MyE=", k="OgfkZUWDQspnKtve"}
-_STRING_TABLE["_S104"] = {e="GCZCAiQIGgQ+UUUbBFcDMSojQwc+EA==", k="YE6kRinaZq6ng4fB"}
-_STRING_TABLE["_S105"] = {e="ABQ/PgBbMgo7FCtdJUMKAjQU", k="PqMSa5WdO4l2AcGm"}
-_STRING_TABLE["_S106"] = {e="Mi1cAVM=", k="AZ3s7Hg8jYmfdK3Z"}
-_STRING_TABLE["_S107"] = {e="CxorIRI=", k="xmDSvncIhkNCLavK"}
-_STRING_TABLE["_S108"] = {e="eysnCy0g", k="3JIoAEzpCcnLFCkF"}
-_STRING_TABLE["_S109"] = {e="AiMe", k="fNycmSEy83WTS2JT"}
-_STRING_TABLE["_S110"] = {e="aisBPD82NyNVD0Q=", k="8NlSKSrU0a0RUjYu"}
-_STRING_TABLE["_S111"] = {e="JVk3GA==", k="q6XtaN47z67fGlxq"}
-_STRING_TABLE["_S112"] = {e="NTgmFFw=", k="FOIf8nwEKqUE4QXq"}
-_STRING_TABLE["_S113"] = {e="KAQLFC8APwMdKSZeJgwUAxMpPQ==", k="zFSGLrVsijI0Hiww"}
-_STRING_TABLE["_S114"] = {e="Pz5WFgw/Jg==", k="oR7oiMUqwmlix6Ud"}
-_STRING_TABLE["_S115"] = {e="XAcE", k="9abrBehsqe2hVjrv"}
-_STRING_TABLE["_S116"] = {e="LV8rIA==", k="A0JDNG480dK2UX8d"}
-_STRING_TABLE["_S117"] = {e="DC8l", k="iICAOx3fFRGQ0e7o"}
-_STRING_TABLE["_S118"] = {e="IzdfKxM3Sk0wGw0aDBxeVhRxVyEEY18CJhoH", k="fQ9NpC9mStcnmu03"}
-_STRING_TABLE["_S119"] = {e="NSEeIjoyLUALXC0=", k="gDsMNWh6n2YvX20g"}
-_STRING_TABLE["_S120"] = {e="ZxUACkQ8PTFXWD8ZLwYfa1MfGAtU", k="5pme0YxG26K9AikK"}
-_STRING_TABLE["_S121"] = {e="L1lYKzwgUh4XagcjHgk1FApXXSgrflI=", k="i81GYDrjxJfSneL4"}
-_STRING_TABLE["_S122"] = {e="IV0MKA==", k="M2mLbWiP6CtFcG1y"}
-_STRING_TABLE["_S123"] = {e="Pi88AQUGcwc/LzE=", k="lJQnqc6qZAE3Uru9"}
-_STRING_TABLE["_S124"] = {e="DwsFV1Q6DSQYHV1EIl8QYSULEV0Q", k="Cdd3tHhIwi8dL0dA"}
-_STRING_TABLE["_S125"] = {e="Li5eDQ==", k="zA1aL35lQCC2FSDT"}
-_STRING_TABLE["_S126"] = {e="KgYXCCol", k="yeeaZQVTDRdlqMse"}
-_STRING_TABLE["_S127"] = {e="JVwlIB0ENn0lGzQ=", k="h5KEDaE0LuQHrIzU"}
-_STRING_TABLE["_S128"] = {e="O0MXCBk2JC86FVwhBgIeMw==", k="s6ziwYMKhz3UVclG"}
-_STRING_TABLE["_S129"] = {e="IhtWPDUcKgg6DF0=", k="or8YlyYESb8Uibxh"}
-_STRING_TABLE["_S130"] = {e="CSRSE1ggAzIZIzguCAs=", k="HI7g0YpF9eTOenLu"}
-_STRING_TABLE["_S131"] = {e="JEY0GDkz", k="t3FhUVESNyRa0Y21"}
-_STRING_TABLE["_S132"] = {e="ChgGFQoBFkQmKwIIFg==", k="IjoxynxddGcrs7Gx"}
-_STRING_TABLE["_S133"] = {e="HQM9", k="OfYiJa0OTyOQe7Hh"}
-_STRING_TABLE["_S134"] = {e="GAAxDhMfKxQ=", k="NoXjuvYqg04LX7U4"}
-_STRING_TABLE["_S135"] = {e="cAsrGSY=", k="2gJzM2oJlSNuZvoq"}
-_STRING_TABLE["_S136"] = {e="Ow4yWlMEMgs2LDI=", k="ukF26vTgWAWJPH2e"}
-_STRING_TABLE["_S137"] = {e="eg0uC1I=", k="8aOh9kUTrhNIt6iP"}
-_STRING_TABLE["_S138"] = {e="PlQNGQEyMVQpXFo8Hg==", k="m7lkmWEtl18YlOEV"}
-_STRING_TABLE["_S139"] = {e="GRIL", k="KwolFs1uMS2v8M5j"}
-_STRING_TABLE["_S140"] = {e="NzAqGDhZFxYCWAIm", k="gXKvL6z6E4mQbYl8"}
-_STRING_TABLE["_S141"] = {e="FUA8IQ4S", k="E5NQbwm3dqbTUjky"}
-_STRING_TABLE["_S142"] = {e="ByYHVg4gdDIOCwI7", k="TNf2aWTwcigIoSXl"}
-_STRING_TABLE["_S143"] = {e="AQ0HOhk=", k="CafYr5eYYehUO4eU"}
-_STRING_TABLE["_S144"] = {e="BShdJxskGmIlFjUDXg==", k="FZ4JhKtBvfTq5P8m"}
-_STRING_TABLE["_S145"] = {e="My8q", k="aJNEAHlXgDsjcHiE"}
-_STRING_TABLE["_S146"] = {e="HRgsIykibS0tJTQN", k="KqCOLVMoADNhmoZW"}
-_STRING_TABLE["_S147"] = {e="HSUTQF4f", k="MPa02zqXViaR8KBC"}
-_STRING_TABLE["_S148"] = {e="IS0EXx1zBgpXMSINOyY=", k="cAk0ySGg2EJtHRbm"}
-_STRING_TABLE["_S149"] = {e="HSRAPlRR", k="MQ2N84I3zOXKiO0e"}
-_STRING_TABLE["_S150"] = {e="Oitc", k="hN8np5obtgxOsbgs"}
-_STRING_TABLE["_S151"] = {e="ARUtEBI1CxA8AFgKVA==", k="DvAybFn0zl9g1Oh1"}
-_STRING_TABLE["_S152"] = {e="MTsBBVsp", k="aNsu7LxsTGiV6n00"}
-_STRING_TABLE["_S153"] = {e="MV0sDAo=", k="s1MoasD4ZBgfF1gi"}
-_STRING_TABLE["_S154"] = {e="GhUbGxc8FQlWIAQ2HD0t", k="RpwwqUglvslWxRZY"}
-_STRING_TABLE["_S155"] = {e="IzIS", k="qWv7iXgmVTmfHVro"}
-_STRING_TABLE["_S156"] = {e="LQ4kAl4=", k="obEa5YxfNSmL7OFF"}
-_STRING_TABLE["_S157"] = {e="LgEbKEBYViQdAg==", k="yszA400MogjXX4qW"}
-_STRING_TABLE["_S158"] = {e="OQQ9FT4O", k="iqOeRky2THQ8UtqD"}
-_STRING_TABLE["_S159"] = {e="ERg1OyI=", k="StTXIETxExSgsUKA"}
-_STRING_TABLE["_S160"] = {e="CzsdXw8wLiFKEgAKIDg=", k="DYn6kYOOjErkTPWg"}
-_STRING_TABLE["_S161"] = {e="L143BSo=", k="m2VfA3Q7NkXL8PeM"}
-_STRING_TABLE["_S162"] = {e="NFA1", k="f5QnU186e397w1Da"}
-_STRING_TABLE["_S163"] = {e="KREmEDVXGVUgLSot", k="zrGbY2mudXYFWBLK"}
-_STRING_TABLE["_S164"] = {e="Fy0U", k="EHpL5pSmLexnOPkR"}
-_STRING_TABLE["_S165"] = {e="Ggw4CDsp", k="JyJxWLYsjcPvAF7a"}
-_STRING_TABLE["_S166"] = {e="HyMOOz8oEj9YMBccFTo=", k="KTgWVOzKxqdtpIeL"}
-_STRING_TABLE["_S167"] = {e="EgAILyw=", k="PliLG9kuK7lcxdXi"}
-_STRING_TABLE["_S168"] = {e="MxozFTgz", k="coAeTVoYqXqmiydI"}
-_STRING_TABLE["_S169"] = {e="IS0oAyNaD15jNAM7NQ==", k="hCNfQ4n2CbfRYyD8"}
-_STRING_TABLE["_S170"] = {e="Zl0+", k="48ZXlCxIxkd5ooks"}
-_STRING_TABLE["_S171"] = {e="cQsmVgU=", k="3gG5nZ7C1WinuGrt"}
-_STRING_TABLE["_S172"] = {e="czgaLyxoAwQ9ByM=", k="2KrJBHAhRhN36woE"}
-_STRING_TABLE["_S173"] = {e="cVQ1W1o=", k="38T81SDUAcZlmOE8"}
-_STRING_TABLE["_S174"] = {e="OhVd", k="hp9oPUiu5v77F6hb"}
-_STRING_TABLE["_S175"] = {e="NVpHXQU5OxYc", k="f521cUZdy8LXadWt"}
-_STRING_TABLE["_S176"] = {e="AxEzP1UK", k="SdAO9o9tL3i9fEmV"}
-_STRING_TABLE["_S177"] = {e="J1lTFyU=", k="e52tN0YP9zzKQa8m"}
-_STRING_TABLE["_S178"] = {e="dg4OXi4SPC0P", k="4ba1JzSZcHaeqiyf"}
-_STRING_TABLE["_S179"] = {e="ClcS", k="X2vqye1ZAc7qYBG6"}
-_STRING_TABLE["_S180"] = {e="CE0THhg9", k="X8antX8CqXBnFkSP"}
-_STRING_TABLE["_S181"] = {e="IQgEP1Y9OzMLMEUhNSYY", k="eivTvxVQnB6UZTus"}
-_STRING_TABLE["_S182"] = {e="B10RCyg=", k="E1phChVPEaV2GcKS"}
-_STRING_TABLE["_S183"] = {e="aRk9ICMf", k="9lOPOzSj8x05B5Vn"}
-_STRING_TABLE["_S184"] = {e="PSIfDBY6El1vJFA7Qg==", k="tLyidTs1Oo9H1Lzl"}
-_STRING_TABLE["_S185"] = {e="YS0x", k="3HUy6bOKXSB9ASgK"}
-_STRING_TABLE["_S186"] = {e="EFwzJTg=", k="R0RFSakoPPtBQfMr"}
-_STRING_TABLE["_S187"] = {e="Nw8CDDwEIzwr", k="szqgKvBHCdCsOSMS"}
-_STRING_TABLE["_S188"] = {e="ARsfOg5W", k="QnmJb3xIDwVGLXlI"}
-_STRING_TABLE["_S189"] = {e="OS9Q", k="kJ4fDr9n7tHgUZuW"}
-_STRING_TABLE["_S190"] = {e="diAZIUstKy8hIjMs", k="2AkJkyYFOKGU6fgy"}
-_STRING_TABLE["_S191"] = {e="AwtW", k="Qn2aLjjCAeMqHn3z"}
-_STRING_TABLE["_S192"] = {e="ZywqSAMW", k="7YX8osfjlHJE8zwO"}
-_STRING_TABLE["_S193"] = {e="eysIATg=", k="9GibSjudEYsq40GJ"}
-_STRING_TABLE["_S194"] = {e="EiEqCzwWHkIAGhRJLw==", k="SCSxOwrbBvu3JX80"}
-_STRING_TABLE["_S195"] = {e="KBUGAAw=", k="jygcg85cXufls9aP"}
-_STRING_TABLE["_S196"] = {e="Ozc3PQAB", k="kBEMldEQf0oZSJNx"}
-_STRING_TABLE["_S197"] = {e="Z1MS", k="56vuEC84s9VkPrcC"}
-_STRING_TABLE["_S198"] = {e="MwMuLhJUQTI8UwouLFs1", k="pbZOq88AQsLBM6PI"}
-_STRING_TABLE["_S199"] = {e="HxEnEQEp", k="OdUamLYaC68oSzYY"}
-_STRING_TABLE["_S200"] = {e="EQcz", k="CbW05umHVr7q2obX"}
-_STRING_TABLE["_S201"] = {e="OysuGTE=", k="yGOzZxpEEfxu4PTS"}
-_STRING_TABLE["_S202"] = {e="MSkhATc9Vz96cTYhJSY=", k="xGGdES6SZ3ZNJKV9"}
-_STRING_TABLE["_S203"] = {e="FlIh", k="D7E7BaN3Rom2Np6s"}
-_STRING_TABLE["_S204"] = {e="NC8YOjoL", k="dZjJVnpEPinm3cu8"}
-_STRING_TABLE["_S205"] = {e="JyotLSY=", k="eFLNMfwLqldWgwPv"}
-_STRING_TABLE["_S206"] = {e="cDxTJDZFEjsHDg==", k="3T2KEeBBuk70Onbt"}
-_STRING_TABLE["_S207"] = {e="AB9QMic=", k="Bs1QLRUqibMzIflw"}
-_STRING_TABLE["_S208"] = {e="Jiky", k="tLVznGlyHC1wJ6Lp"}
-_STRING_TABLE["_S209"] = {e="JCczOQ1T", k="tRAIa6ppJOhbugAs"}
-_STRING_TABLE["_S210"] = {e="OS0DMB01XzFYEgAWVyco", k="oBjTnA0C52Fz6JMD"}
-_STRING_TABLE["_S211"] = {e="IEwROBwW", k="p9cHpsozmp2rfOe7"}
-_STRING_TABLE["_S212"] = {e="MiNQBCI=", k="pO1gIsyVmUVUHKVO"}
-_STRING_TABLE["_S213"] = {e="IQoK", k="sonab5q8tVcoDOWU"}
-_STRING_TABLE["_S214"] = {e="Ohk0Ajt2Dj48Mz9nLAkMIx0=", k="xuUaPVBQHFLGjemN"}
-_STRING_TABLE["_S215"] = {e="LTUxEiE=", k="oYPqJlQb6WhDX79U"}
-_STRING_TABLE["_S216"] = {e="BzE5FAAj", k="WDKdlFYGFEnNZf4g"}
-_STRING_TABLE["_S217"] = {e="IlJQ", k="p745COlnvQF5FhYg"}
-_STRING_TABLE["_S218"] = {e="cRcIHyMxHkEx", k="6eiiFWw3TY27oESz"}
-_STRING_TABLE["_S219"] = {e="FSsc", k="GNxgssVI1tIOeYbz"}
-_STRING_TABLE["_S220"] = {e="KApQGzE=", k="jf1xZ0MJ4rI02l6Y"}
-_STRING_TABLE["_S221"] = {e="A0VKJDgk", k="S08TTAnKjUInHRtu"}
-_STRING_TABLE["_S222"] = {e="JwggTClWRzcKHzkP", k="jgL8L8gsxzXk9kZ4"}
-_STRING_TABLE["_S223"] = {e="a1Ql", k="91AvLoxPReeRzb90"}
-_STRING_TABLE["_S224"] = {e="ZwMDSRkr", k="7vq9uNUnO5v5BNWD"}
-_STRING_TABLE["_S225"] = {e="LT0UJl4=", k="oQuE5SouduVQuDae"}
-_STRING_TABLE["_S226"] = {e="Ni8qWiQARxQtGCcD", k="aFI1AdgVAwHnVgzZ"}
-_STRING_TABLE["_S227"] = {e="FzEYPR0Q", k="GDjMquNtBIIAeabZ"}
-_STRING_TABLE["_S228"] = {e="disbDBk=", k="4GzorubUYMtfD7zN"}
-_STRING_TABLE["_S229"] = {e="aigR", k="8MusRDusTBCJm235"}
-_STRING_TABLE["_S230"] = {e="d1w8VxkSLzw5Ig==", k="50U0qfIUKGycq8NB"}
-_STRING_TABLE["_S231"] = {e="DVg1Jh0=", k="O4TEva4tcbVruG4G"}
-_STRING_TABLE["_S232"] = {e="Hg41", k="LkQuh7WueRWhU7Xr"}
-_STRING_TABLE["_S233"] = {e="KRcZO1gN", k="ybkK4hUab7tWOWLL"}
-_STRING_TABLE["_S234"] = {e="IxEuCw4vF1c3aAADVh02", k="mxIczMv9RHFo7pSi"}
-_STRING_TABLE["_S235"] = {e="aAwTMlg3", k="8yaB4R00FYhmv4oH"}
-_STRING_TABLE["_S236"] = {e="FC40", k="FKPL4ZdAG9iLc1Q4"}
-_STRING_TABLE["_S237"] = {e="NiYnOz0=", k="tJFXVHGYiH3ecQQ5"}
-_STRING_TABLE["_S238"] = {e="HCsYLiBAIwJV", k="KDjES0Ba0AyYsNfA"}
-_STRING_TABLE["_S239"] = {e="DAM5VBAnSUw8Wg4KRjVNdikNPFcHMA==", k="JbP8uCi8Szoz6Y4V"}
-_STRING_TABLE["_S240"] = {e="NCs8BzwGUCcf", k="cDNlOv1DzAUppc7m"}
-_STRING_TABLE["_S241"] = {e="HxgtXA==", k="KwB0vRRrv0vWOKfI"}
-_STRING_TABLE["_S242"] = {e="Hzs3OEgZ", k="LXEQ8m700JMipVha"}
-_STRING_TABLE["_S243"] = {e="Ji5cKQ0PCSIoAy0=", k="kG2LTjzoAmHPI7gg"}
-_STRING_TABLE["_S244"] = {e="DTgDACUaGxc9OAw7ZVU/Gg==", k="EMnaKursoWcO54Mn"}
-_STRING_TABLE["_S245"] = {e="DxgKKl8PCw==", k="XyxD6al7ZahKL352"}
-_STRING_TABLE["_S246"] = {e="FjwvIDx2HQIGMjxXIQFVISQlIjI2", k="ELNWRVngwGY9BduG"}
-_STRING_TABLE["_S247"] = {e="dQdHG0Y=", k="0u5t4IFwItQqyPmo"}
-_STRING_TABLE["_S248"] = {e="JwgxMDc5a0dAPkRRGVdMFAMYNjw4LClYXHcQ", k="bnWUTMK49M04tw9z"}
-_STRING_TABLE["_S249"] = {e="AQ8tLD1HF2ooIDgtIA==", k="TaFBR0yJMRJBRK0p"}
-_STRING_TABLE["_S250"] = {e="Fj0ZCh0UOFgRIRAxThoHL1ArShoUDCRYDXUJdSocAiBaLVgdFx1oBkF1AToBBQFsT256BRcYJlEQdVAxTh0TK0A=", k="3N9iryH4tUuUnirL"}
-_STRING_TABLE["_S251"] = {e="fEZhRxcBHTwgNVg9VSkpOSlZJEMTF0kpYQpBJxYvNSdjFWRTWVYN", k="Y5A7vsiUAY4DuJFT"}
-_STRING_TABLE["_S252"] = {e="N1E1KCweEkQVFDtADx4=", k="r7SMOjadFmH4jsus"}
-_STRING_TABLE["_S253"] = {e="LAwvLCY2Cw==", k="ijIIEBx8M2btjHIC"}
-_STRING_TABLE["_S254"] = {e="dT0EDzZcXi5j", k="4MtcO50ICFPoKUAV"}
-_STRING_TABLE["_S255"] = {e="RVsKMTonEFRXRgE0KUhDT0UaOiEnOFA=", k="esNDJKy762hZNhqz"}
-_STRING_TABLE["_S256"] = {e="IiIoKiMXJgtQIykoOQoiR00TKSwlCg==", k="mPAMJyGgpqHAWhM0"}
-_STRING_TABLE["_S257"] = {e="KhEaB1EoEBUEMQkARQ==", k="xpsi3Gg5GYho6efP"}
-_STRING_TABLE["_S258"] = {e="CAAJ", k="ZemLn5y1rwkZ750U"}
-_STRING_TABLE["_S259"] = {e="KiYzPQ==", k="hJFX5Fo2OnJyibPZ"}
-_STRING_TABLE["_S260"] = {e="Ex02MhE=", k="QqWQzMgrFH5L2Xjq"}
-_STRING_TABLE["_S261"] = {e="BRMBQBsB", k="Ufs0wdDHwBrVedKF"}
-_STRING_TABLE["_S262"] = {e="diELKS8eIQ==", k="3GmLLjRtAeVdO0e8"}
-_STRING_TABLE["_S263"] = {e="MQgHChoiCB5OeUJcUwYUMRxYJQcKJQQWGRZzXVUACXBYPAIWDyIFGBpfXlIUXU9wGQwSCxBi", k="pxwfcKfyn6054ozP"}
-_STRING_TABLE["_S264"] = {e="CzAiGlADanUFChgPGhE=", k="FQLo1oJ6ioyaoa2S"}
-_STRING_TABLE["_S265"] = {e="ewUXGR8DHw==", k="8irxqvo9ncbEhGL1"}
-_STRING_TABLE["_S266"] = {e="AhAOHUYOU0QQN2UaLFAXDzRVCgZVBkQ=", k="Pucr0k7d5SEnM7pj"}
-_STRING_TABLE["_S267"] = {e="JU4DHiYcFiYkEAIy", k="v7pjCq6eLuaYaM5I"}
-_STRING_TABLE["_S268"] = {e="AD9WMy4xIEImH1paEhx7SQQ6RD87IA==", k="EY0VMESbtz75fyAi"}
-_STRING_TABLE["_S269"] = {e="BgVUAgVDOEM2Mz4OLhxNSQ4KQRQPWSw=", k="Cc2gf7KcdVSaZywi"}
-_STRING_TABLE["_S270"] = {e="IQYGB28dKyNdHAlpGRQNTAQfAg==", k="migcOONN2hlS9Un8"}
-_STRING_TABLE["_S271"] = {e="DwkxAFU8Dw4tLAZiEBwnIDAPPgM=", k="CfPdunjcBXcX0QNS"}
-_STRING_TABLE["_S272"] = {e="KxMUFgoiUxYfMwM5Qw==", k="xjgboOsEkRwL06pZ"}
-_STRING_TABLE["_S273"] = {e="MRY=", k="mxzXGIvksjFJUVfF"}
-_STRING_TABLE["_S274"] = {e="djMKFhg+BB8EVQMwAA==", k="3KizmMmiauKEbNj6"}
-_STRING_TABLE["_S275"] = {e="BiU8QQYCamYdGUBeIj4cKxszPUIQSiYmAQxSHjF5CywDfgZYElAxJA4KUhwqPgRsISYmAFpKIC8cV18VJDMbbAMwIV9afT0qAw1EGTMyTXFeGT1TW1QwKA==", k="nQH1u8EIox7pEWhC"}
-_STRING_TABLE["_S276"] = {e="dTcbCCtwewZe", k="GCzcNAUr5hUBQ11H"}
-_STRING_TABLE["_S277"] = {e="OyMzRzxNFklECiJnUBAXLyY1MkQqBVoJWB8wJ0NXACg+eAleKB9NC1cZMCVYEA9oHCApBmAFXABFRD0sVh0QaD42LllgRU0HXQ5k", k="SWG7Ow9f6kUI7ycG"}
-_STRING_TABLE["_S278"] = {e="ZBM8FQlZYz05FDpROx84T38RMQ==", k="7dSgmy0TTaV0OpJo"}
-_STRING_TABLE["_S279"] = {e="EgYuBxJPZVkUEzlANiE2Jg8QLwQEBykZCAYrACVmISEXXRsbGxsSWTQdLAI+MG8dGQAzBxUGZQQDFD1BOS0jKgldNxYIG2UlER08CnR6ch0THy8bAAElBENAfiYkKg==", k="zrZwauJvfrNnQHBN"}
-_STRING_TABLE["_S280"] = {e="BxsFBAgOOVAmNho=", k="KrtqajJpacSyyzUb"}
-_STRING_TABLE["_S281"] = {e="LEIEPhZpZRdANyVPIRk8BTFUBT0AISlXXCI3DzJeKwIpGTEiHz0SF2A5MA0pCGU+J0QZPhEgZUpXMCFOLhUpCTcZHS8MPWV0WycnCCJXO0h2Bjc7DA==", k="D6pNeSJ82VRaFpHm"}
-_STRING_TABLE["_S282"] = {e="BCUBGDAbO3oKTBsTCg==", k="EPsyDnHZRlSfhHAr"}
-_STRING_TABLE["_S283"] = {e="GUI5A0ELV2EjJ0NYKgoEUQRUOABXQxshPzJRGDlNE1YcGQwdW1wZOjQifwM/AhkWIlU/GkJFC2EjI1IFYgsVWBVFYh5TWBZhEDNGFzkWAxxDBgUGUB8MNiU=", k="q6Ms21xNQF4vMcp9"}
-_STRING_TABLE["_S284"] = {e="GxQbIi8oWQEQWB1nP3o=", k="IqkNFK8uy7sGj3zO"}
-_STRING_TABLE["_S285"] = {e="EiUVBB93Wn43EhBDLiY+Ag8zFAcJPxY+KwcCAz1hKQUXfiQxIglHAgYhLj0dHGU4HyENHQ8sATgqHUgAKCYkRQg0ERgFLhQlLBwJ", k="zQatlMuQEsgmIOJj"}
-_STRING_TABLE["_S286"] = {e="Ih0nFDwJJxIzWgozHg==", k="gpWqNfU2d3dTmX52"}
-_STRING_TABLE["_S287"] = {e="JRIkGztxZBZKBUFHLzoEKjgEJRgtOShWVhBTBzx9Ey0gSR4CLyM/VFkWUwUnOhxtAhE+Wmc5Ll9LS14MKTcDbSAHOQVnDiZJXRZZG21hQBUkCDcYZic+WA==", k="MfPkHKK98d6iHSpB"}
-_STRING_TABLE["_S288"] = {e="PSYjBiJ4JyEY", k="zNLuVXoTz9UN82E3"}
-_STRING_TABLE["_S289"] = {e="Wg43KQlcS38HKgZeUD0sDUcYNiofFAc/Gz8UHkN6OwpfVQI1AAg8fyckExxYLHU2UQgqKQ4VSyIQLQJfXzE5AUFVLjgTCEsXHSQCBGgcLQc=", k="2zCYzfdPuKqp7TXe"}
-_STRING_TABLE["_S290"] = {e="dR8SFl40TyZBE3YKBR8gBUQA", k="1msq1Zon4qVZwzMl"}
-_STRING_TABLE["_S291"] = {e="ODgbBypUR3wZMjx0Fy4ZKyUuGgQ8HAs8BScuNARpDiw9Yy4bIwAwfDk8KTYfP0AQMz4GBy0dRz4KOiV1NDUMJD8iSkVsXFgbHjE=", k="PLowYnhSkSKZpGmC"}
-_STRING_TABLE["_S292"] = {e="MFxVPx8RFCkaIw==", k="c04Fzc4aoAQISbua"}
-_STRING_TABLE["_S293"] = {e="Ai04IisMTUglAxh/FyFCLh87OSE9RAEIORYKPwRmVSkHdgI7P14WCjYQCj0fIVppJS4iY3dbAw45TTsjBS1VKQ48", k="jYLRX6bgWboQpH6F"}
-_STRING_TABLE["_S294"] = {e="CgApIXcUFiUFAQwqLk0BNiQ=", k="FiGDPg6vfseZZmIC"}
-_STRING_TABLE["_S295"] = {e="Hj89ARF/Zh0ENw1pIVtFHgMpPAIHNypdGCIfKTIcUhkbZBMQAS4wHwY/AiIqH0IdEz8qGU0NPFAFeRcmL1weMhMmJh9Hd3laAzRfdXZBXgMEKCxUUHUqXRIzVCszUw==", k="vKIqbEI2vVzGF21v"}
-_STRING_TABLE["_S296"] = {e="KFE8CBIkGAlNMj8hNjQ=", k="d4JafEllmfPNZGOw"}
-_STRING_TABLE["_S297"] = {e="IjA1CgdRTWEXWEJfIB0yIT8mNAkRGQEhC01QHzNaJSYnaw8TEwMWIwRLUB0oHSpmBTMvS1sZBygWFl0UJhA1ZiclKBRbJwc4DE1UBSJRdHkeKy4WB0UOOwQ=", k="JDAztkbNe95qGtFI"}
-_STRING_TABLE["_S298"] = {e="JDUKExdhKxYnUgs=", k="wBeasAcyQ7yQ1JaX"}
-_STRING_TABLE["_S299"] = {e="JQY5IjtffV8dCyAeK1kuWDgQOCEtFzEfAR4yXjgeOV8gXQM7Lw0mHQ4YMlwjWTYfAgUjY2cXNxYcRT9VLVQpHyATJDxnNiUfHQ5yAnx4NUYoAGM+PQQ=", k="MrMRHeRpojW0L0Z0"}
-_STRING_TABLE["_S300"] = {e="PwIXKFYxbTFAE0ExKw==", k="lgyX7XMp6r5PYvmo"}
-_STRING_TABLE["_S301"] = {e="IScWB0tTR2oXJko6CxQaVmcwDRoXGwkySBdcOAs4EVwk", k="ISbw8ihEgG9Nnvs8"}
-_STRING_TABLE["_S302"] = {e="LCssWRobC2YAJhYxK0cFPgE8", k="hRB8wrhFSQyCOgVN"}
-_STRING_TABLE["_S303"] = {e="LyYTJkM=", k="jTaI1slM0cHJKepl"}
-_STRING_TABLE["_S304"] = {e="eyxxMB0eCDcrcy02HAMX", k="5CQCjqzSXSKYimsB"}
-_STRING_TABLE["_S305"] = {e="FmE9UBQlJRgL", k="I2M9zKLvlFJQz3nq"}
-_STRING_TABLE["_S306"] = {e="L1ENCSkC", k="g0cmEgKJkTiFdhgk"}
-_STRING_TABLE["_S307"] = {e="MARcSz8nNh8NOT0+", k="rk82oHEvyPRPDQ0I"}
-_STRING_TABLE["_S308"] = {e="DwBVKA84KS0GBAZnUhg7LSQbSA==", k="Mo1QNVNXjet17tTN"}
-_STRING_TABLE["_S309"] = {e="PTk/VSIpXTZgBAQDaQ8KPg==", k="uLR4LF4R2kkw9nxJ"}
-_STRING_TABLE["_S310"] = {e="ZUEcAFRVYDoiIA==", k="66sr0u3JKNkbaxu6"}
-_STRING_TABLE["_S311"] = {e="PjckAhUdMBggNSg=", k="zREaatFyTPLyXj5r"}
-_STRING_TABLE["_S312"] = {e="CyQHUj8kPVM=", k="CQj3QKT7fwj3tiaE"}
-_STRING_TABLE["_S313"] = {e="IR0IJSdvPwUDAg==", k="rjgWCOlujlS1AfVZ"}
-_STRING_TABLE["_S314"] = {e="JhkXMgpOKkMQB0Y0BTcidwpL", k="vkrAynrcdhfGqXRW"}
-_STRING_TABLE["_S315"] = {e="ZkQZPxEuAFNEBxgFOFwmUg==", k="F7nPcJss7wqkV5H5"}
-_STRING_TABLE["_S316"] = {e="HzUlMwc0Jw==", k="OYDJbFTabtFE9CKp"}
-_STRING_TABLE["_S317"] = {e="GDAJMgxHNCEXFA==", k="JEgai5BHtqpBe4TH"}
-_STRING_TABLE["_S318"] = {e="LhYUJzgnFDMk", k="yyfLKWuPA7ekHa61"}
-_STRING_TABLE["_S319"] = {e="HR0XNAAgBy8=", k="UhzUnOnKRz6TAGRt"}
-_STRING_TABLE["_S320"] = {e="Fz0YFQVzbQ==", k="ROjzwIMq8LbMgRpB"}
-_STRING_TABLE["_S321"] = {e="HDw4WBgqGVY=", k="TIU9vEp2yq5xREjz"}
-_STRING_TABLE["_S322"] = {e="OwsbC3oZHDVfOSQ0Vh8oMk8MFg06KVJydTQqIlYCMjQKSgAXIT9TB3F1JzUXHCIxABgSWD0+Uz5XNCUiEl8=", k="ojyxTMsR8UAGvqGF"}
-_STRING_TABLE["_S323"] = {e="GDsdJWYJHlMIaAEtKyAL", k="YNiJFNl2jHUBDLxS"}
-_STRING_TABLE["_S324"] = {e="eCE9Nw09CjQTXBUnPQw0QQ==", k="0TPVcRcPA3zSmmF5"}
-_STRING_TABLE["_S325"] = {e="ARtVJjcFUDM=", k="In8GYj9WGrR7TwRa"}
-_STRING_TABLE["_S326"] = {e="FhBaAz0=", k="eg5qYaq8YuLP89d2"}
-_STRING_TABLE["_S327"] = {e="RzkBBg==", k="3VnjmQVg3xCP7JMZ"}
-_STRING_TABLE["_S328"] = {e="ZypbAg==", k="3E4n3xKvw2Thmsjg"}
-_STRING_TABLE["_S329"] = {e="KhEcESA=", k="YfscD7ovgLYz9Iqf"}
-_STRING_TABLE["_S330"] = {e="Ol0ZAw==", k="N2voEs4jrIcxPnVj"}
-_STRING_TABLE["_S331"] = {e="KQcPKCdd", k="afaLK8BeZufH1gEJ"}
-_STRING_TABLE["_S332"] = {e="FAgLPDgiIgI=", k="VixYhCPvkrgS4Hfg"}
-_STRING_TABLE["_S333"] = {e="DTc0JjITBFQaJxwzHDg9Gw==", k="YXAEZGv5tTqZhLXi"}
-_STRING_TABLE["_S334"] = {e="AyQbBQ==", k="WKtiXKp6whW6XhBd"}
-_STRING_TABLE["_S335"] = {e="Pi0sDg==", k="jBCba7y6PxLZ0JRK"}
-_STRING_TABLE["_S336"] = {e="eRsdAFkg", k="1zsd5EjVoqu3CIcS"}
-_STRING_TABLE["_S337"] = {e="AxZGWxQ2Ql4Fd2ENLl0/", k="Bc244r01uW5bA1LQ"}
-_STRING_TABLE["_S338"] = {e="Ig0+GA0dAxQ7Nl8XOFEIBA==", k="jxSycrjpiY0ch0zp"}
-_STRING_TABLE["_S339"] = {e="IC42GQ==", k="tAYuCPl4g4cKo28S"}
-_STRING_TABLE["_S340"] = {e="PCQlKjA=", k="OSJXTm1psXag1WmZ"}
-_STRING_TABLE["_S341"] = {e="ETQCMSk=", k="bCmCMhJW52sDikUF"}
-_STRING_TABLE["_S342"] = {e="Mx8jXA==", k="gpL0JH3xKSh6yy8d"}
-_STRING_TABLE["_S343"] = {e="OAAIRCw=", k="Kwg6HQ1P9TA7RNnl"}
-_STRING_TABLE["_S344"] = {e="ElIgDxUU", k="Z3Nkyq3dzRAWvfPa"}
-_STRING_TABLE["_S345"] = {e="HTwr", k="yQLQDdZNkTK5Fn7n"}
-_STRING_TABLE["_S346"] = {e="NxY+XSwUAxAmHiM=", k="esS2XqFfCpWrgPnC"}
-_STRING_TABLE["_S347"] = {e="NzQuKEMzAh1SVxg=", k="eQCG7VGk79lMOawk"}
-_STRING_TABLE["_S348"] = {e="BSEoW0EAcUYHI0Q=", k="WDE45e40bM0ClHys"}
-_STRING_TABLE["_S349"] = {e="ESEiBhQ7PRRnOAIaNDEeJA==", k="YTOgzTTp5WmndPlP"}
-_STRING_TABLE["_S350"] = {e="LBY1EgMqEwI=", k="dcXsmEzfEKJKGaHZ"}
-_STRING_TABLE["_S351"] = {e="BTMeJUgiITV6GQMZDA1LEA==", k="NZrIhcMYZIoxuh9c"}
-_STRING_TABLE["_S352"] = {e="FCIuXkUOVhgqbGYzBFcdQXB8fQVM", k="XMM5eY7tAL5Ca2ya"}
-_STRING_TABLE["_S353"] = {e="KFMfAC8/egQCNlcUAzEdWj1jOxw=", k="z6roYZZEnZwDbBnz"}
-_STRING_TABLE["_S354"] = {e="AQEuNlYiNRMt", k="QmOO3PrfDvDKQHRG"}
-_STRING_TABLE["_S355"] = {e="BAM9RDUD", k="tbN7Pp1plaMdG9eJ"}
-_STRING_TABLE["_S356"] = {e="HhQQFRA=", k="XfqxuNRj1zIXTGU5"}
-_STRING_TABLE["_S357"] = {e="MDdJETE8RURbCQ==", k="dR1esI104gvWUrbA"}
-_STRING_TABLE["_S358"] = {e="Yxs=", k="6R7lWSLlsF7xXOM0"}
-_STRING_TABLE["_S359"] = {e="HSQJMQgNQGUoExAQQzM/Ay4nC3QbHEEoDig8XkU6Kw==", k="XBoTky3EoFY01VRl"}
-_STRING_TABLE["_S360"] = {e="IDMGLCs=", k="aAcBJJfpu4ZbhXJP"}
-_STRING_TABLE["_S361"] = {e="N0IdFQ==", k="c0xpIsR0WEKpBQj0"}
-_STRING_TABLE["_S362"] = {e="Azs0NA==", k="TZXX7Ee0kAKR2JXA"}
-_STRING_TABLE["_S363"] = {e="LAMmI0I/DQY4", k="kqGZbhljTZ9dPS8T"}
-_STRING_TABLE["_S364"] = {e="OVwyNgwxEXIKJ1c=", k="j9QDiE13xB6QkJKu"}
-_STRING_TABLE["_S365"] = {e="dzY5OwQsFg==", k="8CMHmHsOZ9mm0Qa0"}
-_STRING_TABLE["_S366"] = {e="FSk4MBQOSDcrOjo5Cw==", k="RHLU4K0CNHSVypEY"}
-_STRING_TABLE["_S367"] = {e="NlcTHEE4OUUJPD5cIUpj", k="d8pwaqW1lNW3SjRS"}
-_STRING_TABLE["_S368"] = {e="Ph8aPiwIQiwmHg==", k="nvvRMzbxInfEqc00"}
-_STRING_TABLE["_S369"] = {e="PjQ1NzQlPiMAKx4=", k="kZQRFBLLuEz6O7kM"}
-_STRING_TABLE["_S370"] = {e="BBY+JwUDOS0rKQoVJSohBw==", k="LcSFklPIyFeauKSs"}
-_STRING_TABLE["_S371"] = {e="OTUbDkgcIhs=", k="mPwk8sPoYplTJ9Gx"}
-_STRING_TABLE["_S372"] = {e="Eyk0FRY3CDMrXXcRJUU=", k="GLXpfXzGN9WeJeyI"}
-_STRING_TABLE["_S373"] = {e="Kg8HQTwwIgkmJDgHSS9QThsDHQUb", k="yjsahUNlVKJsid57"}
-_STRING_TABLE["_S374"] = {e="DhJYPAkgP0M=", k="Zw4YyOM7oEYL8NBB"}
-_STRING_TABLE["_S375"] = {e="BTk1HRETVHhhdCI3OUNEPjwoO04WVgkwJDs2LDg=", k="UKPnb3eUTTDXKc5K"}
-_STRING_TABLE["_S376"] = {e="DSE1Kz0LGQMoIFoNGQIiBg==", k="ETXJSdpgzO5yIcPr"}
-_STRING_TABLE["_S377"] = {e="AD0FWiRaGAU=", k="QHl9OzLUlMMRV3HV"}
-_STRING_TABLE["_S378"] = {e="JiE6XBECN0MjE2kHOnU=", k="rDV9amE7FwIsUU9L"}
-_STRING_TABLE["_S379"] = {e="YglvKDkCAiNuSQoWZyweMDYwORk6Bk4=", k="SBOxVugQNa9eGEpD"}
-_STRING_TABLE["_S380"] = {e="PkcYPkFgV242NCR0VhEEGyNRGT1XKBsuKiE2NEVWExw7HCInVTIMLCUnNjZeERxcGUQCfx0oHSc3ejs/UBwDXDtSBSAdazM=", k="V3lN2ZxADUSZ1xps"}
-_STRING_TABLE["_S381"] = {e="CzsQJRcZCjRGHno2ESoDTFwCRhQUHUY=", k="9p0uxnoFf6LE1Cm8"}
-_STRING_TABLE["_S382"] = {e="I0xANTtiZm0QJAFKDhFEGD5aQTYtKiotDDETCh1WUx8mF3osLzA9LwM3EwgGEVxfBE9adGcqLCQRah4BCBxDXyZZXStnagI=", k="K84EHXIBbEvdix0p"}
-_STRING_TABLE["_S383"] = {e="VgQWFBwyHB0WelhzI04iHRcqRDISKQpG", k="cO6DsEyo6RiCPnKs"}
-_STRING_TABLE["_S384"] = {e="AQ0GFEtIdVZCBQ12FwARHxwbBxddADkWXhAfNgRHBhgEVjwNXxouFFEWHzQfAAlYJg4cVRcAPx9DSxI9EQ0WWAQYGwoXRxE=", k="iyrd8rZy0dzXpiew"}
-_STRING_TABLE["_S385"] = {e="UwEFZCo1DisCQRtjU0ZHCwxFKzYMOxU9WQ==", k="b1NDzZyNpa3Qc5gb"}
-_STRING_TABLE["_S386"] = {e="LCdEPkFPWGcrFSBWUz06CjExRT1XBxQnNwAyFkB6LQ0pfH4nVR0DJTgGMhRbPSJNCyRefx0HEi4qWz8dVTA9TSkyWSAdREcD", k="DS0N2uwHYtWx4TNb"}
-_STRING_TABLE["_S387"] = {e="CjYOFDwZADxSQhlTJwRQQT8r", k="ZYyqN9SH36jsqm56"}
-_STRING_TABLE["_S388"] = {e="MBMcM0FPY2VBOTtdKQUwMS0FHTBXBy8lXSwpHTpCJzY1SCYqVR04J1IqKR8hBSh2FxAGch0HKSxAdyQWLwg3djUGAS0dJgkJZgoFJxdCKT0=", k="XghC2uLJ3XLsNlDY"}
-_STRING_TABLE["_S389"] = {e="ICEoIC4cUB4kIRc=", k="cNNFKypMLNgDQPRU"}
-_STRING_TABLE["_S390"] = {e="JhA3Azp2bFUZJzUkDwhbG2AHLB5mPiINRhYwOl8pWRZ8", k="NdCsILCziFFPjj2u"}
-_STRING_TABLE["_S391"] = {e="KSMCMgY8VyYHbBgIMygE", k="jOmQmK8TlLYzVFeu"}
-_STRING_TABLE["_S392"] = {e="XQEfAAMLRU0dFUNHNi5eARsWBB1fQwsVQjp+Q2ICfSRh", k="5ukpp1jbmt03SL7o"}
-_STRING_TABLE["_S393"] = {e="Ay5YMQZVOxY=", k="PF1Ak0UbjkG6e8NJ"}
-_STRING_TABLE["_S394"] = {e="LQcaKCJpYEtBKjc5Fw0wFGsQATV+IS4THgF3BxlcFxsG", k="EsnXQSOd1KDMroYz"}
-_STRING_TABLE["_S395"] = {e="ChYzHCYmSjoJJkYNLB8BUjYHMg==", k="ZcAlJCjxhR2aIyh7"}
-_STRING_TABLE["_S396"] = {e="K0wcJxFpTn4EMDtBPAdcGm1bBzpNIQAmWzosUmwRWBAk", k="C8hWbSaQtQH5Ye5t"}
-_STRING_TABLE["_S397"] = {e="B1kRO0cnJw9XIQ==", k="K6rPgtOf1UjSmjbN"}
-_STRING_TABLE["_S398"] = {e="LRAuEhAMHUAfDQ5mLio6KjAGLxEGRFEAAxgcJj1tLS0oSxcLDV98AAIOEC1mECYrIxAWDQBdSkAADRAmZhAmKyMQNg0AXR8iBAIQBiYsLCsg", k="EdZbc62omlyHICNB"}
-_STRING_TABLE["_S399"] = {e="PA5SSgYuRnASXA==", k="oz38rK47g5lgBV2k"}
-_STRING_TABLE["_S400"] = {e="Jx4gAA4HIhREEw==", k="tjArzbPS1zGpu0BR"}
-_STRING_TABLE["_S401"] = {e="AAg8CCVWNS4nKhMbJCAAJg==", k="SmRlk9AGACpzPIoH"}
-_STRING_TABLE["_S402"] = {e="BA8=", k="KDLXJFx4GX9MMDvJ"}
-_STRING_TABLE["_S403"] = {e="HA==", k="GwmE35dvBivfIuXa"}
-_STRING_TABLE["_S404"] = {e="PHE=", k="aQ5BXKlslDnKkbcv"}
-_STRING_TABLE["_S405"] = {e="Ywo0AVIjLQ==", k="0kBdrnHxrH9EMfoo"}
-_STRING_TABLE["_S406"] = {e="SAtfdAJ5QFVlaURJXVZi", k="y9gM5KuaPXuydgV6"}
-_STRING_TABLE["_S407"] = {e="MTU/FjMCMw==", k="cZPbXkGfJaOpWYCU"}
-_STRING_TABLE["_S408"] = {e="VEMCQmZ2Y1twaA==", k="aw3rVNRnDZ0Skh1g"}
-_STRING_TABLE["_S409"] = {e="MRNNdBIfcV9RF18jVWxyMBY=", k="br4TApQrqS0I4L1Q"}
-_STRING_TABLE["_S410"] = {e="QAhzdGYCd3xIfQ==", k="q0GDV1ALyExd30uA"}
-_STRING_TABLE["_S411"] = {e="BSRSQXU0GiJDCA==", k="QL7a3AnW1mnprdlI"}
-_STRING_TABLE["_S412"] = {e="VklXdmJGVVdFSg==", k="gqdAQsmouz7Rn6fD"}
-_STRING_TABLE["_S413"] = {e="JBw9AGs1OTZBYSMRJBst", k="byXlKlVC3AktEiY1"}
-_STRING_TABLE["_S414"] = {e="ekxhYHJpAUhiaw==", k="OxPPBQ3yUZofkCJw"}
-_STRING_TABLE["_S415"] = {e="HwkjNBgXVA==", k="YfQCye04RSo2F7Er"}
-_STRING_TABLE["_S416"] = {e="VGdAQwJvY2RfAw==", k="aSqs2WRPh2FN5OvS"}
-_STRING_TABLE["_S417"] = {e="OAVrZC4KMTo=", k="vjK7BoTJ3qzvt5dz"}
-_STRING_TABLE["_S418"] = {e="ZnpTXlxdXWB8cw==", k="QJaglllWKKP2xOOS"}
-_STRING_TABLE["_S419"] = {e="Cl81CSJkNQsaEwdK", k="Z6MlNDanhah8T0E0"}
-_STRING_TABLE["_S420"] = {e="AltGUQdWXHZmew==", k="7owa7nlBQN6TudjJ"}
-_STRING_TABLE["_S421"] = {e="FhA1Pz8kHwUa", k="ZqWFMMqqrT1DXY0A"}
-_STRING_TABLE["_S422"] = {e="UgRECwNoQkZjTA==", k="e4v85QrvQxM27xPz"}
-_STRING_TABLE["_S423"] = {e="KQcDFyRPNiUfTQ==", k="hko7moaDq948VzDv"}
-_STRING_TABLE["_S424"] = {e="bn5fS3hsVg0FWg==", k="YNmxNTf97lkvgl3x"}
-_STRING_TABLE["_S425"] = {e="HSomNicqDV0L", k="NKEDNLd8oajiEdMv"}
-_STRING_TABLE["_S426"] = {e="CUpQXgdbUUhdXHNdaXcD", k="8xef3lizoeFkZE2w"}
-_STRING_TABLE["_S427"] = {e="AiYgCiAF", k="AILeRvp66jlSFnTV"}
-_STRING_TABLE["_S428"] = {e="DFN1QllOfWREVw==", k="9gDrivKTrexBEZij"}
-_STRING_TABLE["_S429"] = {e="CTUfUScpVFRjJiA=", k="PZjqrZ10CrOGvf3M"}
-_STRING_TABLE["_S430"] = {e="B0BfclJaXl5xQw==", k="0pmAehnlHrGhInBU"}
-_STRING_TABLE["_S431"] = {e="Kg0WWBcQHQQ7", k="xbu37CieIABii35V"}
-_STRING_TABLE["_S432"] = {e="QmlSSUNbbGR7YGRUS0Rk", k="sYjzrbUSCQVbrwUo"}
-_STRING_TABLE["_S433"] = {e="Aic7LFpMOSQV", k="AHIM6ljAtrs70krq"}
-_STRING_TABLE["_S434"] = {e="clF9a3teQk9CVQ==", k="CiNRIkqypla17PFr"}
-_STRING_TABLE["_S435"] = {e="AhsNIw==", k="IrcDb3CJeySf6HI0"}
-_STRING_TABLE["_S436"] = {e="U2gARFJjA2NQCw==", k="bP4tbP3Th3pH1E41"}
-_STRING_TABLE["_S437"] = {e="MTIqIQoPHWxzAVdNFgM=", k="rZKRcazL0m88rpQs"}
-_STRING_TABLE["_S438"] = {e="d2FUVFJzC0BhQg==", k="BUedbK9pXuCFIvNC"}
-_STRING_TABLE["_S439"] = {e="AlBeLw02DyQ=", k="R50KxZzIV2hYT8hD"}
-_STRING_TABLE["_S440"] = {e="S3N1dmcMZ0tnYQ==", k="zKAET4SsWUd88mKF"}
-_STRING_TABLE["_S441"] = {e="AyUGTiFZDS8ZHSA=", k="PMcnl8fJ9PEMkZ6K"}
-_STRING_TABLE["_S442"] = {e="XVF6Rg8JcAZQAQ==", k="liNw79G4f4nN622p"}
-_STRING_TABLE["_S443"] = {e="fV4bYjo9WTkOOwst", k="4yvBiRyxbTeHLHHx"}
-_STRING_TABLE["_S444"] = {e="AEYHB01+fk1MfQ==", k="6q03uILyyJDn5CHs"}
-_STRING_TABLE["_S445"] = {e="BhQYJBgjCg==", k="NulA8noxsTF2Exa7"}
-_STRING_TABLE["_S446"] = {e="ek1AC3BEdkcLWw==", k="Luw8BrFq9mKchGHP"}
-_STRING_TABLE["_S447"] = {e="KRRVUUkRRmEpOz8J", k="zu34i7f2FNQmiwQ9"}
-_STRING_TABLE["_S448"] = {e="XV58U2UKeg5fBw==", k="jnNgW9I6m4Ddb9Ek"}
-_STRING_TABLE["_S449"] = {e="EAgADxwdIz4=", k="TzenqxQM76VxwUk9"}
-_STRING_TABLE["_S450"] = {e="YAh6YWFxAmYCUQ==", k="W8HXQI1S7eLtyn2g"}
-_STRING_TABLE["_S451"] = {e="JRslUDUiUxNWLgIV", k="luQ5GL6gvlmluwYN"}
-_STRING_TABLE["_S452"] = {e="BVZeeV13R0Fmeg==", k="0boImOsyQJ1gXNZb"}
-_STRING_TABLE["_S453"] = {e="fwIeFjtxaCZQDw==", k="3gj1HQ8J1vZVqtiD"}
-_STRING_TABLE["_S454"] = {e="B3tEdmNefUBRVw==", k="2OuFSfHwgdn3jzdo"}
-_STRING_TABLE["_S455"] = {e="OiEXGC4=", k="tHppZxdngpK8npSL"}
-_STRING_TABLE["_S456"] = {e="cw5EXQtmCXFeeA==", k="B6wk3Q0ElIDgJQHL"}
-_STRING_TABLE["_S457"] = {e="NiUrG3gqPAA6", k="fPGwXeJeHXvIrwkp"}
-_STRING_TABLE["_S458"] = {e="e0x9fnIPCmp9XQ==", k="JtNGK79SEmiOI3iV"}
-_STRING_TABLE["_S459"] = {e="Dx4cIGVHWgxSGC53HyQ=", k="XLPdEjzD3vIWJTPB"}
-_STRING_TABLE["_S460"] = {e="WlNgBGNRZlRvUg==", k="ogQ4SiReWjEkeSs7"}
-_STRING_TABLE["_S461"] = {e="HlFTL2U1Aw==", k="Z49NEcva0QfBPSVA"}
-_STRING_TABLE["_S462"] = {e="f1oPSHBQcFF2RA==", k="Im7yAaFaCsGIF0hM"}
-_STRING_TABLE["_S463"] = {e="FFgRJ0YaIgoRJyomKQU=", k="S1gBfNJo1pETEaV6"}
-_STRING_TABLE["_S464"] = {e="ZkpXfXxxVwpGAQ==", k="WrdKKFo9s2pcQWPq"}
-_STRING_TABLE["_S465"] = {e="MlsycTcxWGQnKBAOGBQrLw==", k="f4BQxWx0OM0YwfGK"}
-_STRING_TABLE["_S466"] = {e="R3EBTlN9RWNhdg==", k="vI2xkIrZXBDcqDKm"}
-_STRING_TABLE["_S467"] = {e="BS0cUwE=", k="VDn6oGF7XCRBuDq8"}
-_STRING_TABLE["_S468"] = {e="RWBMXlMHUwlaYA==", k="tXxnc2e1lVW8kxLg"}
-_STRING_TABLE["_S469"] = {e="BAVSRyYKBRA=", k="Ks75RchurwXxK4Bk"}
-_STRING_TABLE["_S470"] = {e="V2hdAAUAbHMBAA==", k="fPi251UK72QYfJak"}
-_STRING_TABLE["_S471"] = {e="EF4DHkY=", k="X1vl5ipRPKoOHy9j"}
-_STRING_TABLE["_S472"] = {e="f2VWVHpUaFNQcg==", k="HUdlCgZffABuxN8Y"}
-_STRING_TABLE["_S473"] = {e="FRxVMiMvABNjEStRQw==", k="By0YFAd35xI40Yhd"}
-_STRING_TABLE["_S474"] = {e="CH9gVHZVflhhRw==", k="9GScFmMhWs6d7m3M"}
-_STRING_TABLE["_S475"] = {e="IRwHDQ8VNg==", k="fpfnfpDhJmuj6yAu"}
-_STRING_TABLE["_S476"] = {e="AwJGUnF8agVabg==", k="42taFJZ0hWJkJTwT"}
-_STRING_TABLE["_S477"] = {e="Gz4ESGM2WQM=", k="TPh1Co6vwx3M6nfL"}
-_STRING_TABLE["_S478"] = {e="ZHNAewNBfmsFcw==", k="SCrO3sFS0J93pI7R"}
-_STRING_TABLE["_S479"] = {e="DE4ADic=", k="D7pkUiYlWpeFujw3"}
-_STRING_TABLE["_S480"] = {e="VmhBaXxURn1ZQQ==", k="aXsZDlqKjqKRmOlS"}
-_STRING_TABLE["_S481"] = {e="JA0NNnIaFikI", k="talORYyFdg16KnxO"}
-_STRING_TABLE["_S482"] = {e="c2YLdQkAA1t6cQ==", k="DV9L914oNICk9aiB"}
-_STRING_TABLE["_S483"] = {e="Dy1ZDUU5Bm8gbikeUlE=", k="XE8yeprHSNew94Hn"}
-_STRING_TABLE["_S484"] = {e="eElGeXBbQkJiBA==", k="OytAIbuwQ34zG7LE"}
-_STRING_TABLE["_S485"] = {e="Cy06GTpXOSZW", k="EHM9m8KJ2yzXtj6W"}
-_STRING_TABLE["_S486"] = {e="DUMEVmBXClBXYg==", k="8w5fPo8ccTt619td"}
-_STRING_TABLE["_S487"] = {e="HSNDQh44IwdrKR0=", k="DL6bJYHbKdxeQ5CY"}
-_STRING_TABLE["_S488"] = {e="TXRBQAREQWpxfw==", k="zDsy4sqZAG2sjL1T"}
-_STRING_TABLE["_S489"] = {e="AzoCNzg+Gwx4LzENDRhIODgn", k="WRkYSWukXnSbxlha"}
-_STRING_TABLE["_S490"] = {e="dGB0ZQBNZgRleg==", k="CPFV4yS4VI9VgW1Y"}
-_STRING_TABLE["_S491"] = {e="PSEXFxg=", k="rNgdaNT9UffNisG9"}
-_STRING_TABLE["_S492"] = {e="eARGD3pAA1RyfGVhcVxm", k="I5s7Mw4bKIRPDnPK"}
-_STRING_TABLE["_S493"] = {e="BURFFlxXHGkXPQ==", k="Ld2y2phIpRDRNqtk"}
-_STRING_TABLE["_S494"] = {e="UUVpZwZdQ3BHcQ==", k="dqXW6eqBpBeedEFF"}
-_STRING_TABLE["_S495"] = {e="FgdEVi8UdDhVEUVA", k="Qr64JfTZ0p13RW5S"}
-_STRING_TABLE["_S496"] = {e="QGNLQFZ1RQdjAgNGcFVB", k="qQzxnDw6P12rBgvH"}
-_STRING_TABLE["_S497"] = {e="GiMdABFHNzAC", k="TJzhegxGnR1DWCJa"}
-_STRING_TABLE["_S498"] = {e="SXpiUlt2a1VqZQ==", k="xBVahOZcYRLHmMu8"}
-_STRING_TABLE["_S499"] = {e="BFgOWgkGYxAmA1ZO", k="G7c3gaCCIl8odaPt"}
-_STRING_TABLE["_S500"] = {e="", k="WbSotBjJ7Y1cJqgd"}
-_STRING_TABLE["_S501"] = {e="YDohHFFjXDwgBRYP", k="3UTr509NVlujKvRV"}
-_STRING_TABLE["_S502"] = {e="Hj4uWQ0dWw8=", k="RWI1yt5hOMmSLSww"}
-_STRING_TABLE["_S503"] = {e="YBYXDycgLD0mDzU9WzlSIlc=", k="2sgcNCMICkfI4K3E"}
-_STRING_TABLE["_S504"] = {e="HCIKICZKIw==", k="LNkYC8PClKqg3nbc"}
-_STRING_TABLE["_S505"] = {e="MC4ZEBoRMz84Lg==", k="cZxbntAxMG4oxpII"}
-_STRING_TABLE["_S506"] = {e="NjdWHUJXGB4PBFs=", k="eC7o62jNng0TwIDb"}
-_STRING_TABLE["_S507"] = {e="OCs3NiY=", k="kDBXBQeVyugPY7LV"}
-_STRING_TABLE["_S508"] = {e="", k="vdJYun1dkbL9StCv"}
-_STRING_TABLE["_S509"] = {e="HgIYOVA=", k="SwkP3mS3RdapcZVD"}
-_STRING_TABLE["_S510"] = {e="IzoELnMFGT9CACYQOAkCMBwwSjA2H1c=", k="pUjISkvKbaPqQecR"}
-_STRING_TABLE["_S511"] = {e="PA1AIw0=", k="ob5MiJeidd8mIIL1"}
-_STRING_TABLE["_S512"] = {e="QAwMADYgECMzDXVaXQ==", k="2ntaESuWZiOurjpl"}
-_STRING_TABLE["_S513"] = {e="ElcWLBY5ERtDJykI", k="A8cBrjti5NJmZr1N"}
-_STRING_TABLE["_S514"] = {e="I0IpWyg=", k="n7Z2K8rBep2Bdr57"}
-_STRING_TABLE["_S515"] = {e="PAsWTDZaNz4fIBBNZQ==", k="rdalF6VGvNwwEpXz"}
-_STRING_TABLE["_S516"] = {e="FUU8Jgk=", k="X0OOjhYDZChkFA19"}
-_STRING_TABLE["_S517"] = {e="FyJeJwsociILSUElF0pLRw==", k="QC7KnLRVdi1Iv3qg"}
-_STRING_TABLE["_S518"] = {e="NBoMKWMyDQpPeCc3Mwo=", k="gncYCsafo5RDZi42"}
-_STRING_TABLE["_S519"] = {e="AEEHWlM=", k="M4t30tfolvuV9xaV"}
-_STRING_TABLE["_S520"] = {e="DCg7SSkXOxoNSDsZBEccUClq", k="MDWiDbHsnhHmk7l5"}
-_STRING_TABLE["_S521"] = {e="bxgpLQIj", k="9wEXoFRbheBH63pB"}
-_STRING_TABLE["_S522"] = {e="NS8mLAw=", k="xZUEo1FRuROi6SyK"}
-_STRING_TABLE["_S523"] = {e="ESk1Hho0ShE=", k="GFYkwQp1Lb50F7FB"}
-_STRING_TABLE["_S524"] = {e="cg==", k="WiXTRh0WD6vjDH8r"}
-_STRING_TABLE["_S525"] = {e="", k="77aaUuntEnRgVV2l"}
-_STRING_TABLE["_S526"] = {e="HghQMCxAMg==", k="Nd1II2AtFUGkUlBl"}
-_STRING_TABLE["_S527"] = {e="FhQ8URFbOyQQHD87Xwgt", k="BqP4a4IPCyMM6kHB"}
-_STRING_TABLE["_S528"] = {e="PhwjSDcPKBIkDik=", k="vhW8djZdMmL10xVT"}
-_STRING_TABLE["_S529"] = {e="Ezw0RANePT0uHikRQg0WKQ==", k="FOQ6J0MHZMLc4duL"}
-_STRING_TABLE["_S530"] = {e="eAJHOlEjVzMjOjo2NjE=", k="9w3Uqq2PLTTSUEdF"}
-_STRING_TABLE["_S531"] = {e="NSMvHx9eLlA+", k="gFLpq0K3JcLPOx2N"}
-_STRING_TABLE["_S532"] = {e="tO6RFy4LHyYrS0x3AzcnJzMQHWMqEw4zKUlMPgsxbjkzF14tJQIZImoXFg==", k="Vt1CKgzVD98WeVNK"}
-_STRING_TABLE["_S533"] = {e="PS5BAwNXN0s=", k="nK5wj9P8TqsFonLM"}
-_STRING_TABLE["_S534"] = {e="KCM9C2o1EyUVGgQ3AkMSKAc3KwgvIw==", k="iVIdJGvFztjRa72M"}
-_STRING_TABLE["_S535"] = {e="OzVHPCYGLxw=", k="hP3HOhHoap9YRJ8G"}
-_STRING_TABLE["_S536"] = {e="cAUZORo9XAk8KisTGUVWDVgDDDRbKl0=", k="1pmV7O9jSDEvz1vi"}
-_STRING_TABLE["_S537"] = {e="JBVRXVIxDhFSXBtS", k="nz83rugb13i6eks8"}
-_STRING_TABLE["_S538"] = {e="GkIeCBUNGUNTDhpTPBwvQxFZB1cPWUAFQwJGemQvEh8zRiw5Lg==", k="r6jxf76l7gi0SnKm"}
-_STRING_TABLE["_S539"] = {e="JlFHCVlDDg==", k="b84j61jRtVeirBIr"}
-_STRING_TABLE["_S540"] = {e="cjEKAAI1KBQGNwMZBC5pE1koEAYJZzhbTzoZGQApJhFEPFg=", k="6XycmGL4oYuppKIp"}
-_STRING_TABLE["_S541"] = {e="CwtGKFdCIw==", k="Ob5K80GSZJYqUzIH"}
-_STRING_TABLE["_S542"] = {e="NwQ6NC4+cR0gFFUsJxZsEz0MPTNxeg==", k="qeSXKZQiO46CWoB3"}
-_STRING_TABLE["_S543"] = {e="KSFNED0qDzI=", k="zD9dTDhAiFEhCs6f"}
-_STRING_TABLE["_S544"] = {e="HxsELGknKDcQAzhDDzc+YTgECSAlNTMoAQ==", k="YrhIITQDdfUcaXJA"}
-_STRING_TABLE["_S545"] = {e="BWlUdA==", k="7YfACSwMAB3RO5ui"}
-_STRING_TABLE["_S546"] = {e="ECEpXgoDGxM+ARU2PFkOK3ouN14K", k="TDD1dKnqmdaBU7iX"}
-_STRING_TABLE["_S547"] = {e="GDwhBTgDESQ=", k="KYUqQmvWLFOrgA2D"}
-_STRING_TABLE["_S548"] = {e="EVEgBzs3KxAUSgckBxV0OTdXNxYhKioWWFUf", k="B4TsRYLc49fRbqTJ"}
-_STRING_TABLE["_S549"] = {e="ESk/JycWHhY=", k="BLKSNxyef9ErkzlA"}
-_STRING_TABLE["_S550"] = {e="KlccHxAwcj4+FQEKRAt3BglCARobMyE=", k="l6usuTRJQ5rk2nWu"}
-_STRING_TABLE["_S551"] = {e="GQ1BQioiLD8=", k="Jh56CLKL1DeuktzH"}
-_STRING_TABLE["_S552"] = {e="FzkJVEojARcACx8VIQlDVzAmBFgGMRoIEQ==", k="QPe1jPxdtnr5Of7w"}
-_STRING_TABLE["_S553"] = {e="JwFYNSE/QDJgHyNMAggvBU0ORjUh", k="cd5ZOw5P3zW8kfHv"}
-_STRING_TABLE["_S554"] = {e="ACIsEy9ZM0A=", k="SGXgF7T3LXfGvjI2"}
-_STRING_TABLE["_S555"] = {e="JTtFJS4jCCoYMS08Mj9XARh0Azk6Owk=", k="kTeVOUmN8BHHFV9f"}
-_STRING_TABLE["_S556"] = {e="KVU+OAABJg0dLy0TGwo3MUNaIDgA", k="m0SWnISoNJYgrdPB"}
-_STRING_TABLE["_S557"] = {e="JzQ2EgMFUAo=", k="tQBfjk7yYXIpy6qt"}
-_STRING_TABLE["_S558"] = {e="Nw8BABpbAhhwWAgkNj8vaRcfFhcWRhYNJVgLPA==", k="djuts5ekP4gERZKI"}
-_STRING_TABLE["_S559"] = {e="BDY7RAQECyI=", k="WSO0mjlQWTB6Qpx3"}
-_STRING_TABLE["_S560"] = {e="FVAtFlIIR0MedDk1FhFGFjZFMBNZCxQ=", k="S1Dz7lg7qTUZwufe"}
-_STRING_TABLE["_S561"] = {e="FBkHUlIKNDBFUCUrQg==", k="Gxq7rYQD19KL1ZMk"}
-_STRING_TABLE["_S562"] = {e="LV0RVkULNgEsPC1QOw==", k="a2p2eXSuXUC7HHpw"}
-_STRING_TABLE["_S563"] = {e="PA8hKE1nChdTNwk7OBMDKQ==", k="njRM9GOa6EpOPzmN"}
-_STRING_TABLE["_S564"] = {e="IjIJHxk=", k="pWzzmnceKxuYHGMz"}
-_STRING_TABLE["_S565"] = {e="ez48KANXVhQHMD9wIQIyJFE8dX5IBFIQCTc1I3YfKWxbPTstAQVaUyUWHAAaLhIJGAAQGC0j", k="8RUKhw7sfYQPVkFL"}
-_STRING_TABLE["_S566"] = {e="JC8ZEQM=", k="vJjtwxhODeO0tsnC"}
-_STRING_TABLE["_S567"] = {e="OjAnJ0xJLTgZKDY2ADEK", k="hUTB8iNYwKSZlTnr"}
-_STRING_TABLE["_S568"] = {e="IDsdNDRBXQJEMyQ0GSAZLhsWKw==", k="ryEgW34r0pKZwEzZ"}
-_STRING_TABLE["_S569"] = {e="ewEaFSI1EDU=", k="3twtLZyQtuLuRbJC"}
-_STRING_TABLE["_S570"] = {e="NzULDQ0=", k="ePxhyAqviuqA4qiP"}
-_STRING_TABLE["_S571"] = {e="ESQdO0glKjopXxEoE0cQPHQhDSpSNDEgIU1dNg8=", k="TRxI1QBSG81Zv4uH"}
-_STRING_TABLE["_S572"] = {e="EygQDyY8Jg==", k="PZukOHU8tZlsvIqc"}
-_STRING_TABLE["_S573"] = {e="EiE/HAwdFA==", k="QSZxeigJLAyOgQXq"}
-_STRING_TABLE["_S574"] = {e="MTkuVDY8ERVXEFd0HEkhcbDL6RUEMA1QUUkVTFBLLGIkIw==", k="RKK5BYu55iw5p3OQ"}
-_STRING_TABLE["_S575"] = {e="JCwTDwIDGA==", k="gCajEvq6FxDMNCKK"}
-_STRING_TABLE["_S576"] = {e="YQYdOANWHCEGAzMBFwYMUw==", k="4uxJJ8lTrPVsaoo6"}
-_STRING_TABLE["_S577"] = {e="C1gUEA4eBg==", k="O1gsalbV3HPfZlCm"}
-_STRING_TABLE["_S578"] = {e="fzUbWmQ6", k="2Tr41sDdKaZnM4cI"}
-_STRING_TABLE["_S579"] = {e="CiwQHSJbFzkA", k="YObxG5PLiRyUOFoz"}
-_STRING_TABLE["_S580"] = {e="bXE=", k="88m0MZf2DW17Xfp1"}
-_STRING_TABLE["_S581"] = {e="DCNVIgIVTwg=", k="Yjuqjz8f7UkNKC2S"}
-_STRING_TABLE["_S582"] = {e="NwFqPCBQAQQU", k="bHJtI4eaze9rkcjt"}
-_STRING_TABLE["_S583"] = {e="Gn8=", k="O6YaHkoFXRP0Z40P"}
-_STRING_TABLE["_S584"] = {e="Pxp0GlsEPlg=", k="jSTI3kI6eYV69vHN"}
-_STRING_TABLE["_S585"] = {e="BiZ4ElkjLyoI", k="SoXZ0GKOfaryOQqx"}
-
-local function _D(id)
-    local entry = _STRING_TABLE[id]
-    if not entry then return "" end
-    
-    -- Base64 decode
-    local function b64decode(data)
-        local b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-        local t = {}
-        for i = 1, #b do t[b:sub(i,i)] = i-1 end
-        
-        local r = {}
-        local i = 1
-        while i <= #data do
-            local a = t[data:sub(i,i)] or 0
-            local b = t[data:sub(i+1,i+1)] or 0
-            local c = t[data:sub(i+2,i+2)] or 0
-            local d = t[data:sub(i+3,i+3)] or 0
-            
-            local n = (a * 262144) + (b * 4096) + (c * 64) + d
-            
-            table.insert(r, string.char(math.floor(n / 65536) % 256))
-            
-            if data:sub(i+2,i+2) ~= "=" then 
-                table.insert(r, string.char(math.floor(n / 256) % 256))
-            end
-            
-            if data:sub(i+3,i+3) ~= "=" then 
-                table.insert(r, string.char(n % 256))
-            end
-            
-            i = i + 4
-        end
-        return table.concat(r)
-    end
-    
-    -- XOR decrypt
-    local decoded = b64decode(entry.e)
-    local result = {}
-    for i = 1, #decoded do
-        local a = decoded:byte(i)
-        local b = entry.k:byte(((i-1) % #entry.k) + 1)
-        local c = 0
-        for j = 0, 7 do
-            local x = a % 2
-            local y = b % 2
-            if x ~= y then
-                c = c + 2^j
-            end
-            a = math.floor(a / 2)
-            b = math.floor(b / 2)
-        end
-        table.insert(result, string.char(c))
-    end
-    
-    return table.concat(result)
-end
-
-
 -- ════════════════ [1] CONFIGURATION & CONSTANTS ════════════════
 local CONFIG = {
-    VERSION = _D("_S0"),
-    NOTIFICATION_SOUND = _D("_S1"),
-    UI_LIBRARY_URL = _D("_S2"),
+    VERSION = "5",
+    NOTIFICATION_SOUND = "rbxassetid://6026984224",
+    UI_LIBRARY_URL = "https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt",
     THEME = {
         PRIMARY_COLOR = Color3.fromRGB(138, 43, 226),   -- Blue Violet
         SECONDARY_COLOR = Color3.fromRGB(75, 0, 130),   -- Indigo
@@ -710,23 +41,23 @@ local CONFIG = {
 
 -- ════════════════ [2] CORE SERVICES ════════════════
 local Services = {
-    Players = game:GetService(_D("_S3")),
-    RunService = game:GetService(_D("_S4")),
-    SoundService = game:GetService(_D("_S5")),
-    UserInputService = game:GetService(_D("_S6")),
-    TweenService = game:GetService(_D("_S7")),
-    Debris = game:GetService(_D("_S8")),
-    ReplicatedStorage = game:GetService(_D("_S9")),
-    StarterGui = game:GetService(_D("_S10")),
-    HttpService = game:GetService(_D("_S11")),
-    Lighting = game:GetService(_D("_S12"))
+    Players = game:GetService("Players"),
+    RunService = game:GetService("RunService"),
+    SoundService = game:GetService("SoundService"),
+    UserInputService = game:GetService("UserInputService"),
+    TweenService = game:GetService("TweenService"),
+    Debris = game:GetService("Debris"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    StarterGui = game:GetService("StarterGui"),
+    HttpService = game:GetService("HttpService"),
+    Lighting = game:GetService("Lighting")
 }
 
 -- ════════════════ [3] PLAYER REFERENCES ════════════════
 local LocalPlayer = Services.Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild(_D("_S13"))
-local RootPart = Character:WaitForChild(_D("_S14"))
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
 
 -- State Management
 local States = {
@@ -749,7 +80,7 @@ local Utils = {}
 function Utils.SafeExecute(func, ...)
     local success, result = pcall(func, ...)
     if not success then
-        warn(_D("_S15"), result)
+        warn("[Demon Hub] Error:", result)
         return false, result
     end
     return true, result
@@ -758,20 +89,20 @@ end
 -- 4.2 Enhanced notification system
 function Utils.Notify(title, text, duration)
     local success = Utils.SafeExecute(function()
-        Services.StarterGui:SetCore(_D("_S16"), {
-            Title = title or _D("_S17"),
-            Text = text or _D("_S18"),
+        Services.StarterGui:SetCore("SendNotification", {
+            Title = title or "Demon Hub",
+            Text = text or "",
             Duration = duration or 3
         })
     end)
     if not success then
-        print(_D("_S19") .. (title or _D("_S20")) .. _D("_S21") .. (text or _D("_S22")))
+        print("[Demon Hub] " .. (title or "Notification") .. ": " .. (text or ""))
     end
 end
 
 -- 4.3 Play sound with cleanup
 function Utils.PlaySound(soundId, volume, callback)
-    local sound = Instance.new(_D("_S23"))
+    local sound = Instance.new("Sound")
     sound.SoundId = soundId
     sound.Volume = volume or 1
     sound.Parent = Services.SoundService
@@ -793,7 +124,7 @@ end
 -- 4.5 Get humanoid safely
 function Utils.GetHumanoid()
     local char = Utils.GetCharacter()
-    return char and char:FindFirstChildOfClass(_D("_S24"))
+    return char and char:FindFirstChildOfClass("Humanoid")
 end
 
 -- 4.6 Load external script safely
@@ -818,7 +149,7 @@ end
 -- ════════════════ [5] INITIALIZATION ════════════════
 -- Play startup sound
 Utils.PlaySound(CONFIG.NOTIFICATION_SOUND, 1, function()
-    Utils.Notify(_D("_S25"), _D("_S26") .. CONFIG.VERSION, 5)
+    Utils.Notify("Demon Hub 2025", "Successfully loaded v" .. CONFIG.VERSION, 5)
 end)
 
 -- Load UI Library with error handling
@@ -829,27 +160,27 @@ local Tabs = {}
 
 Utils.SafeExecute(function()
     UILib = loadstring(game:HttpGet(CONFIG.UI_LIBRARY_URL))()
-    Window = UILib:Window(_D("_S27") .. CONFIG.VERSION)
-    MainServer = Window:Server(_D("_S28"), _D("_S29"))
+    Window = UILib:Window("Demon Hub 2025 | v" .. CONFIG.VERSION)
+    MainServer = Window:Server("Scripts", "")
 
     -- Create UI Tabs
     Tabs = {
-        Main = MainServer:Channel(_D("_S30")),
-        Character = MainServer:Channel(_D("_S31")),
-        Effects = MainServer:Channel(_D("_S32")),
-        Scripts = MainServer:Channel(_D("_S33")),
-        Toggles = MainServer:Channel(_D("_S34")),
-        UI = MainServer:Channel(_D("_S35")),
-        Teleports = MainServer:Channel(_D("_S36")),
-        Power = MainServer:Channel(_D("_S37")),
-        Worlds = MainServer:Channel(_D("_S38")),
-        Music = MainServer:Channel(_D("_S39")),
-        Settings = MainServer:Channel(_D("_S40"))
+        Main = MainServer:Channel("Main"),
+        Character = MainServer:Channel("Character"),
+        Effects = MainServer:Channel("Effects"),
+        Scripts = MainServer:Channel("Scripts"),
+        Toggles = MainServer:Channel("Toggles"),
+        UI = MainServer:Channel("UI"),
+        Teleports = MainServer:Channel("Teleports"),
+        Power = MainServer:Channel("Power"),
+        Worlds = MainServer:Channel("Worlds"),
+        Music = MainServer:Channel("Music"),
+        Settings = MainServer:Channel("Settings")
     }
 end)
 
 if not UILib then
-    Utils.Notify(_D("_S41"), _D("_S42"), 5)
+    Utils.Notify("Error", "Failed to load UI Library", 5)
     return
 end
 
@@ -861,16 +192,16 @@ function Core.FireSwordRemote(times, delay)
     local char = Utils.GetCharacter()
     if not char then return false end
     
-    local sword = char:FindFirstChild(_D("_S43")) or LocalPlayer.Backpack:FindFirstChild(_D("_S44"))
+    local sword = char:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
     if not sword then return false end
     
-    local handle = sword:FindFirstChild(_D("_S45"))
+    local handle = sword:FindFirstChild("Handle")
     if not handle then return false end
     
-    local up = handle:FindFirstChild(_D("_S46"))
+    local up = handle:FindFirstChild("up")
     if not up then return false end
     
-    local remoteEvent = up:FindFirstChild(_D("_S47"))
+    local remoteEvent = up:FindFirstChild("RemoteEvent")
     if not remoteEvent then return false end
     
     for i = 1, times do
@@ -901,7 +232,7 @@ function Core.GetSwords(useCache)
     for _, container in ipairs({backpack, char}) do
         if container then
             for _, tool in ipairs(container:GetChildren()) do
-                if tool:IsA(_D("_S48")) and tool.Name:lower():find(_D("_S49")) then
+                if tool:IsA("Tool") and tool.Name:lower():find("sword") then
                     table.insert(swordCache, tool)
                 end
             end
@@ -919,7 +250,7 @@ function Core.KillAuraSystem()
     
     -- Create range slider
     if Tabs.Main then
-        Tabs.Main:Slider(_D("_S50"), 10, 1000, range, function(value)
+        Tabs.Main:Slider("Kill Aura Range", 10, 1000, range, function(value)
             range = value
         end)
     end
@@ -952,19 +283,19 @@ function Core.KillAuraSystem()
         local sword = setupSword()
         if not sword then return end
         
-        local handle = sword:FindFirstChild(_D("_S51"))
-        local dmg = handle and handle:FindFirstChild(_D("_S52"))
-        local remote = dmg and dmg:FindFirstChild(_D("_S53"))
+        local handle = sword:FindFirstChild("Handle")
+        local dmg = handle and handle:FindFirstChild("dmg")
+        local remote = dmg and dmg:FindFirstChild("RemoteEvent")
         
         if not remote then return end
         
-        local myRoot = Character:FindFirstChild(_D("_S54"))
+        local myRoot = Character:FindFirstChild("HumanoidRootPart")
         if not myRoot then return end
         
         for _, player in ipairs(Services.Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
-                local targetRoot = player.Character:FindFirstChild(_D("_S55"))
-                local targetHum = player.Character:FindFirstChild(_D("_S56"))
+                local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                local targetHum = player.Character:FindFirstChild("Humanoid")
                 
                 if targetRoot and targetHum and targetHum.Health > 0 then
                     local distance = (myRoot.Position - targetRoot.Position).Magnitude
@@ -983,7 +314,7 @@ function Core.KillAuraSystem()
         if processed then return end
         if input.KeyCode == Enum.KeyCode.E then
             killAuraActive = not killAuraActive
-            Utils.Notify(_D("_S57"), killAuraActive and _D("_S58") or _D("_S59"), 2)
+            Utils.Notify("Kill Aura", killAuraActive and "Activated" or "Deactivated", 2)
         end
     end)
 end
@@ -991,9 +322,9 @@ end
 -- ════════════════ [7] FARMING SYSTEM ════════════════
 if Tabs.Main then
     -- 7.1 Slow Farm
-    Tabs.Main:Button(_D("_S60"), function()
+    Tabs.Main:Button("Start Slow Farm", function()
         States.SlowFarm = true
-        Utils.Notify(_D("_S61"), _D("_S62"), 2)
+        Utils.Notify("Farming", "Slow Farm activated", 2)
         
         task.spawn(function()
             while States.SlowFarm do
@@ -1005,15 +336,15 @@ if Tabs.Main then
         end)
     end)
 
-    Tabs.Main:Button(_D("_S63"), function()
+    Tabs.Main:Button("Stop Slow Farm", function()
         States.SlowFarm = false
-        Utils.Notify(_D("_S64"), _D("_S65"), 2)
+        Utils.Notify("Farming", "Slow Farm deactivated", 2)
     end)
 
     -- 7.2 Fast Farm
-    Tabs.Main:Button(_D("_S66"), function()
+    Tabs.Main:Button("Start Fast Farm", function()
         States.FastFarm = true
-        Utils.Notify(_D("_S67"), _D("_S68"), 2)
+        Utils.Notify("Farming", "Fast Farm activated", 2)
         
         if Connections.FastFarm then
             Connections.FastFarm:Disconnect()
@@ -1026,33 +357,33 @@ if Tabs.Main then
         end)
     end)
 
-    Tabs.Main:Button(_D("_S69"), function()
+    Tabs.Main:Button("Stop Fast Farm", function()
         States.FastFarm = false
         if Connections.FastFarm then
             Connections.FastFarm:Disconnect()
             Connections.FastFarm = nil
         end
-        Utils.Notify(_D("_S70"), _D("_S71"), 2)
+        Utils.Notify("Farming", "Fast Farm deactivated", 2)
     end)
 
     -- ════════════════ [8] MAIN FEATURES ════════════════
     -- 8.1 Kill Aura
-    Tabs.Main:Button(_D("_S72"), function()
+    Tabs.Main:Button("Activate Kill Aura", function()
         if States.KillAura then return end
         States.KillAura = true
         Core.KillAuraSystem()
-        Utils.Notify(_D("_S73"), _D("_S74"), 3)
+        Utils.Notify("Combat", "Kill Aura system initialized", 3)
     end)
 
     -- 8.2 Sword Damage Script
-    Tabs.Main:Button(_D("_S75"), function()
+    Tabs.Main:Button("Instant Kill Sword Damage", function()
         local swords = Core.GetSwords()
         local count = 0
         
         for _, sword in ipairs(swords) do
             Utils.SafeExecute(function()
                 sword.Parent = LocalPlayer.Backpack
-                local handle = sword:FindFirstChild(_D("_S76"))
+                local handle = sword:FindFirstChild("Handle")
                 if handle then
                     handle.Massless = true
                     handle.CanCollide = true
@@ -1061,10 +392,10 @@ if Tabs.Main then
                 
                 if handle then
                     handle.Touched:Connect(function(hit)
-                        local targetHum = hit.Parent and hit.Parent:FindFirstChild(_D("_S77"))
+                        local targetHum = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
                         if targetHum and hit.Parent ~= Character then
-                            local dmg = handle:FindFirstChild(_D("_S78"))
-                            local remote = dmg and dmg:FindFirstChild(_D("_S79"))
+                            local dmg = handle:FindFirstChild("dmg")
+                            local remote = dmg and dmg:FindFirstChild("RemoteEvent")
                             if remote then
                                 Utils.SafeExecute(function()
                                     remote:FireServer(targetHum, math.huge)
@@ -1078,12 +409,12 @@ if Tabs.Main then
             end)
         end
         
-        Utils.Notify(_D("_S80"), _D("_S81") .. count .. _D("_S82"), 3)
+        Utils.Notify("Combat", "Instant Kill: " .. count .. " Sword(s)", 3)
     end)
 
     -- 8.3 Infinite Yield
-    Tabs.Main:Button(_D("_S83"), function()
-        Utils.LoadScript(_D("_S84"))
+    Tabs.Main:Button("Load Infinite Yield", function()
+        Utils.LoadScript("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
     end)
 end
 
@@ -1095,13 +426,13 @@ local Movement = {
 
 if Tabs.Character then
     -- 9.1 Movement controls with validation
-    Tabs.Character:Slider(_D("_S85"), 0, 500, Movement.WalkSpeed, function(value)
+    Tabs.Character:Slider("Walk Speed", 0, 500, Movement.WalkSpeed, function(value)
         Movement.WalkSpeed = value
         local hum = Utils.GetHumanoid()
         if hum then hum.WalkSpeed = value end
     end)
 
-    Tabs.Character:Slider(_D("_S86"), 0, 500, Movement.JumpPower, function(value)
+    Tabs.Character:Slider("Jump Power", 0, 500, Movement.JumpPower, function(value)
         Movement.JumpPower = value
         local hum = Utils.GetHumanoid()
         if hum then hum.JumpPower = value end
@@ -1109,9 +440,9 @@ if Tabs.Character then
 
     -- 9.2 Quick Speed Buttons
     local speedPresets = {
-        {name = _D("_S87"), speed = 16, jump = 50},
-        {name = _D("_S88"), speed = 100, jump = 100},
-        {name = _D("_S89"), speed = 250, jump = 150},
+        {name = "Normal Speed", speed = 16, jump = 50},
+        {name = "Fast Speed", speed = 100, jump = 100},
+        {name = "Super Speed", speed = 250, jump = 150},
     }
 
     for _, preset in ipairs(speedPresets) do
@@ -1123,16 +454,16 @@ if Tabs.Character then
                 hum.WalkSpeed = preset.speed
                 hum.JumpPower = preset.jump
             end
-            Utils.Notify(_D("_S90"), preset.name .. _D("_S91"), 2)
+            Utils.Notify("Movement", preset.name .. " activated", 2)
         end)
     end
 
     -- 9.3 Enhanced Respawn
-    Tabs.Character:Button(_D("_S92"), function()
+    Tabs.Character:Button("Smart Respawn", function()
         local char = Utils.GetCharacter()
         if not char then return end
         
-        local root = char:FindFirstChild(_D("_S93"))
+        local root = char:FindFirstChild("HumanoidRootPart")
         if not root then return end
         
         local pos = root.CFrame
@@ -1144,33 +475,33 @@ if Tabs.Character then
             task.wait(0.2)
             
             local newChar = LocalPlayer.Character
-            local newRoot = newChar:WaitForChild(_D("_S94"))
+            local newRoot = newChar:WaitForChild("HumanoidRootPart")
             newRoot.CFrame = pos
-            Utils.Notify(_D("_S95"), _D("_S96"), 2)
+            Utils.Notify("Respawn", "Respawned at saved position", 2)
         end
     end)
 
     -- 9.4 God Mode System
-    Tabs.Character:Button(_D("_S97"), function()
+    Tabs.Character:Button("GodMode", function()
         local hum = Utils.GetHumanoid()
         if not hum then return end
         
-        local sword = Character:FindFirstChild(_D("_S98")) or LocalPlayer.Backpack:FindFirstChild(_D("_S99"))
+        local sword = Character:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
         if sword then
-            local handle = sword:FindFirstChild(_D("_S100"))
-            local dmg = handle and handle:FindFirstChild(_D("_S101"))
-            local remote = dmg and dmg:FindFirstChild(_D("_S102"))
+            local handle = sword:FindFirstChild("Handle")
+            local dmg = handle and handle:FindFirstChild("dmg")
+            local remote = dmg and dmg:FindFirstChild("RemoteEvent")
             if remote then
                 Utils.SafeExecute(function()
                     remote:FireServer(hum, -math.huge)
                 end)
-                Utils.Notify(_D("_S103"), _D("_S104"), 3)
+                Utils.Notify("God Mode", "Activated successfully", 3)
             end
         end
     end)
 
     -- 9.5 Fixed Perma God Toggle
-    Tabs.Character:Toggle(_D("_S105"), false, function(state)
+    Tabs.Character:Toggle("Permanent God Mode", false, function(state)
         States.PermaGod = state
         
         -- Cleanup existing connections
@@ -1189,12 +520,12 @@ if Tabs.Character then
                 while States.PermaGod do
                     Utils.SafeExecute(function()
                         local hum = Utils.GetHumanoid()
-                        local sword = Character:FindFirstChild(_D("_S106")) or LocalPlayer.Backpack:FindFirstChild(_D("_S107"))
+                        local sword = Character:FindFirstChild("sword") or LocalPlayer.Backpack:FindFirstChild("sword")
                         
                         if hum and sword then
-                            local handle = sword:FindFirstChild(_D("_S108"))
-                            local dmg = handle and handle:FindFirstChild(_D("_S109"))
-                            local remote = dmg and dmg:FindFirstChild(_D("_S110"))
+                            local handle = sword:FindFirstChild("Handle")
+                            local dmg = handle and handle:FindFirstChild("dmg")
+                            local remote = dmg and dmg:FindFirstChild("RemoteEvent")
                             if remote then
                                 remote:FireServer(hum, -math.huge)
                             end
@@ -1213,7 +544,7 @@ if Tabs.Character then
             
             -- Prevent external tool pickup
             local toolConnection = Character.ChildAdded:Connect(function(child)
-                if States.PermaGod and child:IsA(_D("_S111")) and child.Name ~= _D("_S112") then
+                if States.PermaGod and child:IsA("Tool") and child.Name ~= "sword" then
                     task.wait(0.1)
                     if child.Parent == Character then
                         child.Parent = workspace
@@ -1228,7 +559,7 @@ if Tabs.Character then
             if States.GodModeConnections then
                 for _, connection in pairs(States.GodModeConnections) do
                     if connection then
-                        if typeof(connection) == _D("_S113") then
+                        if typeof(connection) == "RBXScriptConnection" then
                             connection:Disconnect()
                         else
                             task.cancel(connection)
@@ -1245,24 +576,24 @@ end
 local Effects = {}
 
 -- Services and Dependencies
-local Players = game:GetService(_D("_S114"))
+local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 -- Constants
-local EFFECTS_REMOTE_NAME = _D("_S115")
-local LOAD_REMOTE_NAME = _D("_S116")
+local EFFECTS_REMOTE_NAME = "eff"
+local LOAD_REMOTE_NAME = "load"
 local TOTAL_DUPLICATIONS = 25 -- Changed to 25 as requested
 
 -- ════════════════ CORE FUNCTIONS ════════════════
 
 -- Apply flame colors with smooth transitions
 function Effects.ApplyFlameColors(colors, loops)
-    local eff = workspace:FindFirstChild(_D("_S117"))
-    if not eff then return false, _D("_S118") end
+    local eff = workspace:FindFirstChild("eff")
+    if not eff then return false, "Effects container not found" end
 
-    local event = eff:FindFirstChild(_D("_S119"))
-    if not event then return false, _D("_S120") end
+    local event = eff:FindFirstChild("RemoteEvent")
+    if not event then return false, "RemoteEvent not found" end
 
     for i = 1, loops do
         for _, color in ipairs(colors) do
@@ -1270,7 +601,7 @@ function Effects.ApplyFlameColors(colors, loops)
                 event:FireServer(color)
             end)
             if not success then
-                return false, _D("_S121") .. color
+                return false, "Failed to apply color: " .. color
             end
         end
     end
@@ -1283,9 +614,9 @@ end
 -- Enhanced spawn and drop matching original behavior
 function Effects.SpawnAndDrop()
     local success, error = pcall(function()
-        local loadRemote = workspace:FindFirstChild(_D("_S122"))
-        if not loadRemote or not loadRemote:FindFirstChild(_D("_S123")) then
-            return false, _D("_S124")
+        local loadRemote = workspace:FindFirstChild("load")
+        if not loadRemote or not loadRemote:FindFirstChild("RemoteEvent") then
+            return false, "Load remote not found"
         end
         
         loadRemote.RemoteEvent:FireServer()
@@ -1300,15 +631,15 @@ function Effects.SpawnAndDrop()
 
         -- Drop tools and add tag with position checking
         for i, v in pairs(LocalPlayer.Character:GetChildren()) do
-            if v:IsA(_D("_S125")) then
+            if v:IsA('Tool') then
                 v.Parent = workspace
-                local ex = Instance.new(_D("_S126"))
+                local ex = Instance.new('Script')
                 ex.Parent = v
-                ex.Name = _D("_S127")
+                ex.Name = 'MineYesMine'
                 
                 -- Check nearby players
                 for ix, vx in pairs(Players:GetChildren()) do
-                    if vx.Character and vx.Character:FindFirstChild(_D("_S128")) ~= nil then
+                    if vx.Character and vx.Character:FindFirstChild('HumanoidRootPart') ~= nil then
                         local xDiff = vx.Character.HumanoidRootPart.Position.X - v.Handle.Position.X
                         if xDiff < 20 and xDiff > -20 then
                             if vx ~= LocalPlayer then
@@ -1330,7 +661,7 @@ function Effects.Cleanup()
     local cleanedCount = 0
     -- Remove tags from backpack tools
     for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
-        if tool:FindFirstChild(_D("_S129")) then
+        if tool:FindFirstChild('MineYesMine') then
             tool.MineYesMine:Destroy()
             cleanedCount = cleanedCount + 1
         end
@@ -1341,45 +672,45 @@ end
 -- Flame effect definitions (same as before)
 local flameEffects = {
     -- Single Color Flames
-    {name = _D("_S130"), colors = {_D("_S131")}},
-    {name = _D("_S132"), colors = {_D("_S133")}},
-    {name = _D("_S134"), colors = {_D("_S135")}},
-    {name = _D("_S136"), colors = {_D("_S137")}},
-    {name = _D("_S138"), colors = {_D("_S139")}},
-    {name = _D("_S140"), colors = {_D("_S141")}},
-    {name = _D("_S142"), colors = {_D("_S143")}},
-    {name = _D("_S144"), colors = {_D("_S145")}},
-    {name = _D("_S146"), colors = {_D("_S147")}},
+    {name = "Amethyst Flame", colors = {"Purple"}},
+    {name = "Crimson Blaze", colors = {"Red"}},
+    {name = "Voidfire", colors = {"Black"}},
+    {name = "Netherflame", colors = {"Black"}},
+    {name = "Scarlet Ember", colors = {"Red"}},
+    {name = "Phantom Glow", colors = {"Purple"}},
+    {name = "Shadow Ember", colors = {"Black"}},
+    {name = "Crimson Spark", colors = {"Red"}},
+    {name = "Violet Blaze", colors = {"Purple"}},
 
     -- Dual Color Combinations
-    {name = _D("_S148"), colors = {_D("_S149"), _D("_S150")}},
-    {name = _D("_S151"), colors = {_D("_S152"), _D("_S153")}},
-    {name = _D("_S154"), colors = {_D("_S155"), _D("_S156")}},
-    {name = _D("_S157"), colors = {_D("_S158"), _D("_S159")}},
-    {name = _D("_S160"), colors = {_D("_S161"), _D("_S162")}},
-    {name = _D("_S163"), colors = {_D("_S164"), _D("_S165")}},
-    {name = _D("_S166"), colors = {_D("_S167"), _D("_S168")}},
-    {name = _D("_S169"), colors = {_D("_S170"), _D("_S171")}},
-    {name = _D("_S172"), colors = {_D("_S173"), _D("_S174")}},
-    {name = _D("_S175"), colors = {_D("_S176"), _D("_S177")}},
-    {name = _D("_S178"), colors = {_D("_S179"), _D("_S180")}},
-    {name = _D("_S181"), colors = {_D("_S182"), _D("_S183")}},
-    {name = _D("_S184"), colors = {_D("_S185"), _D("_S186")}},
-    {name = _D("_S187"), colors = {_D("_S188"), _D("_S189")}},
+    {name = "Blood Amethyst", colors = {"Purple", "Red"}},
+    {name = "Eclipse Flame", colors = {"Purple", "Black"}},
+    {name = "Hellfire Shadow", colors = {"Red", "Black"}},
+    {name = "Wraithfire", colors = {"Purple", "Black"}},
+    {name = "Obsidian Wrath", colors = {"Black", "Red"}},
+    {name = "Scarlet Dusk", colors = {"Red", "Purple"}},
+    {name = "Twilight Ashes", colors = {"Black", "Purple"}},
+    {name = "Infernal Veil", colors = {"Red", "Black"}},
+    {name = "Ashen Bloom", colors = {"Black", "Red"}},
+    {name = "Soulflare", colors = {"Purple", "Black"}},
+    {name = "Bloodhowl", colors = {"Red", "Purple"}},
+    {name = "Dark Emberstorm", colors = {"Black", "Purple"}},
+    {name = "Infernal Kiss", colors = {"Red", "Black"}},
+    {name = "Duskwrath", colors = {"Purple", "Red"}},
 
     -- Triple Color Combinations
-    {name = _D("_S190"), colors = {_D("_S191"), _D("_S192"), _D("_S193")}},
-    {name = _D("_S194"), colors = {_D("_S195"), _D("_S196"), _D("_S197")}},
-    {name = _D("_S198"), colors = {_D("_S199"), _D("_S200"), _D("_S201")}},
-    {name = _D("_S202"), colors = {_D("_S203"), _D("_S204"), _D("_S205")}},
-    {name = _D("_S206"), colors = {_D("_S207"), _D("_S208"), _D("_S209")}},
-    {name = _D("_S210"), colors = {_D("_S211"), _D("_S212"), _D("_S213")}},
-    {name = _D("_S214"), colors = {_D("_S215"), _D("_S216"), _D("_S217")}},
-    {name = _D("_S218"), colors = {_D("_S219"), _D("_S220"), _D("_S221")}},
-    {name = _D("_S222"), colors = {_D("_S223"), _D("_S224"), _D("_S225")}},
-    {name = _D("_S226"), colors = {_D("_S227"), _D("_S228"), _D("_S229")}},
-    {name = _D("_S230"), colors = {_D("_S231"), _D("_S232"), _D("_S233")}},
-    {name = _D("_S234"), colors = {_D("_S235"), _D("_S236"), _D("_S237")}},
+    {name = "Dark Trinity", colors = {"Red", "Purple", "Black"}},
+    {name = "Abyssal Blaze", colors = {"Black", "Purple", "Red"}},
+    {name = "Cataclysm Flame", colors = {"Purple", "Red", "Black"}},
+    {name = "Infernal Bloom", colors = {"Red", "Purple", "Black"}},
+    {name = "Chaos Pyre", colors = {"Black", "Red", "Purple"}},
+    {name = "Voidstorm Flame", colors = {"Purple", "Black", "Red"}},
+    {name = "Black Lotus Flame", colors = {"Black", "Purple", "Red"}},
+    {name = "Gravefire", colors = {"Red", "Black", "Purple"}},
+    {name = "Molten Dread", colors = {"Red", "Purple", "Black"}},
+    {name = "Wicked Bloom", colors = {"Purple", "Black", "Red"}},
+    {name = "Blightfire", colors = {"Black", "Red", "Purple"}},
+    {name = "Nightbane Flame", colors = {"Purple", "Red", "Black"}},
 }
 
 -- Function to apply an effect and duplicate items
@@ -1391,13 +722,13 @@ local function applyEffect(effect)
     for i = 1, TOTAL_DUPLICATIONS do
         local colorSuccess, message = true, nil
         for _, color in ipairs(effect.colors) do
-            local event = game:GetService(_D("_S238")).eff.RemoteEvent
+            local event = game:GetService("Workspace").eff.RemoteEvent
             local success = pcall(function()
                 event:FireServer(color)
             end)
             if not success then
                 colorSuccess = false
-                message = _D("_S239")
+                message = "Failed to apply colors"
                 break
             end
         end
@@ -1407,7 +738,7 @@ local function applyEffect(effect)
 
             -- Create sword
             local spawnSuccess = pcall(function()
-                local event = game:GetService(_D("_S240")).load.RemoteEvent
+                local event = game:GetService("Workspace").load.RemoteEvent
                 event:FireServer()
             end)
 
@@ -1421,15 +752,15 @@ local function applyEffect(effect)
 
                 -- Drop tools and add tag
                 for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
-                    if tool:IsA(_D("_S241")) then
+                    if tool:IsA('Tool') then
                         tool.Parent = workspace
-                        local scriptTag = Instance.new(_D("_S242"))
+                        local scriptTag = Instance.new('Script')
                         scriptTag.Parent = tool
-                        scriptTag.Name = _D("_S243")
+                        scriptTag.Name = 'MineYesMine'
 
                         -- Check nearby players
                         for _, player in pairs(game.Players:GetChildren()) do
-                            if player.Character and player.Character:FindFirstChild(_D("_S244")) then
+                            if player.Character and player.Character:FindFirstChild('HumanoidRootPart') then
                                 local xDiff = player.Character.HumanoidRootPart.Position.X - tool.Handle.Position.X
                                 if math.abs(xDiff) < 20 and player ~= LocalPlayer then
                                     print(tool.Handle.Position.X)
@@ -1441,11 +772,11 @@ local function applyEffect(effect)
 
                 successfulApplications = successfulApplications + 1
             else
-                Utils.Notify(_D("_S245"), _D("_S246"), 1)
+                Utils.Notify("Warning", "Spawn sequence failed", 1)
             end
         else
             failedAttempts = failedAttempts + 1
-            Utils.Notify(_D("_S247"), _D("_S248") .. (message or _D("_S249")), 2)
+            Utils.Notify("Error", "Effect system unavailable: " .. (message or "Unknown error"), 2)
             break
         end
     end
@@ -1456,65 +787,65 @@ local function applyEffect(effect)
     -- Final notification
     local statusMessage
     if failedAttempts == 0 then
-        statusMessage = string.format(_D("_S250"), effect.name, cleanedItems)
+        statusMessage = string.format("%s completed successfully | Duplicated 25 tools | Cleaned %d tags", effect.name, cleanedItems)
     else
-        statusMessage = string.format(_D("_S251"), effect.name, successfulApplications, TOTAL_DUPLICATIONS)
+        statusMessage = string.format("%s partially completed | Success: %d/%d", effect.name, successfulApplications, TOTAL_DUPLICATIONS)
     end
-    Utils.Notify(_D("_S252"), statusMessage, 3)
+    Utils.Notify("Effects System", statusMessage, 3)
 end
 
 -- Create effect buttons
 if Tabs.Effects then
     for _, preset in ipairs(flameEffects) do
         Tabs.Effects:Button(preset.name, function()
-            Utils.Notify(_D("_S253"), _D("_S254") .. preset.name .. _D("_S255"), 2)
+            Utils.Notify("Effects", "Applying " .. preset.name .. " (Duplicating 25 items)", 2)
             applyEffect(preset)
         end)
     end
     
     -- Original Rainbow Chaos (uses same code structure as the others)
-    Tabs.Effects:Button(_D("_S256"), function()
-        local rainbowEffect = {name = _D("_S257"), colors = {_D("_S258"), _D("_S259"), _D("_S260"), _D("_S261")}}
-        Utils.Notify(_D("_S262"), _D("_S263"), 2)
+    Tabs.Effects:Button("Original Rainbow Chaos", function()
+        local rainbowEffect = {name = "Rainbow Chaos", colors = {"Red", "Blue", "Black", "Purple"}}
+        Utils.Notify("Effects", "Applying Original Rainbow Chaos (Duplicating 25 items)", 2)
         applyEffect(rainbowEffect)
     end)
     
     -- Manual Cleanup button
-    Tabs.Effects:Button(_D("_S264"), function()
+    Tabs.Effects:Button("Manual Cleanup", function()
         local cleanedCount = Effects.Cleanup()
-        Utils.Notify(_D("_S265"), string.format(_D("_S266"), cleanedCount), 2)
+        Utils.Notify("Cleanup", string.format("Removed %d tagged items", cleanedCount), 2)
     end)
 
     -- System Check button
-    Tabs.Effects:Button(_D("_S267"), function()
+    Tabs.Effects:Button("System Check", function()
         local effRemote = workspace:FindFirstChild(EFFECTS_REMOTE_NAME)
         local loadRemote = workspace:FindFirstChild(LOAD_REMOTE_NAME)
 
         local status = {}
-        table.insert(status, effRemote and _D("_S268") or _D("_S269"))
-        table.insert(status, loadRemote and _D("_S270") or _D("_S271"))
+        table.insert(status, effRemote and "Effects Remote: Active" or "Effects Remote: Missing")
+        table.insert(status, loadRemote and "Load Remote: Active" or "Load Remote: Missing")
 
-        Utils.Notify(_D("_S272"), table.concat(status, _D("_S273")), 4)
+        Utils.Notify("System Status", table.concat(status, "\n"), 4)
     end)
 end
 
 -- ════════════════ [11] EXTERNAL SCRIPTS ════════════════
 if Tabs.Scripts then
     local externalScripts = {
-        {name = _D("_S274"), url = _D("_S275")},
-        {name = _D("_S276"), url = _D("_S277")},
-        {name = _D("_S278"), url = _D("_S279")},
-        {name = _D("_S280"), url = _D("_S281")},
-        {name = _D("_S282"), url = _D("_S283")},
-        {name = _D("_S284"), url = _D("_S285")},
-        {name = _D("_S286"), url = _D("_S287")},
-        {name = _D("_S288"), url = _D("_S289")},
-        {name = _D("_S290"), url = _D("_S291")},
-        {name = _D("_S292"), url = _D("_S293")},
-        {name = _D("_S294"), url = _D("_S295")},
-        {name = _D("_S296"), url = _D("_S297")},
-        {name = _D("_S298"), url = _D("_S299")},
-        {name = _D("_S300"), url = _D("_S301")}
+        {name = "Exclusive Hub", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Exclusive%20Hub.lua"},
+        {name = "2take1.tk", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/2take1"},
+        {name = "Sword Simulator Hub", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Sword%20Simulator%20Hub"},
+        {name = "Liquids GUI", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Liquid's%20Gui"},
+        {name = "Auratus X Hub", url = "https://raw.githubusercontent.com/AnimatedKurai/Scripts/refs/heads/main/Auratus%20Hub.txt"},
+        {name = "Replication UI", url = "https://raw.githubusercontent.com/EEND2SCRIPTS/Replication/main/replication"},
+        {name = "Emperor Wings", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Emperor%20Wings.lua"},
+        {name = "Ghost Hub", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/refs/heads/main/Ghost_Hub"},
+        {name = "Dragon Hub Premium", url = "https://raw.githubusercontent.com/AlznX/Roblox-Scripts/main/Dragon%2520Hub"},
+        {name = "Slayer Hub", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/main/Truecode"},
+        {name = "Line's Script Hub", url = "https://raw.githubusercontent.com/Zacky-pixel-sketch/Hubs/main/Demon%20hub%20source%20code.lua"},
+        {name = "Levitate Tools", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Levitate%20Tools.lua"},
+        {name = "Sword Hover", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/Sword%20Hover.lua"},
+        {name = "Senpai Avatar", url = "https://pastebin.com/raw/PeveNbdm"}
     }
 
     for _, script in ipairs(externalScripts) do
@@ -1525,10 +856,10 @@ if Tabs.Scripts then
 
     -- ════════════════ [12] ADVANCED SWORD STYLES ════════════════
     -- 12.1 Enhanced Sword Spin
-    Tabs.Scripts:Button(_D("_S302"), function()
+    Tabs.Scripts:Button("Dynamic Sword Spin", function()
         local swords = Core.GetSwords()
         if #swords == 0 then 
-            Utils.Notify(_D("_S303"), _D("_S304"), 2)
+            Utils.Notify("Error", "No swords found", 2)
             return 
         end
         
@@ -1545,20 +876,20 @@ if Tabs.Scripts then
             
             local clonedSword = sword:Clone()
             clonedSword.Parent = workspace
-            clonedSword.Name = sword.Name .. _D("_S305")
+            clonedSword.Name = sword.Name .. "_Spinning"
             
-            local handle = clonedSword:FindFirstChild(_D("_S306"))
+            local handle = clonedSword:FindFirstChild("Handle")
             if handle then
                 handle.Massless = true
                 handle.CanCollide = false
                 
-                local bodyPos = Instance.new(_D("_S307"))
+                local bodyPos = Instance.new("BodyPosition")
                 bodyPos.MaxForce = Vector3.new(4000, 4000, 4000)
                 bodyPos.P = 3000
                 bodyPos.D = 500
                 bodyPos.Parent = handle
                 
-                local bodyAngVel = Instance.new(_D("_S308"))
+                local bodyAngVel = Instance.new("BodyAngularVelocity")
                 bodyAngVel.MaxTorque = Vector3.new(4000, 4000, 4000)
                 bodyAngVel.AngularVelocity = Vector3.new(0, 10, 0)
                 bodyAngVel.Parent = handle
@@ -1577,7 +908,7 @@ if Tabs.Scripts then
             if not spinning then return end
             
             angleOffset = angleOffset + dt * spinSpeed
-            local humanoidRootPart = Character:FindFirstChild(_D("_S309"))
+            local humanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
             if not humanoidRootPart then return end
             
             for i, swordData in ipairs(spinSwords) do
@@ -1612,7 +943,7 @@ if Tabs.Scripts then
                 end
             end
             
-            Utils.Notify(_D("_S310"), _D("_S311"), 2)
+            Utils.Notify("Sword Spin", "Deactivated", 2)
         end
         
         local inputConn = Services.UserInputService.InputBegan:Connect(function(input)
@@ -1622,25 +953,25 @@ if Tabs.Scripts then
             end
         end)
         
-        local humanoid = Character:FindFirstChild(_D("_S312"))
+        local humanoid = Character:FindFirstChild("Humanoid")
         if humanoid then
             humanoid.Died:Connect(cleanup)
         end
         
-        Utils.Notify(_D("_S313"), _D("_S314") .. #spinSwords .. _D("_S315"), 3)
+        Utils.Notify("Sword Spin", "Press X to stop | " .. #spinSwords .. " swords spinning", 3)
     end)
 end
 
 -- ════════════════ [13] TOGGLE FEATURES ════════════════
 -- Services
-local Players = game:GetService(_D("_S316"))
-local RunService = game:GetService(_D("_S317"))
-local Workspace = game:GetService(_D("_S318"))
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 -- Local Variables
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild(_D("_S319"))
+local Humanoid = Character:WaitForChild("Humanoid")
 
 -- Tables
 local Connections = {}
@@ -1651,7 +982,7 @@ local Utils = {
     SafeExecute = function(func)
         local success, result = pcall(func)
         if not success then
-            warn(_D("_S320") .. tostring(result))
+            warn("Error: " .. tostring(result))
         end
         return success, result
     end
@@ -1660,13 +991,13 @@ local Utils = {
 -- Update character reference when respawning
 LocalPlayer.CharacterAdded:Connect(function(newChar)
     Character = newChar
-    Humanoid = newChar:WaitForChild(_D("_S321"))
+    Humanoid = newChar:WaitForChild("Humanoid")
 end)
 
 -- Ensure Tabs.Toggles exists
 if not Tabs then Tabs = {} end
 if not Tabs.Toggles then 
-    warn(_D("_S322"))
+    warn("Tabs.Toggles not found! Make sure your UI framework is loaded.")
     return
 end
 
@@ -1674,7 +1005,7 @@ end
 local lastGrabTime = 0
 local GRAB_COOLDOWN = 0.2 -- Prevent spam grabbing
 
-Tabs.Toggles:Toggle(_D("_S323"), false, function(state)
+Tabs.Toggles:Toggle("Auto Grab Tools", false, function(state)
     States.GrabTools = state
     
     -- Clean up existing connection
@@ -1692,23 +1023,23 @@ Tabs.Toggles:Toggle(_D("_S323"), false, function(state)
             
             -- Ensure character exists and is valid
             if not Character or not Character.Parent then return end
-            local root = Character:FindFirstChild(_D("_S324"))
-            local humanoid = Character:FindFirstChild(_D("_S325"))
+            local root = Character:FindFirstChild("HumanoidRootPart")
+            local humanoid = Character:FindFirstChild("Humanoid")
             if not root or not humanoid or humanoid.Health <= 0 then return end
             
-            -- Look for tools with _D("_S326") or _D("_S327") in the name
+            -- Look for tools with "sword" or "tool" in the name
             for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA(_D("_S328")) and obj.Parent == Workspace then
+                if obj:IsA("Tool") and obj.Parent == Workspace then
                     local toolName = obj.Name:lower()
-                    if toolName:find(_D("_S329")) or toolName:find(_D("_S330")) then
-                        local handle = obj:FindFirstChild(_D("_S331"))
-                        if handle and handle:IsA(_D("_S332")) then
+                    if toolName:find("sword") or toolName:find("tool") then
+                        local handle = obj:FindFirstChild("Handle")
+                        if handle and handle:IsA("BasePart") then
                             -- Check if tool is within reasonable distance
                             local distance = (root.Position - handle.Position).Magnitude
                             if distance <= 50 then -- Only grab nearby tools
                                 Utils.SafeExecute(function()
                                     -- Method 1: Use touch interest (safer)
-                                    local touchTransmitter = handle:FindFirstChildOfClass(_D("_S333"))
+                                    local touchTransmitter = handle:FindFirstChildOfClass("TouchTransmitter")
                                     if touchTransmitter then
                                         firetouchinterest(root, handle, 0)
                                         task.wait(0.05)
@@ -1734,7 +1065,7 @@ local function dropAllTools()
     if not Character or not Humanoid or Humanoid.Health <= 0 then return end
     
     -- Drop equipped tools
-    local equippedTool = Character:FindFirstChildOfClass(_D("_S334"))
+    local equippedTool = Character:FindFirstChildOfClass("Tool")
     if equippedTool then
         pcall(function()
             equippedTool.CanBeDropped = true
@@ -1745,13 +1076,13 @@ local function dropAllTools()
     
     -- Drop backpack tools
     for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
-        if tool:IsA(_D("_S335")) then
+        if tool:IsA("Tool") then
             pcall(function()
                 tool.CanBeDropped = true
                 tool.Parent = Character
                 wait(0.1)
                 tool.Parent = Workspace
-                if tool:FindFirstChild(_D("_S336")) then
+                if tool:FindFirstChild("Handle") then
                     tool.Handle.CFrame = Character.HumanoidRootPart.CFrame + Vector3.new(math.random(-5, 5), -3, math.random(-5, 5))
                 end
             end)
@@ -1759,7 +1090,7 @@ local function dropAllTools()
     end
 end
 
-Tabs.Toggles:Toggle(_D("_S337"), false, function(state)
+Tabs.Toggles:Toggle("Auto Drop Tools", false, function(state)
     States.AutoDropTools = state
     
     -- Clean up existing connection
@@ -1783,15 +1114,15 @@ end)
 local function attemptKillAll()
     if not Character or not Humanoid or Humanoid.Health <= 0 then return end
     
-    local myRoot = Character:FindFirstChild(_D("_S338"))
+    local myRoot = Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
     
     -- Find sword tool
-    local sword = Character:FindFirstChildOfClass(_D("_S339")) or LocalPlayer.Backpack:FindFirstChild(_D("_S340"))
+    local sword = Character:FindFirstChildOfClass("Tool") or LocalPlayer.Backpack:FindFirstChild("sword")
     if not sword then
-        -- Try to find any tool with _D("_S341") in the name
+        -- Try to find any tool with "sword" in the name
         for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
-            if tool:IsA(_D("_S342")) and tool.Name:lower():find(_D("_S343")) then
+            if tool:IsA("Tool") and tool.Name:lower():find("sword") then
                 sword = tool
                 break
             end
@@ -1812,23 +1143,23 @@ local function attemptKillAll()
     local remote = nil
     
     -- Method 1: Standard path
-    local handle = sword:FindFirstChild(_D("_S344"))
+    local handle = sword:FindFirstChild("Handle")
     if handle then
-        local dmgPart = handle:FindFirstChild(_D("_S345"))
+        local dmgPart = handle:FindFirstChild("dmg")
         if dmgPart then
-            remote = dmgPart:FindFirstChild(_D("_S346"))
+            remote = dmgPart:FindFirstChild("RemoteEvent")
         end
         
         -- Method 2: Direct child of handle
         if not remote then
-            remote = handle:FindFirstChild(_D("_S347"))
+            remote = handle:FindFirstChild("RemoteEvent")
         end
     end
     
     -- Method 3: Search all descendants
     if not remote then
         for _, desc in ipairs(sword:GetDescendants()) do
-            if desc:IsA(_D("_S348")) then
+            if desc:IsA("RemoteEvent") then
                 remote = desc
                 break
             end
@@ -1840,8 +1171,8 @@ local function attemptKillAll()
     -- Attack all players
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
-            local targetRoot = player.Character:FindFirstChild(_D("_S349"))
-            local targetHum = player.Character:FindFirstChildOfClass(_D("_S350"))
+            local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            local targetHum = player.Character:FindFirstChildOfClass("Humanoid")
             
             if targetRoot and targetHum and targetHum.Health > 0 then
                 local distance = (myRoot.Position - targetRoot.Position).Magnitude
@@ -1864,7 +1195,7 @@ local function attemptKillAll()
     end
 end
 
-Tabs.Toggles:Toggle(_D("_S351"), false, function(state)
+Tabs.Toggles:Toggle("Kill All Players", false, function(state)
     States.KillAll = state
     
     -- Clean up existing connection
@@ -1898,7 +1229,7 @@ LocalPlayer.CharacterRemoving:Connect(function()
 end)
 
     -- 13.4 Loop Walk Speed
-    Tabs.Toggles:Toggle(_D("_S352"), false, function(state)
+    Tabs.Toggles:Toggle("Lock Walk Speed (100)", false, function(state)
         States.WalkSpeedLoop = state
         
         if Connections.WalkSpeedLoop then
@@ -1922,13 +1253,13 @@ end)
 
 -- ════════════════ [14] UI MODIFICATIONS ════════════════
 if Tabs.UI then
-    Tabs.UI:Button(_D("_S353"), function()
+    Tabs.UI:Button("Remove All Pass GUIs", function()
         local function destroyEffectsUI()
-            for _, gui in ipairs({Services.StarterGui, LocalPlayer:WaitForChild(_D("_S354"))}) do
-                local passes = gui:FindFirstChild(_D("_S355"))
+            for _, gui in ipairs({Services.StarterGui, LocalPlayer:WaitForChild("PlayerGui")}) do
+                local passes = gui:FindFirstChild("passes")
                 if passes then
                     for _, child in ipairs(passes:GetChildren()) do
-                        if child:IsA(_D("_S356")) or child:IsA(_D("_S357")) then
+                        if child:IsA("Frame") or child:IsA("TextButton") then
                             Utils.SafeExecute(function()
                                 child:Destroy()
                             end)
@@ -1945,37 +1276,37 @@ if Tabs.UI then
             destroyEffectsUI()
         end)
         
-        Utils.Notify(_D("_S358"), _D("_S359"), 3)
+        Utils.Notify("UI", "Effects GUI removed permanently", 3)
     end)
 end
 
 -- ════════════════ [15] TELEPORTATION SYSTEM ════════════════
 if Tabs.Teleports then
     local TeleportLocations = {
-        {name = _D("_S360"), cframe = CFrame.new(-18.393, 26.978, 9.003, 0.999929, 0, 0.011914, 0, 1, 0, -0.011914, 0, 0.999929)},
-        {name = _D("_S361"), cframe = CFrame.new(-143.156, 82.464, -246.582, 0.985673, 0, -0.168666, 0, 1, 0, 0.168666, 0, 0.985673)},
-        {name = _D("_S362"), cframe = CFrame.new(-251.617, 92.690, -335.043, -0.794003, 0, -0.607913, 0, 1, 0, 0.607913, 0, -0.794003)},
-        {name = _D("_S363"), cframe = CFrame.new(-266.613, 119.881, -347.056, -0.698223, 0, -0.715880, 0, 1, 0, 0.715880, 0, -0.698223)},
-        {name = _D("_S364"), cframe = CFrame.new(-197.105, 22.953, -377.287) * CFrame.Angles(math.rad(0.044), math.rad(23.156), math.rad(0.08))},
-        {name = _D("_S365"), cframe = CFrame.new(-295.778, 25.596, -355.215, -0.409, 0, -0.913, 0, 1, 0, 0.913, 0, -0.409)},
-        {name = _D("_S366"), cframe = CFrame.new(-420.443, 25.596, -9.648, -0.0046, 0, -0.999989, 0, 1, 0, 0.999989, 0, -0.0046)},
-        {name = _D("_S367"), cframe = CFrame.new(-341.302, 25.596, 47.305, 0.342859, 0, 0.939387, 0, 1, 0, -0.939387, 0, 0.342859)},
-        {name = _D("_S368"), cframe = CFrame.new(-88.647, 70.197, 92.618, 0.952380, 0, -0.304915, 0, 1, 0, 0.304915, 0, 0.952380)},
-        {name = _D("_S369"), cframe = CFrame.new(45.779, 21.812, -185.381, -0.863430, -0.497, -0.087601, 0, 0.173651, -0.984807, 0.504468, -0.850312, -0.149936)}
+        {name = "Arena", cframe = CFrame.new(-18.393, 26.978, 9.003, 0.999929, 0, 0.011914, 0, 1, 0, -0.011914, 0, 0.999929)},
+        {name = "Tree", cframe = CFrame.new(-143.156, 82.464, -246.582, 0.985673, 0, -0.168666, 0, 1, 0, 0.168666, 0, 0.985673)},
+        {name = "Wall", cframe = CFrame.new(-251.617, 92.690, -335.043, -0.794003, 0, -0.607913, 0, 1, 0, 0.607913, 0, -0.794003)},
+        {name = "Gray Wall", cframe = CFrame.new(-266.613, 119.881, -347.056, -0.698223, 0, -0.715880, 0, 1, 0, 0.715880, 0, -0.698223)},
+        {name = "Secret Area", cframe = CFrame.new(-197.105, 22.953, -377.287) * CFrame.Angles(math.rad(0.044), math.rad(23.156), math.rad(0.08))},
+        {name = "Outside", cframe = CFrame.new(-295.778, 25.596, -355.215, -0.409, 0, -0.913, 0, 1, 0, 0.913, 0, -0.409)},
+        {name = "Gate Exterior", cframe = CFrame.new(-420.443, 25.596, -9.648, -0.0046, 0, -0.999989, 0, 1, 0, 0.999989, 0, -0.0046)},
+        {name = "Rock Interior 1", cframe = CFrame.new(-341.302, 25.596, 47.305, 0.342859, 0, 0.939387, 0, 1, 0, -0.939387, 0, 0.342859)},
+        {name = "Pillar Top", cframe = CFrame.new(-88.647, 70.197, 92.618, 0.952380, 0, -0.304915, 0, 1, 0, 0.304915, 0, 0.952380)},
+        {name = "Underground", cframe = CFrame.new(45.779, 21.812, -185.381, -0.863430, -0.497, -0.087601, 0, 0.173651, -0.984807, 0.504468, -0.850312, -0.149936)}
     }
 
     for _, location in ipairs(TeleportLocations) do
         Tabs.Teleports:Button(location.name, function()
-            local root = Character:FindFirstChild(_D("_S370"))
+            local root = Character:FindFirstChild("HumanoidRootPart")
             if root then
                 root.CFrame = location.cframe
-                Utils.Notify(_D("_S371"), _D("_S372") .. location.name, 2)
+                Utils.Notify("Teleport", "Teleported to " .. location.name, 2)
             end
         end)
     end
 
-    Tabs.Teleports:Button(_D("_S373"), function()
-        Utils.Notify(_D("_S374"), _D("_S375"), 3)
+    Tabs.Teleports:Button("Set Teleport Keybinds", function()
+        Utils.Notify("Teleport", "Press 1-5 for quick teleports", 3)
         
         Services.UserInputService.InputBegan:Connect(function(input, processed)
             if processed then return end
@@ -1990,10 +1321,10 @@ if Tabs.Teleports then
             
             local index = keyMap[input.KeyCode]
             if index and TeleportLocations[index] then
-                local root = Character:FindFirstChild(_D("_S376"))
+                local root = Character:FindFirstChild("HumanoidRootPart")
                 if root then
                     root.CFrame = TeleportLocations[index].cframe
-                    Utils.Notify(_D("_S377"), _D("_S378") .. TeleportLocations[index].name, 1)
+                    Utils.Notify("Quick TP", "Teleported to " .. TeleportLocations[index].name, 1)
                 end
             end
         end)
@@ -2003,10 +1334,10 @@ end
 -- ════════════════ [16] POWER SYSTEM ════════════════
 if Tabs.Power then
     local powerScripts = {
-        {name = _D("_S379"), url = _D("_S380")},
-        {name = _D("_S381"), url = _D("_S382")},
-        {name = _D("_S383"), url = _D("_S384")},
-        {name = _D("_S385"), url = _D("_S386")}
+        {name = "1K Power (3s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/1K"},
+        {name = "2K Power (6s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/2K"},
+        {name = "5K Power (10s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/5K"},
+        {name = "10K Power (20s intervals)", url = "https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/10K"}
     }
 
     for _, script in ipairs(powerScripts) do
@@ -2016,19 +1347,19 @@ if Tabs.Power then
     end
 
     -- Additional tool for monitoring power stats
-    Tabs.Power:Button(_D("_S387"), function()
-        Utils.LoadScript(_D("_S388"))
+    Tabs.Power:Button("Power Stats Viewer", function()
+        Utils.LoadScript("https://raw.githubusercontent.com/Nightmareloil/Own1/refs/heads/main/SECURITY.md")
     end)
 end
 
 -- ════════════════ [17] WORLD TELEPORTS ════════════════
 if Tabs.Worlds then
     local worldScripts = {
-        {name = _D("_S389"), url = _D("_S390")},
-        {name = _D("_S391"), url = _D("_S392")},
-        {name = _D("_S393"), url = _D("_S394")},
-        {name = _D("_S395"), url = _D("_S396")},
-        {name = _D("_S397"), url = _D("_S398")}
+        {name = "Coffee Shop", url = "https://pastebin.com/raw/Pvj5Ckc2"},
+        {name = "Clockwork Arena", url = "https://pastebin.com/raw/NNp1NJKT"},
+        {name = "Shipment", url = "https://pastebin.com/raw/J3Jk3NaC"},
+        {name = "Purple Battlefields", url = "https://pastebin.com/raw/kdg5tmdg"},
+        {name = "Lock Shift", url = "https://raw.githubusercontent.com/MiniNoobie/ShiftLockx/main/Shiftlock-MiniNoobie"}
     }
 
     for _, world in ipairs(worldScripts) do
@@ -2059,19 +1390,19 @@ local function processNotificationQueue()
             
             local success = pcall(function()
                 -- Try StarterGui notification first
-                if game:GetService(_D("_S399")) then
-                    game:GetService(_D("_S400")):SetCore(_D("_S401"), {
+                if game:GetService("StarterGui") then
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
                         Title = notification.title;
                         Text = notification.message;
                         Duration = notification.duration or 3;
-                        Button1 = _D("_S402");
+                        Button1 = "OK";
                     })
                 end
             end)
             
             if not success then
                 -- Fallback: Print to console
-                print(_D("_S403") .. notification.title .. _D("_S404") .. notification.message)
+                print("[" .. notification.title .. "] " .. notification.message)
             end
             
             -- Wait between notifications to prevent overlap
@@ -2108,54 +1439,54 @@ local MusicPlayer = {
     CurrentSong = nil,
     Volume = 1,
     Songs = {
-        {name = _D("_S405"), id = _D("_S406")},
-        {name = _D("_S407"), id = _D("_S408")},
-        {name = _D("_S409"), id = _D("_S410")},
-        {name = _D("_S411"), id = _D("_S412")},
-        {name = _D("_S413"), id = _D("_S414")},
-        {name = _D("_S415"), id = _D("_S416")},
-        {name = _D("_S417"), id = _D("_S418")},
-        {name = _D("_S419"), id = _D("_S420")},
-        {name = _D("_S421"), id = _D("_S422")},
-        {name = _D("_S423"), id = _D("_S424")},
-        {name = _D("_S425"), id = _D("_S426")},
-        {name = _D("_S427"), id = _D("_S428")},
-        {name = _D("_S429"), id = _D("_S430")},
-        {name = _D("_S431"), id = _D("_S432")},
-        {name = _D("_S433"), id = _D("_S434")},
-        {name = _D("_S435"), id = _D("_S436")},
-        {name = _D("_S437"), id = _D("_S438")},
-        {name = _D("_S439"), id = _D("_S440")},
-        {name = _D("_S441"), id = _D("_S442")},
-        {name = _D("_S443"), id = _D("_S444")},
-        {name = _D("_S445"), id = _D("_S446")},
-        {name = _D("_S447"), id = _D("_S448")},
-        {name = _D("_S449"), id = _D("_S450")},
-        {name = _D("_S451"), id = _D("_S452")},
-        {name = _D("_S453"), id = _D("_S454")},
-        {name = _D("_S455"), id = _D("_S456")},
-        {name = _D("_S457"), id = _D("_S458")},
-        {name = _D("_S459"), id = _D("_S460")},
-        {name = _D("_S461"), id = _D("_S462")},
-        {name = _D("_S463"), id = _D("_S464")},
-        {name = _D("_S465"), id = _D("_S466")},
-        {name = _D("_S467"), id = _D("_S468")},
-        {name = _D("_S469"), id = _D("_S470")},
-        {name = _D("_S471"), id = _D("_S472")},
-        {name = _D("_S473"), id = _D("_S474")},
-        {name = _D("_S475"), id = _D("_S476")},
-        {name = _D("_S477"), id = _D("_S478")},
-        {name = _D("_S479"), id = _D("_S480")},
-        {name = _D("_S481"), id = _D("_S482")},
-        {name = _D("_S483"), id = _D("_S484")},
-        {name = _D("_S485"), id = _D("_S486")},
-        {name = _D("_S487"), id = _D("_S488")},
-        {name = _D("_S489"), id = _D("_S490")},
-        {name = _D("_S491"), id = _D("_S492")},
-        {name = _D("_S493"), id = _D("_S494")},
-        {name = _D("_S495"), id = _D("_S496")},
-        {name = _D("_S497"), id = _D("_S498")},
-        {name = _D("_S499"), id = _D("_S500")}
+        {name = "Save Me", id = "128972545110914"},
+        {name = "Rootkit", id = "5410081542"},
+        {name = "Say So - Doja Cat", id = "1840036018"},
+        {name = "The Future", id = "1837358800"},
+        {name = "Feel Your Heart", id = "5410082171"},
+        {name = "Forward", id = "5410081471"},
+        {name = "No Sleep", id = "7029011778"},
+        {name = "Pixel Terror", id = "5410080475"},
+        {name = "Labyrinth", id = "7023690024"},
+        {name = "All I Want", id = "7023680426"},
+        {name = "Sacrified", id = "125847822956321"},
+        {name = "Colors", id = "5410086062"},
+        {name = "You Used To", id = "7023720291"},
+        {name = "Rock Star", id = "108319978126931"},
+        {name = "Coral Sea", id = "1839253629"},
+        {name = "King", id = "1840030788"},
+        {name = "Chasing Clouds", id = "5410082097"},
+        {name = "Pendulum", id = "1843384804"},
+        {name = "She Make Me", id = "1841807265"},
+        {name = "I'm So Alone", id = "6774872457"},
+        {name = "Hate Me", id = "6873260626"},
+        {name = "Safe & Sound", id = "7024233823"},
+        {name = "Dreamers", id = "7029083554"},
+        {name = "Internet Boy", id = "5410084870"},
+        {name = "Let's Play", id = "5410085763"},
+        {name = "Night", id = "1836879421"},
+        {name = "Pull Over", id = "1839983980"},
+        {name = "WRLD - Hang Up", id = "5410084188"},
+        {name = "Deja Vu", id = "6781116057"},
+        {name = "Give The World", id = "1836778353"},
+        {name = "Top Of The World", id = "1836847994"},
+        {name = "Siren", id = "1840056866"},
+        {name = "Overtime", id = "1842019862"},
+        {name = "Hours", id = "7028932563"},
+        {name = "Weekend Vibes", id = "1837083064"},
+        {name = "Glacier", id = "7023760529"},
+        {name = "Only You", id = "7024028859"},
+        {name = "Hyper", id = "7023887630"},
+        {name = "Play Cool", id = "7029017448"},
+        {name = "What It's Like", id = "7028997537"},
+        {name = "New World", id = "5410082346"},
+        {name = "You Take Me", id = "7029070008"},
+        {name = "Thinking About You", id = "7023445033"},
+        {name = "Oopsy", id = "115877769571526"},
+        {name = "I won't go", id = "5410082273"},
+        {name = "Gurber beats", id = "121881213314227"},
+        {name = "Night Owl", id = "1843391637"},
+        {name = "Coming Soon!", id = ""}
     }
 }
 
@@ -2169,18 +1500,18 @@ local function stopAllSounds()
         end
 
         local soundContainers = {
-            game:GetService(_D("_S501")),
+            game:GetService("SoundService"),
             workspace,
-            game:GetService(_D("_S502")),
-            game:GetService(_D("_S503")),
-            game:GetService(_D("_S504")),
-            game:GetService(_D("_S505")),
-            game:GetService(_D("_S506"))
+            game:GetService("Lighting"),
+            game:GetService("ReplicatedStorage"),
+            game:GetService("Players"),
+            game:GetService("StarterGui"),
+            game:GetService("StarterPack")
         }
 
         for _, container in pairs(soundContainers) do
             for _, descendant in pairs(container:GetDescendants()) do
-                if descendant:IsA(_D("_S507")) then
+                if descendant:IsA("Sound") then
                     pcall(function()
                         descendant:Stop()
                         descendant:Destroy()
@@ -2192,8 +1523,8 @@ local function stopAllSounds()
 end
 
 local function playSong(songName, soundId)
-    if soundId == _D("_S508") or not soundId then
-        Utils.Notify(_D("_S509"), _D("_S510"), 2)
+    if soundId == "" or not soundId then
+        Utils.Notify("Music", "Song not available yet!", 2)
         return
     end
     
@@ -2205,11 +1536,11 @@ local function playSong(songName, soundId)
         end
         
         -- Create new sound
-        MusicPlayer.CurrentSong = Instance.new(_D("_S511"))
-        MusicPlayer.CurrentSong.SoundId = _D("_S512") .. soundId
+        MusicPlayer.CurrentSong = Instance.new("Sound")
+        MusicPlayer.CurrentSong.SoundId = "rbxassetid://" .. soundId
         MusicPlayer.CurrentSong.Volume = MusicPlayer.Volume
         MusicPlayer.CurrentSong.Looped = true
-        MusicPlayer.CurrentSong.Parent = game:GetService(_D("_S513"))
+        MusicPlayer.CurrentSong.Parent = game:GetService("SoundService")
         
         -- Play with error handling
         local success = pcall(function()
@@ -2217,32 +1548,32 @@ local function playSong(songName, soundId)
         end)
         
         if success then
-            Utils.Notify(_D("_S514"), _D("_S515") .. songName, 3)
+            Utils.Notify("Music", "Now playing: " .. songName, 3)
         else
-            Utils.Notify(_D("_S516"), _D("_S517") .. songName, 3)
+            Utils.Notify("Music", "Failed to play: " .. songName, 3)
         end
     end)
 end
 
 if Tabs and Tabs.Music then
     -- Music Controls
-    Tabs.Music:Button(_D("_S518"), function()
+    Tabs.Music:Button("Stop All Music", function()
         stopAllSounds()
-        Utils.Notify(_D("_S519"), _D("_S520"), 2)
+        Utils.Notify("Music", "All music stopped.", 2)
     end)
 
     -- Volume Control
-    Tabs.Music:Slider(_D("_S521"), 0, 100, 50, function(value)
+    Tabs.Music:Slider("Volume", 0, 100, 50, function(value)
         MusicPlayer.Volume = value / 100
         if MusicPlayer.CurrentSong then
             MusicPlayer.CurrentSong.Volume = MusicPlayer.Volume
         end
-        Utils.Notify(_D("_S522"), _D("_S523") .. value .. _D("_S524"), 1)
+        Utils.Notify("Music", "Volume: " .. value .. "%", 1)
     end)
 
     -- Create song buttons
     for _, song in ipairs(MusicPlayer.Songs) do
-        if song.id ~= _D("_S525") then -- Only create buttons for available songs
+        if song.id ~= "" then -- Only create buttons for available songs
             Tabs.Music:Button(song.name, function()
                 playSong(song.name, song.id)
             end)
@@ -2260,34 +1591,34 @@ if Tabs and Tabs.Settings then
     
     -- Services
     local Services = {
-        Players = game:GetService(_D("_S526")),
-        TeleportService = game:GetService(_D("_S527")),
-        HttpService = game:GetService(_D("_S528")),
-        UserInputService = game:GetService(_D("_S529"))
+        Players = game:GetService("Players"),
+        TeleportService = game:GetService("TeleportService"),
+        HttpService = game:GetService("HttpService"),
+        UserInputService = game:GetService("UserInputService")
     }
     
     local LocalPlayer = Services.Players.LocalPlayer
       
     -- Auto-reconnect
-    Tabs.Settings:Toggle(_D("_S530"), false, function(state)
+    Tabs.Settings:Toggle("Auto Reconnect", false, function(state)
         if state then
             LocalPlayer.OnTeleport:Connect(function(teleportState)
                 if teleportState == Enum.TeleportState.Failed then
-                    Utils.Notify(_D("_S531"), _D("_S532"), 5)
+                    Utils.Notify("Reconnect", "⚠Teleport failed, attempting reconnect...", 5)
                     pcall(function()
                         Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId)
                     end)
                 end
             end)
-            Utils.Notify(_D("_S533"), _D("_S534"), 2)
+            Utils.Notify("Settings", "Auto reconnect enabled", 2)
         else
-            Utils.Notify(_D("_S535"), _D("_S536"), 2)
+            Utils.Notify("Settings", "Auto-reconnect disabled", 2)
         end
     end)
 
     -- Discord
-    Tabs.Settings:Button(_D("_S537"), function()
-        local discordInvite = _D("_S538")
+    Tabs.Settings:Button("Join Discord", function()
+        local discordInvite = "https://discord.com/invite/J7AYrApFAH"
         
         local success = pcall(function()
             if setclipboard then
@@ -2298,16 +1629,16 @@ if Tabs and Tabs.Settings then
         end)
         
         if success then
-            Utils.Notify(_D("_S539"), _D("_S540"), 3)
+            Utils.Notify("Discord", "Discord invite copied to clipboard!", 3)
         else
-            Utils.Notify(_D("_S541"), _D("_S542") .. discordInvite, 5)
+            Utils.Notify("Discord", "Failed to copy. Link: " .. discordInvite, 5)
         end
     end)
 
     -- Save/Load Settings
     local function saveSettings()
         if not writefile then
-            Utils.Notify(_D("_S543"), _D("_S544"), 2)
+            Utils.Notify("Settings", "File system not available", 2)
             return
         end
         
@@ -2317,34 +1648,34 @@ if Tabs and Tabs.Settings then
             States = States or {},
             Volume = MusicPlayer.Volume,
             LastSaved = os.time(),
-            Version = _D("_S545")
+            Version = "2025"
         }
         
         local success = pcall(function()
             local configString = Services.HttpService:JSONEncode(config)
-            writefile(_D("_S546"), configString)
+            writefile("DemonHubSettings.json", configString)
         end)
         
         if success then
-            Utils.Notify(_D("_S547"), _D("_S548"), 2)
+            Utils.Notify("Settings", "Settings saved successfully", 2)
         else
-            Utils.Notify(_D("_S549"), _D("_S550"), 2)
+            Utils.Notify("Settings", "Failed to save settings", 2)
         end
     end
     
     local function loadSettings()
         if not readfile or not isfile then
-            Utils.Notify(_D("_S551"), _D("_S552"), 2)
+            Utils.Notify("Settings", "File system not available", 2)
             return
         end
         
-        if not isfile(_D("_S553")) then
-            Utils.Notify(_D("_S554"), _D("_S555"), 2)
+        if not isfile("DemonHubSettings.json") then
+            Utils.Notify("Settings", "No saved settings found", 2)
             return
         end
         
         local success = pcall(function()
-            local configString = readfile(_D("_S556"))
+            local configString = readfile("DemonHubSettings.json")
             local config = Services.HttpService:JSONDecode(configString)
             
             if config.WalkSpeed and Movement then Movement.WalkSpeed = config.WalkSpeed end
@@ -2358,26 +1689,26 @@ if Tabs and Tabs.Settings then
         end)
         
         if success then
-            Utils.Notify(_D("_S557"), _D("_S558"), 2)
+            Utils.Notify("Settings", "Settings loaded successfully", 2)
         else
-            Utils.Notify(_D("_S559"), _D("_S560"), 2)
+            Utils.Notify("Settings", "Failed to load settings", 2)
         end
     end
 
-    Tabs.Settings:Button(_D("_S561"), saveSettings)
-    Tabs.Settings:Button(_D("_S562"), loadSettings)
+    Tabs.Settings:Button("Save Settings", saveSettings)
+    Tabs.Settings:Button("Load Settings", loadSettings)
 
     -- Enhanced Reset
     local resetConfirmation = false
-    Tabs.Settings:Button(_D("_S563"), function()
+    Tabs.Settings:Button("Reset Everything", function()
         if not resetConfirmation then
             resetConfirmation = true
-            Utils.Notify(_D("_S564"), _D("_S565"), 5)
+            Utils.Notify("Reset", "Click again within 5 seconds to confirm COMPLETE RESET", 5)
             
             task.spawn(function()
                 task.wait(5)
                 resetConfirmation = false
-                Utils.Notify(_D("_S566"), _D("_S567"), 1)
+                Utils.Notify("Reset", "Reset cancelled", 1)
             end)
             return
         end
@@ -2387,7 +1718,7 @@ if Tabs and Tabs.Settings then
             if Connections then
                 for name, connection in pairs(Connections) do
                     if connection then
-                        if typeof(connection) == _D("_S568") then
+                        if typeof(connection) == "RBXScriptConnection" then
                             connection:Disconnect()
                         else
                             task.cancel(connection)
@@ -2415,7 +1746,7 @@ if Tabs and Tabs.Settings then
             
             local character = LocalPlayer.Character
             if character then
-                local humanoid = character:FindFirstChild(_D("_S569"))
+                local humanoid = character:FindFirstChild("Humanoid")
                 if humanoid then
                     humanoid.WalkSpeed = 16
                     humanoid.JumpPower = 50
@@ -2424,33 +1755,33 @@ if Tabs and Tabs.Settings then
         end)
         
         resetConfirmation = false
-        Utils.Notify(_D("_S570"), _D("_S571"), 3)
+        Utils.Notify("Reset", "Everything reset successfully", 3)
     end)
 
     -- Credits
-    Tabs.Settings:Button(_D("_S572"), function()
-        Utils.Notify(_D("_S573"), _D("_S574"), 4)
+    Tabs.Settings:Button("Credits", function()
+        Utils.Notify("Credits", "created by Alzn • Fixed by xc3vh", 4)
     end)
 end
 
 -- UI Toggle (Right Ctrl key)
 local function setupUIToggle()
     pcall(function()
-        local CoreGui = game:GetService(_D("_S575"))
-        local UserInputService = game:GetService(_D("_S576"))
+        local CoreGui = game:GetService("CoreGui")
+        local UserInputService = game:GetService("UserInputService")
         
         UserInputService.InputBegan:Connect(function(input, gameProcessed)
             if gameProcessed then return end
             if input.KeyCode == Enum.KeyCode.RightControl then
                 -- Try to find the main UI
-                local mainUI = CoreGui:FindFirstChild(_D("_S577")) or CoreGui:FindFirstChild(_D("_S578"))
+                local mainUI = CoreGui:FindFirstChild("Discord") or CoreGui:FindFirstChild("MainUI")
                 if mainUI then
-                    if mainUI:IsA(_D("_S579")) then
+                    if mainUI:IsA("ScreenGui") then
                         mainUI.Enabled = not mainUI.Enabled
-                        Utils.Notify(_D("_S580"), mainUI.Enabled and _D("_S581") or _D("_S582"), 1)
+                        Utils.Notify("UI", mainUI.Enabled and "UI Shown" or "UI Hidden", 1)
                     else
                         mainUI.Visible = not mainUI.Visible
-                        Utils.Notify(_D("_S583"), mainUI.Visible and _D("_S584") or _D("_S585"), 1)
+                        Utils.Notify("UI", mainUI.Visible and "UI Shown" or "UI Hidden", 1)
                     end
                 end
             end
