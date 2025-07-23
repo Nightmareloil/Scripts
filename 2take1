@@ -438,46 +438,101 @@ local function updateStats()
     if not player.Character then return end
     
     local currentTime = tick()
-    if currentTime - Stats.lastUpdateTime < 1 then return end
+    if currentTime - Stats.lastUpdateTime < 0.5 then return end -- Update more frequently
     Stats.lastUpdateTime = currentTime
     
     local sessionTime = currentTime - Stats.sessionStartTime
     
+    -- Get stats from leaderstats with better detection
     local leaderstats = player:FindFirstChild("leaderstats")
     if leaderstats then
-        local powerStat = leaderstats:FindFirstChild("Power") or leaderstats:FindFirstChild("power") or leaderstats:FindFirstChild("Strength") or leaderstats:FindFirstChild("strength")
+        -- Try multiple possible names for power stat
+        local powerStat = leaderstats:FindFirstChild("Power") or 
+                         leaderstats:FindFirstChild("power") or 
+                         leaderstats:FindFirstChild("Strength") or 
+                         leaderstats:FindFirstChild("strength") or
+                         leaderstats:FindFirstChild("Energy") or
+                         leaderstats:FindFirstChild("energy")
+        
         if powerStat then
-            local currentPower = powerStat.Value
-            if Stats.lastPowerCheck > 0 and currentPower > Stats.lastPowerCheck then
-                Stats.powerGainedThisSession = Stats.powerGainedThisSession + (currentPower - Stats.lastPowerCheck)
-            end
-            Stats.power = currentPower
-            Stats.lastPowerCheck = currentPower
+            local currentPower = tonumber(powerStat.Value) or 0
             
-            if sessionTime > 60 then
+            -- Initialize if first time
+            if Stats.lastPowerCheck == 0 then
+                Stats.lastPowerCheck = currentPower
+                Stats.power = currentPower
+            else
+                -- Calculate power gained
+                if currentPower > Stats.lastPowerCheck then
+                    local powerGained = currentPower - Stats.lastPowerCheck
+                    Stats.powerGainedThisSession = Stats.powerGainedThisSession + powerGained
+                end
+                Stats.power = currentPower
+                Stats.lastPowerCheck = currentPower
+            end
+            
+            -- Calculate rates with better accuracy
+            if sessionTime > 10 then -- Wait at least 10 seconds for accurate rates
                 Stats.powerPerSecond = Stats.powerGainedThisSession / sessionTime
                 Stats.powerPerHour = Stats.powerPerSecond * 3600
+            else
+                Stats.powerPerSecond = 0
+                Stats.powerPerHour = 0
             end
         end
         
-        local killsStat = leaderstats:FindFirstChild("Kills") or leaderstats:FindFirstChild("kills") or leaderstats:FindFirstChild("KOs")
-        if killsStat then Stats.kills = killsStat.Value end
+        -- Try multiple possible names for kills stat
+        local killsStat = leaderstats:FindFirstChild("Kills") or 
+                         leaderstats:FindFirstChild("kills") or 
+                         leaderstats:FindFirstChild("KOs") or
+                         leaderstats:FindFirstChild("Eliminations") or
+                         leaderstats:FindFirstChild("eliminations")
+        
+        if killsStat then 
+            Stats.kills = tonumber(killsStat.Value) or 0
+        end
     end
     
+    -- Get health with error handling
     pcall(function()
         local humanoid = player.Character:FindFirstChild("Humanoid")
-        if humanoid then Stats.health = math.floor(humanoid.Health) end
+        if humanoid then 
+            Stats.health = math.floor(humanoid.Health) 
+        end
     end)
     
+    -- Calculate efficiency
+    local efficiency = "Calculating..."
+    if sessionTime > 30 and Stats.powerPerHour > 0 then
+        if Stats.powerPerHour >= 1000000 then
+            efficiency = "Excellent (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+        elseif Stats.powerPerHour >= 100000 then
+            efficiency = "Very Good (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+        elseif Stats.powerPerHour >= 10000 then
+            efficiency = "Good (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+        elseif Stats.powerPerHour >= 1000 then
+            efficiency = "Average (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+        else
+            efficiency = "Low (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+        end
+    elseif sessionTime <= 30 then
+        efficiency = "Starting up..."
+    elseif Stats.powerGainedThisSession == 0 then
+        efficiency = "No progress detected"
+    end
+    
+    -- Update UI with error handling
     pcall(function()
         powerLabel.Text = "⚡ Power: " .. formatNumber(Stats.power)
         killsLabel.Text = "💀 Kills: " .. formatNumber(Stats.kills)
         healthLabel.Text = "❤️ Health: " .. Stats.health
-        powerPerSecLabel.Text = "⏱️ Power/sec: " .. formatNumber(Stats.powerPerSecond)
-        powerPerHourLabel.Text = "🕐 Power/hour: " .. formatNumber(Stats.powerPerHour)
+        powerPerSecLabel.Text = "⏱️ Power/sec: " .. (Stats.powerPerSecond > 0 and formatNumber(Stats.powerPerSecond) or "0")
+        powerPerHourLabel.Text = "🕐 Power/hour: " .. (Stats.powerPerHour > 0 and formatNumber(Stats.powerPerHour) or "0")
         sessionLabel.Text = "📈 Session: +" .. formatNumber(Stats.powerGainedThisSession)
         sessionTimeLabel.Text = "⏰ Session Time: " .. formatTime(sessionTime)
+        efficiencyLabel.Text = "⚡ Farm Efficiency: " .. efficiency
         
+        -- Dynamic health color
         if Stats.health <= 25 then 
             healthLabel.TextColor3 = Theme.danger
         elseif Stats.health <= 50 then 
@@ -485,13 +540,28 @@ local function updateStats()
         else 
             healthLabel.TextColor3 = Theme.success 
         end
+        
+        -- Dynamic efficiency color
+        if efficiency:find("Excellent") then
+            efficiencyLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        elseif efficiency:find("Very Good") then
+            efficiencyLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        elseif efficiency:find("Good") then
+            efficiencyLabel.TextColor3 = Theme.success
+        elseif efficiency:find("Average") then
+            efficiencyLabel.TextColor3 = Theme.warning
+        elseif efficiency:find("Low") then
+            efficiencyLabel.TextColor3 = Theme.danger
+        else
+            efficiencyLabel.TextColor3 = Theme.accent
+        end
     end)
 end
 
 local function getAllToolHandles()
     local handles = {}
     
-    -- First, get tools from your character (currently equipped)
+    -- Get tools from your character (currently equipped) without moving them
     if player.Character then
         for _, tool in pairs(player.Character:GetChildren()) do
             if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
@@ -500,28 +570,23 @@ local function getAllToolHandles()
         end
     end
     
-    -- If no tools equipped, auto-equip tools from backpack
-    if #handles == 0 and player.Backpack and player.Character and player.Character:FindFirstChild("Humanoid") then
+    -- Get tools from backpack without equipping them
+    if player.Backpack then
         for _, tool in pairs(player.Backpack:GetChildren()) do
             if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                -- Equip the tool temporarily
-                pcall(function()
-                    tool.Parent = player.Character
-                    wait(0.1) -- Small delay for tool to properly equip
-                    table.insert(handles, tool.Handle)
-                end)
-                break -- Only equip one tool at a time
+                table.insert(handles, tool.Handle)
             end
         end
     end
     
-    -- If still no tools, try to load tools if the game has a load system
+    -- If no tools found, try to load tools if the game has a load system
     if #handles == 0 and workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent") then
         pcall(function()
             workspace.load.RemoteEvent:FireServer()
         end)
-        wait(0.5)
-        -- Try again after loading
+        wait(1) -- Wait longer for tools to load
+        
+        -- Check again after loading
         if player.Character then
             for _, tool in pairs(player.Character:GetChildren()) do
                 if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
@@ -529,15 +594,10 @@ local function getAllToolHandles()
                 end
             end
         end
-        if #handles == 0 and player.Backpack then
+        if player.Backpack then
             for _, tool in pairs(player.Backpack:GetChildren()) do
                 if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                    pcall(function()
-                        tool.Parent = player.Character
-                        wait(0.1)
-                        table.insert(handles, tool.Handle)
-                    end)
-                    break
+                    table.insert(handles, tool.Handle)
                 end
             end
         end
@@ -603,7 +663,36 @@ local function enhancedGodPlayer(target)
     return success
 end
 
-local function enhancedFarm(speed)
+local function enhancedDamagePlayer(targetPlayer, damagePercent)
+    if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Humanoid") then
+        return false
+    end
+    
+    local handles = getAllToolHandles()
+    if #handles == 0 then 
+        notification("No damage tools found!")
+        return false 
+    end
+    
+    local humanoid = targetPlayer.Character.Humanoid
+    local maxHealth = humanoid.MaxHealth
+    local damageAmount = (damagePercent / 100) * maxHealth
+    local success = false
+    
+    for _, handle in pairs(handles) do
+        if handle and handle.Parent and handle:FindFirstChild("dmg") then
+            pcall(function()
+                for i = 1, 5 do -- Multiple attempts for reliability
+                    handle.dmg.RemoteEvent:FireServer(humanoid, damageAmount)
+                    wait(0.03)
+                end
+                success = true
+            end)
+        end
+    end
+    
+    return success
+end
     local handles = getAllToolHandles()
     if #handles == 0 then return end
     
@@ -617,7 +706,6 @@ local function enhancedFarm(speed)
             end)
         end
     end
-end
 
 local function findPlayer(name)
     if not name then return nil end
@@ -679,6 +767,7 @@ local commandList = {
     {"tp [player]", "Teleport to a player"},
     {"bring [player/all/others]", "Bring players to you"},
     {"kill [player/all/others]", "Kill players"},
+    {"dmg [player] [percent]", "Damage player by percentage (e.g. ;dmg plr 25%)"},
     {"god [player/all/others/me]", "Give god mode"},
     {"fly", "Toggle fly mode"},
     {"unfly", "Disable fly mode"},
@@ -772,6 +861,54 @@ local function executeCommand(command, commandPlayer)
             end
         else
             notification("Usage: kill [player/all/others]")
+        end
+        
+    elseif cmd == "dmg" or cmd == "damage" and isAuthorized then
+        if args[2] and args[3] then
+            local target = findPlayer(args[2])
+            local damageStr = args[3]
+            
+            -- Remove % symbol if present
+            if damageStr:sub(-1) == "%" then
+                damageStr = damageStr:sub(1, -2)
+            end
+            
+            local damagePercent = tonumber(damageStr)
+            
+            if target and damagePercent then
+                if damagePercent < 1 or damagePercent > 100 then
+                    notification("Damage must be between 1% and 100%!")
+                    return
+                end
+                
+                if type(target) == "table" then
+                    local count = 0
+                    for _, p in pairs(target) do
+                        if p ~= player and enhancedDamagePlayer(p, damagePercent) then
+                            count = count + 1
+                        end
+                    end
+                    notification("Damaged " .. count .. " players by " .. damagePercent .. "%")
+                else
+                    if target ~= player then
+                        if enhancedDamagePlayer(target, damagePercent) then
+                            notification("Damaged " .. target.Name .. " by " .. damagePercent .. "%")
+                        else
+                            notification("Failed to damage " .. target.Name)
+                        end
+                    else
+                        notification("Cannot damage yourself!")
+                    end
+                end
+            else
+                if not target then
+                    notification("Player not found!")
+                else
+                    notification("Invalid damage percentage!")
+                end
+            end
+        else
+            notification("Usage: dmg [player] [percent] (e.g. ;dmg plr 25%)")
         end
         
     elseif cmd == "god" and isAuthorized then
@@ -1557,7 +1694,7 @@ spawn(function()
 end)
 
 -- Startup notifications
-notification("2take1 Hub Loaded!")
+notification("2take1 Hub Enhanced Loaded!")
 wait(1)
 notification("Press ; for commands!")
 wait(1)
