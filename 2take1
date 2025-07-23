@@ -490,37 +490,61 @@ end
 
 local function getAllToolHandles()
     local handles = {}
-    local toolsFound = {}
     
-    -- Get tools from your character (equipped)
+    -- First, get tools from your character (currently equipped)
     if player.Character then
         for _, tool in pairs(player.Character:GetChildren()) do
             if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
                 table.insert(handles, tool.Handle)
-                table.insert(toolsFound, tool.Name)
             end
         end
     end
     
-    -- Get tools from your backpack
-    if player.Backpack then
+    -- If no tools equipped, auto-equip tools from backpack
+    if #handles == 0 and player.Backpack and player.Character and player.Character:FindFirstChild("Humanoid") then
         for _, tool in pairs(player.Backpack:GetChildren()) do
             if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                table.insert(handles, tool.Handle)
-                table.insert(toolsFound, tool.Name)
+                -- Equip the tool temporarily
+                pcall(function()
+                    tool.Parent = player.Character
+                    wait(0.1) -- Small delay for tool to properly equip
+                    table.insert(handles, tool.Handle)
+                end)
+                break -- Only equip one tool at a time
             end
         end
     end
     
-    -- Get tools from other players' characters (equipped)
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= player and otherPlayer.Character then
-            for _, tool in pairs(otherPlayer.Character:GetChildren()) do
+    -- If still no tools, try to load tools if the game has a load system
+    if #handles == 0 and workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent") then
+        pcall(function()
+            workspace.load.RemoteEvent:FireServer()
+        end)
+        wait(0.5)
+        -- Try again after loading
+        if player.Character then
+            for _, tool in pairs(player.Character:GetChildren()) do
                 if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
                     table.insert(handles, tool.Handle)
-                    table.insert(toolsFound, tool.Name .. " (" .. otherPlayer.Name .. ")")
                 end
-            
+            end
+        end
+        if #handles == 0 and player.Backpack then
+            for _, tool in pairs(player.Backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                    pcall(function()
+                        tool.Parent = player.Character
+                        wait(0.1)
+                        table.insert(handles, tool.Handle)
+                    end)
+                    break
+                end
+            end
+        end
+    end
+    
+    return handles
+end
 
 local function enhancedKillPlayer(targetPlayer)
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Humanoid") then
@@ -625,8 +649,13 @@ local function showCommandBar()
     commandInput.Text = ""
     commandInput:CaptureFocus()
     
+    -- Animate the glow effect
+    TweenService:Create(glowFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.6
+    }):Play()
+    
     TweenService:Create(commandBarFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, -200, 0, 20)
+        Position = UDim2.new(0.5, -250, 0, 20)
     }):Play()
 end
 
@@ -636,8 +665,13 @@ local function hideCommandBar()
     
     commandInput:ReleaseFocus()
     
+    -- Animate the glow effect
+    TweenService:Create(glowFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+        BackgroundTransparency = 0.8
+    }):Play()
+    
     TweenService:Create(commandBarFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-        Position = UDim2.new(0.5, -200, 0, -50)
+        Position = UDim2.new(0.5, -250, 0, -60)
     }):Play()
 end
 
