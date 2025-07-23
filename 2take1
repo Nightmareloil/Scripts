@@ -1694,7 +1694,7 @@ spawn(function()
 end)
 
 -- Startup notifications
-notification("2take1 Hub Enhanced Loaded!")
+notification("2take1 Hub Loaded!")
 wait(1)
 notification("Press ; for commands!")
 wait(1)
