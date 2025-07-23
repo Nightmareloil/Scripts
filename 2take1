@@ -87,19 +87,22 @@ local function makeDraggable(frame)
     local dragging = false
     local dragStart = nil
     local startPos = nil
+    
+    -- Get the main frame (the one to actually move)
+    local frameToMove = frame.Name == "MainFrame" and frame or frame:FindFirstAncestorWhichIsA("ScreenGui"):FindFirstChild("MainFrame") or frame:FindFirstAncestorWhichIsA("ScreenGui"):FindFirstChild("CommandListFrame") or frame
 
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
-            startPos = frame.Position
+            startPos = frameToMove.Position
         end
     end)
 
     frame.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            frameToMove.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
@@ -113,15 +116,14 @@ end
 -- Command Bar
 local commandBarFrame = Instance.new("Frame")
 commandBarFrame.Name = "CommandBar"
-commandBarFrame.Size = UDim2.new(0, 400, 0, 40)
-commandBarFrame.Position = UDim2.new(0.5, -200, 0, -50)
+commandBarFrame.Size = UDim2.new(0, 500, 0, 50)
+commandBarFrame.Position = UDim2.new(0.5, -250, 0, -60)
 commandBarFrame.BackgroundColor3 = Theme.background
 commandBarFrame.BorderSizePixel = 0
 commandBarFrame.Parent = screenGui
-makeDraggable(commandBarFrame)
 
 local commandBarCorner = Instance.new("UICorner")
-commandBarCorner.CornerRadius = UDim.new(0, 8)
+commandBarCorner.CornerRadius = UDim.new(0, 12)
 commandBarCorner.Parent = commandBarFrame
 
 local stroke = Instance.new("UIStroke")
@@ -129,9 +131,35 @@ stroke.Thickness = 2
 stroke.Color = Theme.accent
 stroke.Parent = commandBarFrame
 
+-- Add a glow effect
+local glowFrame = Instance.new("Frame")
+glowFrame.Size = UDim2.new(1, 4, 1, 4)
+glowFrame.Position = UDim2.new(0, -2, 0, -2)
+glowFrame.BackgroundColor3 = Theme.accent
+glowFrame.BackgroundTransparency = 0.8
+glowFrame.BorderSizePixel = 0
+glowFrame.ZIndex = commandBarFrame.ZIndex - 1
+glowFrame.Parent = commandBarFrame
+
+local glowCorner = Instance.new("UICorner")
+glowCorner.CornerRadius = UDim.new(0, 14)
+glowCorner.Parent = glowFrame
+
+-- Command icon
+local cmdIcon = Instance.new("TextLabel")
+cmdIcon.Size = UDim2.new(0, 40, 1, 0)
+cmdIcon.Position = UDim2.new(0, 5, 0, 0)
+cmdIcon.BackgroundTransparency = 1
+cmdIcon.Text = "⚡"
+cmdIcon.TextColor3 = Theme.accent
+cmdIcon.TextSize = 20
+cmdIcon.Font = Enum.Font.SourceSansBold
+cmdIcon.TextXAlignment = Enum.TextXAlignment.Center
+cmdIcon.Parent = commandBarFrame
+
 local cmdLabel = Instance.new("TextLabel")
 cmdLabel.Size = UDim2.new(0, 80, 1, -10)
-cmdLabel.Position = UDim2.new(0, 10, 0, 5)
+cmdLabel.Position = UDim2.new(0, 45, 0, 5)
 cmdLabel.BackgroundTransparency = 1
 cmdLabel.Text = "Command:"
 cmdLabel.TextColor3 = Theme.text
@@ -141,28 +169,34 @@ cmdLabel.TextXAlignment = Enum.TextXAlignment.Left
 cmdLabel.Parent = commandBarFrame
 
 local commandInput = Instance.new("TextBox")
-commandInput.Size = UDim2.new(1, -160, 1, -10)
-commandInput.Position = UDim2.new(0, 90, 0, 5)
+commandInput.Size = UDim2.new(1, -210, 1, -16)
+commandInput.Position = UDim2.new(0, 130, 0, 8)
 commandInput.BackgroundColor3 = Theme.secondary
 commandInput.BorderSizePixel = 0
 commandInput.Text = ""
-commandInput.PlaceholderText = "Enter command..."
+commandInput.PlaceholderText = "Enter command here..."
 commandInput.TextColor3 = Theme.text
-commandInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+commandInput.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
 commandInput.TextSize = 14
 commandInput.Font = Enum.Font.SourceSans
 commandInput.ClearTextOnFocus = false
 commandInput.Parent = commandBarFrame
 
 local inputCorner = Instance.new("UICorner")
-inputCorner.CornerRadius = UDim.new(0, 6)
+inputCorner.CornerRadius = UDim.new(0, 8)
 inputCorner.Parent = commandInput
 
+-- Add input stroke
+local inputStroke = Instance.new("UIStroke")
+inputStroke.Thickness = 1
+inputStroke.Color = Theme.tertiary
+inputStroke.Parent = commandInput
+
 local executeButton = Instance.new("TextButton")
-executeButton.Size = UDim2.new(0, 60, 1, -10)
-executeButton.Position = UDim2.new(1, -70, 0, 5)
+executeButton.Size = UDim2.new(0, 70, 1, -16)
+executeButton.Position = UDim2.new(1, -78, 0, 8)
 executeButton.BackgroundColor3 = Theme.accent
-executeButton.Text = "Execute"
+executeButton.Text = "⚡ Run"
 executeButton.TextColor3 = Theme.text
 executeButton.TextSize = 12
 executeButton.Font = Enum.Font.SourceSansBold
@@ -170,8 +204,15 @@ executeButton.BorderSizePixel = 0
 executeButton.Parent = commandBarFrame
 
 local executeCorner = Instance.new("UICorner")
-executeCorner.CornerRadius = UDim.new(0, 6)
+executeCorner.CornerRadius = UDim.new(0, 8)
 executeCorner.Parent = executeButton
+
+-- Add button stroke
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Thickness = 1
+buttonStroke.Color = Color3.fromRGB(255, 255, 255)
+buttonStroke.Transparency = 0.7
+buttonStroke.Parent = executeButton
 
 executeButton.MouseEnter:Connect(function()
     executeButton.BackgroundColor3 = Theme.accent:Lerp(Color3.new(1,1,1), 0.2)
@@ -190,7 +231,6 @@ mainFrame.BackgroundColor3 = Theme.background
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Parent = screenGui
-makeDraggable(mainFrame)
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 12)
@@ -202,6 +242,7 @@ header.Size = UDim2.new(1, 0, 0, 40)
 header.BackgroundColor3 = Theme.secondary
 header.BorderSizePixel = 0
 header.Parent = mainFrame
+makeDraggable(header) -- Make header draggable instead of the whole frame
 
 local headerCorner = Instance.new("UICorner")
 headerCorner.CornerRadius = UDim.new(0, 12)
@@ -449,39 +490,37 @@ end
 
 local function getAllToolHandles()
     local handles = {}
+    local toolsFound = {}
     
+    -- Get tools from your character (equipped)
     if player.Character then
         for _, tool in pairs(player.Character:GetChildren()) do
             if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
                 table.insert(handles, tool.Handle)
+                table.insert(toolsFound, tool.Name)
             end
         end
     end
     
+    -- Get tools from your backpack
     if player.Backpack then
         for _, tool in pairs(player.Backpack:GetChildren()) do
             if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                local char = player.Character
-                if char and char:FindFirstChild("Humanoid") then
-                    tool.Parent = char
-                    wait(0.1)
-                    table.insert(handles, tool.Handle)
-                    tool.Parent = player.Backpack
-                end
+                table.insert(handles, tool.Handle)
+                table.insert(toolsFound, tool.Name)
             end
         end
     end
     
-    if #handles == 0 and workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent") then
-        pcall(function()
-            workspace.load.RemoteEvent:FireServer()
-        end)
-        wait(0.5)
-        return getAllToolHandles()
-    end
-    
-    return handles
-end
+    -- Get tools from other players' characters (equipped)
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            for _, tool in pairs(otherPlayer.Character:GetChildren()) do
+                if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                    table.insert(handles, tool.Handle)
+                    table.insert(toolsFound, tool.Name .. " (" .. otherPlayer.Name .. ")")
+                end
+            
 
 local function enhancedKillPlayer(targetPlayer)
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Humanoid") then
@@ -489,52 +528,67 @@ local function enhancedKillPlayer(targetPlayer)
     end
     
     local handles = getAllToolHandles()
-    if #handles == 0 then return false end
+    if #handles == 0 then 
+        notification("No damage tools found!")
+        return false 
+    end
     
     local humanoid = targetPlayer.Character.Humanoid
+    local success = false
     
     for _, handle in pairs(handles) do
-        if handle:FindFirstChild("dmg") then
+        if handle and handle.Parent and handle:FindFirstChild("dmg") then
             pcall(function()
-                for i = 1, 5 do
+                for i = 1, 10 do -- Increased attempts for better reliability
                     handle.dmg.RemoteEvent:FireServer(humanoid, math.huge)
+                    wait(0.05) -- Small delay between attempts
                 end
+                success = true
             end)
         end
     end
     
-    return true
+    return success
 end
 
 local function enhancedGodPlayer(target)
     local handles = getAllToolHandles()
-    if #handles == 0 then return false end
+    if #handles == 0 then 
+        notification("No damage tools found!")
+        return false 
+    end
     
     local targets = type(target) == "table" and target or {target}
+    local success = false
     
     for _, handle in pairs(handles) do
-        if handle:FindFirstChild("dmg") then
+        if handle and handle.Parent and handle:FindFirstChild("dmg") then
             for _, p in pairs(targets) do
-                if p.Character and p.Character:FindFirstChild("Humanoid") then
+                if p and p.Character and p.Character:FindFirstChild("Humanoid") then
                     pcall(function()
-                        for i = 1, 10 do
+                        for i = 1, 15 do -- More attempts for god mode
                             handle.dmg.RemoteEvent:FireServer(p.Character.Humanoid, -math.huge)
+                            wait(0.03)
                         end
+                        success = true
                     end)
                 end
             end
         end
     end
-    return true
+    return success
 end
 
 local function enhancedFarm(speed)
     local handles = getAllToolHandles()
+    if #handles == 0 then return end
+    
     for _, handle in pairs(handles) do
-        if handle:FindFirstChild("up") then
+        if handle and handle.Parent and handle:FindFirstChild("up") then
             pcall(function()
                 for i = 1, speed do
                     handle.up.RemoteEvent:FireServer()
+                    if speed > 5 then wait(0.01) end -- Small delay for high speeds
                 end
             end)
         end
@@ -885,31 +939,60 @@ local function executeCommand(command, commandPlayer)
         wait(0.5)
         
         local cmdFrame = Instance.new("Frame")
-        cmdFrame.Size = UDim2.new(0, 400, 0, 500)
-        cmdFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+        cmdFrame.Name = "CommandListFrame"
+        cmdFrame.Size = UDim2.new(0, 450, 0, 550)
+        cmdFrame.Position = UDim2.new(0.5, -225, 0.5, -275)
         cmdFrame.BackgroundColor3 = Theme.background
         cmdFrame.BorderSizePixel = 0
+        cmdFrame.Active = true
         cmdFrame.Parent = screenGui
         
         local cmdCorner = Instance.new("UICorner")
         cmdCorner.CornerRadius = UDim.new(0, 12)
         cmdCorner.Parent = cmdFrame
         
+        -- Add border stroke
+        local cmdStroke = Instance.new("UIStroke")
+        cmdStroke.Thickness = 2
+        cmdStroke.Color = Theme.accent
+        cmdStroke.Parent = cmdFrame
+        
         local cmdHeader = Instance.new("Frame")
-        cmdHeader.Size = UDim2.new(1, 0, 0, 40)
+        cmdHeader.Size = UDim2.new(1, 0, 0, 45)
         cmdHeader.BackgroundColor3 = Theme.secondary
         cmdHeader.BorderSizePixel = 0
         cmdHeader.Parent = cmdFrame
+        makeDraggable(cmdHeader) -- Make the header draggable
         
         local cmdHeaderCorner = Instance.new("UICorner")
         cmdHeaderCorner.CornerRadius = UDim.new(0, 12)
         cmdHeaderCorner.Parent = cmdHeader
         
+        -- Header gradient effect
+        local headerGradient = Instance.new("UIGradient")
+        headerGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Theme.secondary),
+            ColorSequenceKeypoint.new(1, Theme.tertiary)
+        }
+        headerGradient.Rotation = 90
+        headerGradient.Parent = cmdHeader
+        
+        local cmdIcon = Instance.new("TextLabel")
+        cmdIcon.Size = UDim2.new(0, 40, 1, 0)
+        cmdIcon.Position = UDim2.new(0, 5, 0, 0)
+        cmdIcon.BackgroundTransparency = 1
+        cmdIcon.Text = "📜"
+        cmdIcon.TextColor3 = Theme.accent
+        cmdIcon.TextSize = 20
+        cmdIcon.Font = Enum.Font.SourceSansBold
+        cmdIcon.TextXAlignment = Enum.TextXAlignment.Center
+        cmdIcon.Parent = cmdHeader
+        
         local cmdTitle = Instance.new("TextLabel")
-        cmdTitle.Size = UDim2.new(1, -40, 1, 0)
-        cmdTitle.Position = UDim2.new(0, 10, 0, 0)
+        cmdTitle.Size = UDim2.new(1, -85, 1, 0)
+        cmdTitle.Position = UDim2.new(0, 45, 0, 0)
         cmdTitle.BackgroundTransparency = 1
-        cmdTitle.Text = "📜 Command List"
+        cmdTitle.Text = "Command List - 2take1 Hub"
         cmdTitle.TextColor3 = Theme.text
         cmdTitle.TextSize = 16
         cmdTitle.Font = Enum.Font.SourceSansBold
@@ -917,47 +1000,68 @@ local function executeCommand(command, commandPlayer)
         cmdTitle.Parent = cmdHeader
         
         local cmdClose = Instance.new("TextButton")
-        cmdClose.Size = UDim2.new(0, 30, 0, 30)
-        cmdClose.Position = UDim2.new(1, -35, 0, 5)
+        cmdClose.Size = UDim2.new(0, 35, 0, 35)
+        cmdClose.Position = UDim2.new(1, -40, 0, 5)
         cmdClose.BackgroundColor3 = Theme.danger
-        cmdClose.Text = "X"
+        cmdClose.Text = "✕"
         cmdClose.TextColor3 = Theme.text
-        cmdClose.TextSize = 14
+        cmdClose.TextSize = 16
         cmdClose.Font = Enum.Font.SourceSansBold
         cmdClose.Parent = cmdHeader
         
         local cmdCloseCorner = Instance.new("UICorner")
-        cmdCloseCorner.CornerRadius = UDim.new(0, 6)
+        cmdCloseCorner.CornerRadius = UDim.new(0, 8)
         cmdCloseCorner.Parent = cmdClose
         
+        -- Close button hover effect
+        local closeStroke = Instance.new("UIStroke")
+        closeStroke.Thickness = 1
+        closeStroke.Color = Color3.fromRGB(255, 255, 255)
+        closeStroke.Transparency = 0.7
+        closeStroke.Parent = cmdClose
+        
         local cmdScroll = Instance.new("ScrollingFrame")
-        cmdScroll.Size = UDim2.new(1, -20, 1, -60)
-        cmdScroll.Position = UDim2.new(0, 10, 0, 50)
+        cmdScroll.Size = UDim2.new(1, -20, 1, -65)
+        cmdScroll.Position = UDim2.new(0, 10, 0, 55)
         cmdScroll.BackgroundColor3 = Theme.secondary
         cmdScroll.BorderSizePixel = 0
-        cmdScroll.ScrollBarThickness = 6
-        cmdScroll.CanvasSize = UDim2.new(0, 0, 0, #commandList * 50 + 20)
+        cmdScroll.ScrollBarThickness = 8
+        cmdScroll.ScrollBarImageColor3 = Theme.accent
+        cmdScroll.CanvasSize = UDim2.new(0, 0, 0, #commandList * 55 + 20)
         cmdScroll.Parent = cmdFrame
         
         local cmdScrollCorner = Instance.new("UICorner")
         cmdScrollCorner.CornerRadius = UDim.new(0, 8)
         cmdScrollCorner.Parent = cmdScroll
         
+        -- Add scroll area stroke
+        local scrollStroke = Instance.new("UIStroke")
+        scrollStroke.Thickness = 1
+        scrollStroke.Color = Theme.tertiary
+        scrollStroke.Parent = cmdScroll
+        
         for i, cmdData in ipairs(commandList) do
             local cmdItem = Instance.new("Frame")
-            cmdItem.Size = UDim2.new(1, -10, 0, 40)
-            cmdItem.Position = UDim2.new(0, 5, 0, (i-1) * 50 + 10)
+            cmdItem.Size = UDim2.new(1, -15, 0, 45)
+            cmdItem.Position = UDim2.new(0, 7, 0, (i-1) * 55 + 10)
             cmdItem.BackgroundColor3 = Theme.tertiary
             cmdItem.BorderSizePixel = 0
             cmdItem.Parent = cmdScroll
             
             local cmdItemCorner = Instance.new("UICorner")
-            cmdItemCorner.CornerRadius = UDim.new(0, 6)
+            cmdItemCorner.CornerRadius = UDim.new(0, 8)
             cmdItemCorner.Parent = cmdItem
             
+            -- Add item stroke
+            local itemStroke = Instance.new("UIStroke")
+            itemStroke.Thickness = 1
+            itemStroke.Color = Theme.accent
+            itemStroke.Transparency = 0.8
+            itemStroke.Parent = cmdItem
+            
             local cmdName = Instance.new("TextLabel")
-            cmdName.Size = UDim2.new(0.4, -10, 1, 0)
-            cmdName.Position = UDim2.new(0, 10, 0, 0)
+            cmdName.Size = UDim2.new(0.45, -15, 1, 0)
+            cmdName.Position = UDim2.new(0, 15, 0, 0)
             cmdName.BackgroundTransparency = 1
             cmdName.Text = Config.commandPrefix .. cmdData[1]
             cmdName.TextColor3 = Theme.accent
@@ -967,22 +1071,36 @@ local function executeCommand(command, commandPlayer)
             cmdName.Parent = cmdItem
             
             local cmdDesc = Instance.new("TextLabel")
-            cmdDesc.Size = UDim2.new(0.6, -10, 1, 0)
-            cmdDesc.Position = UDim2.new(0.4, 0, 0, 0)
+            cmdDesc.Size = UDim2.new(0.55, -15, 1, 0)
+            cmdDesc.Position = UDim2.new(0.45, 0, 0, 0)
             cmdDesc.BackgroundTransparency = 1
             cmdDesc.Text = cmdData[2]
             cmdDesc.TextColor3 = Theme.text
             cmdDesc.TextSize = 12
             cmdDesc.Font = Enum.Font.SourceSans
             cmdDesc.TextXAlignment = Enum.TextXAlignment.Left
+            cmdDesc.TextWrapped = true
             cmdDesc.Parent = cmdItem
+            
+            -- Add hover effect
+            cmdItem.MouseEnter:Connect(function()
+                itemStroke.Transparency = 0.4
+                hoverSound:Play()
+            end)
+            cmdItem.MouseLeave:Connect(function()
+                itemStroke.Transparency = 0.8
+            end)
         end
         
         cmdClose.MouseButton1Click:Connect(function()
             cmdFrame:Destroy()
         end)
         cmdClose.MouseEnter:Connect(function()
+            cmdClose.BackgroundColor3 = Theme.danger:Lerp(Color3.new(1,1,1), 0.2)
             hoverSound:Play()
+        end)
+        cmdClose.MouseLeave:Connect(function()
+            cmdClose.BackgroundColor3 = Theme.danger
         end)
         
     else
