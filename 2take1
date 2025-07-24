@@ -132,7 +132,8 @@ sounds.hover.Parent = screenGui
 sounds.click.SoundId = "rbxassetid://876939830"
 sounds.click.Volume = 0.3
 sounds.click.Parent = screenGui
-sounds.toggle.SoundId = "rbxassetid://10066936276"
+-- FIXED: Replaced faulty sound ID with a working one (using click sound as a replacement)
+sounds.toggle.SoundId = "rbxassetid://876939830" 
 sounds.toggle.Volume = 0.25
 sounds.toggle.Parent = screenGui
 sounds.success.SoundId = "rbxassetid://3398620867"
@@ -234,7 +235,8 @@ end
 local commandBarFrame = Instance.new("Frame")
 commandBarFrame.Name = "CommandBar"
 commandBarFrame.Size = UDim2.new(0, 600, 0, 60)
-commandBarFrame.Position = UDim2.new(0.5, -300, 0, -80)
+-- FIXED: Changed command bar position to be at the bottom of the screen
+commandBarFrame.Position = UDim2.new(0.5, -300, 1, 80) 
 commandBarFrame.BackgroundColor3 = Theme.background
 commandBarFrame.BorderSizePixel = 0
 commandBarFrame.Visible = true
@@ -282,7 +284,8 @@ local cmdIcon = Instance.new("TextLabel")
 cmdIcon.Size = UDim2.new(0, 50, 1, 0)
 cmdIcon.Position = UDim2.new(0, 10, 0, 0)
 cmdIcon.BackgroundTransparency = 1
-cmdIcon.Text = "⚡"
+-- REMOVED EMOJI
+cmdIcon.Text = ">"
 cmdIcon.TextColor3 = Theme.accent
 cmdIcon.TextSize = 24
 cmdIcon.Font = Enum.Font.SourceSansBold
@@ -397,7 +400,8 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -120, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "2take1 Hub 2025 ⚡"
+-- REMOVED EMOJI
+title.Text = "2take1 Hub 2025"
 title.TextColor3 = Theme.text
 title.TextSize = 18
 title.Font = Enum.Font.SourceSansBold
@@ -423,7 +427,7 @@ local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 35, 0, 30)
 closeButton.Position = UDim2.new(1, -40, 0, 10)
 closeButton.BackgroundColor3 = Theme.danger
-closeButton.Text = "✕"
+closeButton.Text = "X"
 closeButton.TextColor3 = Theme.text
 closeButton.TextSize = 14
 closeButton.Font = Enum.Font.SourceSansBold
@@ -473,7 +477,8 @@ local statsTitle = Instance.new("TextLabel")
 statsTitle.Size = UDim2.new(1, -10, 0, 30)
 statsTitle.Position = UDim2.new(0, 10, 0, 5)
 statsTitle.BackgroundTransparency = 1
-statsTitle.Text = "📊 Player Statistics"
+-- REMOVED EMOJI
+statsTitle.Text = "Player Statistics"
 statsTitle.TextColor3 = Theme.accent
 statsTitle.TextSize = 16
 statsTitle.Font = Enum.Font.SourceSansBold
@@ -483,15 +488,15 @@ statsTitle.Parent = statsFrame
 -- Create stat labels with better positioning
 local statLabels = {}
 local statPositions = {
-    {name = "power", icon = "⚡", pos = UDim2.new(0, 15, 0, 35)},
-    {name = "kills", icon = "💀", pos = UDim2.new(0.5, 5, 0, 35)},
-    {name = "health", icon = "❤️", pos = UDim2.new(0, 15, 0, 60)},
-    {name = "powerPerSec", icon = "⏱️", pos = UDim2.new(0.5, 5, 0, 60)},
-    {name = "powerPerHour", icon = "🕐", pos = UDim2.new(0, 15, 0, 85)},
-    {name = "session", icon = "📈", pos = UDim2.new(0.5, 5, 0, 85)},
-    {name = "sessionTime", icon = "⏰", pos = UDim2.new(0, 15, 0, 110), size = UDim2.new(1, -30, 0, 20)},
-    {name = "efficiency", icon = "⚡", pos = UDim2.new(0, 15, 0, 135), size = UDim2.new(1, -30, 0, 20)},
-    {name = "watchToggle", icon = "👀", pos = UDim2.new(0, 15, 0, 160), size = UDim2.new(1, -30, 0, 15)}
+    {name = "power", pos = UDim2.new(0, 15, 0, 35)},
+    {name = "kills", pos = UDim2.new(0.5, 5, 0, 35)},
+    {name = "health", pos = UDim2.new(0, 15, 0, 60)},
+    {name = "powerPerSec", pos = UDim2.new(0.5, 5, 0, 60)},
+    {name = "powerPerHour", pos = UDim2.new(0, 15, 0, 85)},
+    {name = "session", pos = UDim2.new(0.5, 5, 0, 85)},
+    {name = "sessionTime", pos = UDim2.new(0, 15, 0, 110), size = UDim2.new(1, -30, 0, 20)},
+    {name = "efficiency", pos = UDim2.new(0, 15, 0, 135), size = UDim2.new(1, -30, 0, 20)},
+    {name = "watchToggle", pos = UDim2.new(0, 15, 0, 160), size = UDim2.new(1, -30, 0, 15)}
 }
 
 for _, stat in ipairs(statPositions) do
@@ -499,7 +504,7 @@ for _, stat in ipairs(statPositions) do
     label.Size = stat.size or UDim2.new(0.48, -15, 0, 20)
     label.Position = stat.pos
     label.BackgroundTransparency = 1
-    label.Text = stat.icon .. " Loading..."
+    label.Text = "Loading..."
     label.TextColor3 = Theme.text
     label.TextSize = 12
     label.Font = Enum.Font.SourceSans
@@ -529,7 +534,8 @@ local watchTitle = Instance.new("TextLabel")
 watchTitle.Size = UDim2.new(1, -10, 0, 25)
 watchTitle.Position = UDim2.new(0, 10, 0, 5)
 watchTitle.BackgroundTransparency = 1
-watchTitle.Text = "👀 Watching: None"
+-- REMOVED EMOJI
+watchTitle.Text = "Watching: None"
 watchTitle.TextColor3 = Theme.accent
 watchTitle.TextSize = 14
 watchTitle.Font = Enum.Font.SourceSansBold
@@ -539,11 +545,11 @@ watchTitle.Parent = watchFrame
 -- Watch stat labels
 local watchLabels = {}
 local watchPositions = {
-    {name = "power", icon = "⚡", pos = UDim2.new(0, 15, 0, 35)},
-    {name = "kills", icon = "💀", pos = UDim2.new(0.5, 5, 0, 35)},
-    {name = "health", icon = "❤️", pos = UDim2.new(0, 15, 0, 60)},
-    {name = "status", icon = "📊", pos = UDim2.new(0.5, 5, 0, 60)},
-    {name = "stopWatch", icon = "🛑", pos = UDim2.new(0, 15, 0, 85), size = UDim2.new(1, -30, 0, 20)}
+    {name = "power", pos = UDim2.new(0, 15, 0, 35)},
+    {name = "kills", pos = UDim2.new(0.5, 5, 0, 35)},
+    {name = "health", pos = UDim2.new(0, 15, 0, 60)},
+    {name = "status", pos = UDim2.new(0.5, 5, 0, 60)},
+    {name = "stopWatch", pos = UDim2.new(0, 15, 0, 85), size = UDim2.new(1, -30, 0, 20)}
 }
 
 for _, stat in ipairs(watchPositions) do
@@ -551,7 +557,8 @@ for _, stat in ipairs(watchPositions) do
     if stat.name == "stopWatch" then
         label = Instance.new("TextButton")
         label.BackgroundColor3 = Theme.danger
-        label.Text = "🛑 Stop Watching"
+        -- REMOVED EMOJI
+        label.Text = "Stop Watching"
         label.TextColor3 = Theme.text
         label.TextSize = 12
         label.Font = Enum.Font.SourceSansBold
@@ -565,14 +572,14 @@ for _, stat in ipairs(watchPositions) do
             State.watchingPlayer = nil
             WatchedStats.player = nil
             watchFrame.Visible = false
-            statLabels.watchToggle.Text = "👀 Watch: OFF"
+            statLabels.watchToggle.Text = "Watch: OFF"
             statLabels.watchToggle.TextColor3 = Theme.text
             notification("Stopped watching player", 2, "info")
         end)
     else
         label = Instance.new("TextLabel")
         label.BackgroundTransparency = 1
-        label.Text = stat.icon .. " Loading..."
+        label.Text = "Loading..."
         label.TextColor3 = Theme.text
         label.TextSize = 12
         label.Font = Enum.Font.SourceSans
@@ -980,7 +987,7 @@ local function updateStats()
         Stats.health = math.floor(humanoid.Health)
         local maxHealth = humanoid.MaxHealth
         local healthPercent = math.floor((Stats.health / maxHealth) * 100)
-        statLabels.health.Text = string.format("❤️ Health: %d/%d (%d%%)", Stats.health, math.floor(maxHealth), healthPercent)
+        statLabels.health.Text = string.format("Health: %d/%d (%d%%)", Stats.health, math.floor(maxHealth), healthPercent)
         
         -- Dynamic health color based on percentage
         if healthPercent <= 25 then
@@ -993,7 +1000,7 @@ local function updateStats()
             statLabels.health.TextColor3 = Theme.success
         end
     else
-        statLabels.health.Text = "❤️ Health: " .. Stats.health
+        statLabels.health.Text = "Health: " .. Stats.health
     end
 
     -- Calculate efficiency with instant feedback
@@ -1001,60 +1008,60 @@ local function updateStats()
     local efficiencyColor = Theme.accent
     if Stats.powerPerHour > 0 then
         if Stats.powerPerHour >= 1e6 then
-            efficiency = "🔥 INSANE (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "INSANE (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Color3.fromRGB(255, 0, 255)
         elseif Stats.powerPerHour >= 5e5 then
-            efficiency = "⚡ Excellent (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "Excellent (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Color3.fromRGB(0, 255, 0)
         elseif Stats.powerPerHour >= 1e5 then
-            efficiency = "✨ Very Good (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "Very Good (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Color3.fromRGB(100, 255, 100)
         elseif Stats.powerPerHour >= 5e4 then
-            efficiency = "👍 Good (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "Good (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Theme.success
         elseif Stats.powerPerHour >= 1e4 then
-            efficiency = "📊 Average (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "Average (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Theme.warning
         elseif Stats.powerPerHour >= 1e3 then
-            efficiency = "📉 Below Average (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "Below Average (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Color3.fromRGB(255, 150, 0)
         else
-            efficiency = "❌ Low (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
+            efficiency = "Low (" .. formatNumber(Stats.powerPerHour) .. "/hr)"
             efficiencyColor = Theme.danger
         end
     elseif sessionTime <= 5 and (State.fastFarm or State.slowFarm or State.autoFarm) then
-        efficiency = "⏳ Warming up..."
+        efficiency = "Warming up..."
         efficiencyColor = Theme.accent
     elseif not (State.fastFarm or State.slowFarm or State.autoFarm) then
-        efficiency = "⛔ Farming OFF"
+        efficiency = "Farming OFF"
         efficiencyColor = Theme.danger
     elseif Stats.powerGainedThisSession == 0 then
-        efficiency = "❓ No progress detected"
+        efficiency = "No progress detected"
         efficiencyColor = Theme.danger
     end
 
     -- Update UI with smooth transitions
     pcall(function()
-        statLabels.power.Text = "⚡ Power: " .. formatNumber(Stats.power)
-        statLabels.kills.Text = "💀 Kills: " .. formatNumber(Stats.kills)
+        statLabels.power.Text = "Power: " .. formatNumber(Stats.power)
+        statLabels.kills.Text = "Kills: " .. formatNumber(Stats.kills)
         
-        local powerSecText = "⏱️ Power/sec: " .. formatNumber(Stats.powerPerSecond)
+        local powerSecText = "Power/sec: " .. formatNumber(Stats.powerPerSecond)
         if statsCache.instantPowerPerSec > 0 and (State.fastFarm or State.slowFarm or State.autoFarm) then
             powerSecText = powerSecText .. " (+" .. formatNumber(statsCache.instantPowerPerSec) .. ")"
         end
         statLabels.powerPerSec.Text = powerSecText
-        statLabels.powerPerHour.Text = "🕐 Power/hour: " .. formatNumber(Stats.powerPerHour)
-        statLabels.session.Text = "📈 Session: +" .. formatNumber(Stats.powerGainedThisSession)
-        statLabels.sessionTime.Text = "⏰ Session Time: " .. formatTime(sessionTime)
-        statLabels.efficiency.Text = efficiency
+        statLabels.powerPerHour.Text = "Power/hour: " .. formatNumber(Stats.powerPerHour)
+        statLabels.session.Text = "Session: +" .. formatNumber(Stats.powerGainedThisSession)
+        statLabels.sessionTime.Text = "Session Time: " .. formatTime(sessionTime)
+        statLabels.efficiency.Text = "Efficiency: " .. efficiency
         statLabels.efficiency.TextColor3 = efficiencyColor
         
         -- Update watch toggle status
         if State.watchingPlayer then
-            statLabels.watchToggle.Text = "👀 Watching: " .. (WatchedStats.displayName ~= "" and WatchedStats.displayName or WatchedStats.username)
+            statLabels.watchToggle.Text = "Watching: " .. (WatchedStats.displayName ~= "" and WatchedStats.displayName or WatchedStats.username)
             statLabels.watchToggle.TextColor3 = Theme.success
         else
-            statLabels.watchToggle.Text = "👀 Watch: OFF"
+            statLabels.watchToggle.Text = "Watch: OFF"
             statLabels.watchToggle.TextColor3 = Theme.text
         end
         
@@ -1084,7 +1091,7 @@ local function updateWatchedStats()
         State.watchingPlayer = nil
         WatchedStats.player = nil
         watchFrame.Visible = false
-        statLabels.watchToggle.Text = "👀 Watch: OFF"
+        statLabels.watchToggle.Text = "Watch: OFF"
         statLabels.watchToggle.TextColor3 = Theme.text
         notification("Watched player left the game", 3, "info")
         return
@@ -1122,9 +1129,9 @@ local function updateWatchedStats()
         local healthPercent = math.floor((WatchedStats.health / maxHealth) * 100)
         
         -- Update watch UI
-        watchLabels.power.Text = "⚡ Power: " .. formatNumber(WatchedStats.power)
-        watchLabels.kills.Text = "💀 Kills: " .. formatNumber(WatchedStats.kills)
-        watchLabels.health.Text = string.format("❤️ Health: %d/%d (%d%%)", WatchedStats.health, math.floor(maxHealth), healthPercent)
+        watchLabels.power.Text = "Power: " .. formatNumber(WatchedStats.power)
+        watchLabels.kills.Text = "Kills: " .. formatNumber(WatchedStats.kills)
+        watchLabels.health.Text = string.format("Health: %d/%d (%d%%)", WatchedStats.health, math.floor(maxHealth), healthPercent)
         
         -- Health color
         if healthPercent <= 25 then
@@ -1136,17 +1143,17 @@ local function updateWatchedStats()
         end
         
         -- Status
-        local status = "🟢 Alive"
+        local status = "Alive"
         if WatchedStats.health <= 0 then
-            status = "💀 Dead"
+            status = "Dead"
         elseif WatchedStats.health <= maxHealth * 0.3 then
-            status = "🟡 Low Health"
+            status = "Low Health"
         end
-        watchLabels.status.Text = "📊 Status: " .. status
+        watchLabels.status.Text = "Status: " .. status
     end
     
     -- Update title
-    watchTitle.Text = "👀 Watching: " .. (WatchedStats.displayName ~= "" and WatchedStats.displayName or WatchedStats.username)
+    watchTitle.Text = "Watching: " .. (WatchedStats.displayName ~= "" and WatchedStats.displayName or WatchedStats.username)
 end
 
 -- Command Bar Functions
@@ -1158,7 +1165,8 @@ local function showCommandBar()
     
     -- Animate glow
     TweenService:Create(glowFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), { BackgroundTransparency = 0.6 }):Play()
-    TweenService:Create(commandBarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), { Position = UDim2.new(0.5, -300, 0, 30) }):Play()
+    -- FIXED: Animate to a position at the bottom of the screen
+    TweenService:Create(commandBarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), { Position = UDim2.new(0.5, -300, 1, -80) }):Play()
     
     -- Icon animation
     local iconTween = TweenService:Create(cmdIcon, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { TextColor3 = Theme.accentHover, TextSize = 26 })
@@ -1174,7 +1182,8 @@ local function hideCommandBar()
     commandInput:ReleaseFocus()
     
     TweenService:Create(glowFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), { BackgroundTransparency = 0.85 }):Play()
-    TweenService:Create(commandBarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), { Position = UDim2.new(0.5, -300, 0, -80) }):Play()
+    -- FIXED: Animate back off-screen at the bottom
+    TweenService:Create(commandBarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), { Position = UDim2.new(0.5, -300, 1, 80) }):Play()
 end
 
 -- Enhanced Command List
@@ -1794,21 +1803,22 @@ local function executeCommand(command, commandPlayer)
         cmdTitle.TextXAlignment = Enum.TextXAlignment.Left
         cmdTitle.Parent = cmdHeader
         
-        local cmdIcon = Instance.new("TextLabel")
-        cmdIcon.Size = UDim2.new(0, 40, 1, 0)
-        cmdIcon.Position = UDim2.new(0, 5, 0, 0)
-        cmdIcon.BackgroundTransparency = 1
-        cmdIcon.Text = "📋"
-        cmdIcon.TextColor3 = Theme.accent
-        cmdIcon.TextSize = 24
-        cmdIcon.Font = Enum.Font.SourceSansBold
-        cmdIcon.Parent = cmdHeader
+        local cmdIconLabel = Instance.new("TextLabel")
+        cmdIconLabel.Size = UDim2.new(0, 40, 1, 0)
+        cmdIconLabel.Position = UDim2.new(0, 5, 0, 0)
+        cmdIconLabel.BackgroundTransparency = 1
+        -- REMOVED EMOJI
+        cmdIconLabel.Text = "[#]"
+        cmdIconLabel.TextColor3 = Theme.accent
+        cmdIconLabel.TextSize = 24
+        cmdIconLabel.Font = Enum.Font.SourceSansBold
+        cmdIconLabel.Parent = cmdHeader
         
         local cmdClose = Instance.new("TextButton")
         cmdClose.Size = UDim2.new(0, 40, 0, 35)
         cmdClose.Position = UDim2.new(1, -45, 0, 7.5)
         cmdClose.BackgroundColor3 = Theme.danger
-        cmdClose.Text = "✕"
+        cmdClose.Text = "X"
         cmdClose.TextColor3 = Theme.text
         cmdClose.TextSize = 16
         cmdClose.Font = Enum.Font.SourceSansBold
@@ -2048,7 +2058,7 @@ local function createToggleWithSpeed(text, callback)
     speedDisplay.Size = UDim2.new(1, -170, 0, 25)
     speedDisplay.Position = UDim2.new(0, 170, 0, 45)
     speedDisplay.BackgroundTransparency = 1
-    speedDisplay.Text = "≈ " .. formatNumber(Config.speed * 3600) .. "/hr"
+    speedDisplay.Text = "approx " .. formatNumber(Config.speed * 3600) .. "/hr"
     speedDisplay.TextColor3 = Theme.accent
     speedDisplay.TextSize = 11
     speedDisplay.Font = Enum.Font.SourceSans
@@ -2061,7 +2071,7 @@ local function createToggleWithSpeed(text, callback)
             Config.speed = math.floor(newSpeed)
             speedInput.Text = tostring(Config.speed)
             notification("Speed set to " .. Config.speed, 2, "success")
-            speedDisplay.Text = "≈ " .. formatNumber(Config.speed * 3600) .. "/hr"
+            speedDisplay.Text = "approx " .. formatNumber(Config.speed * 3600) .. "/hr"
         else
             speedInput.Text = tostring(Config.speed)
             notification("Invalid speed! Use 1-1000", 3, "error")
@@ -2126,7 +2136,7 @@ local function createButton(text, callback, buttonColor)
 end
 
 -- Create UI Elements with Enhanced Features
-createToggleWithSpeed("🚀 Fast Farm", function(enabled)
+createToggleWithSpeed("Fast Farm", function(enabled)
     State.fastFarm = enabled
     if enabled then
         State.slowFarm = false
@@ -2138,7 +2148,7 @@ createToggleWithSpeed("🚀 Fast Farm", function(enabled)
     end
 end)
 
-createToggle("🐌 Slow Farm", function(enabled)
+createToggle("Slow Farm", function(enabled)
     State.slowFarm = enabled
     if enabled then
         State.fastFarm = false
@@ -2150,7 +2160,7 @@ createToggle("🐌 Slow Farm", function(enabled)
     end
 end)
 
-createToggle("🤖 Auto Farm", function(enabled)
+createToggle("Auto Farm", function(enabled)
     State.autoFarm = enabled
     if enabled then
         State.fastFarm = false
@@ -2162,7 +2172,7 @@ createToggle("🤖 Auto Farm", function(enabled)
     end
 end)
 
-createToggle("🛡️ God Mode", function(enabled)
+createToggle("God Mode", function(enabled)
     State.godMode = enabled
     notification("God Mode " .. (enabled and "enabled" or "disabled"), 3, enabled and "success" or "info")
     if enabled then
@@ -2175,12 +2185,12 @@ createToggle("🛡️ God Mode", function(enabled)
     end
 end)
 
-createToggle("⚔️ Kill Aura", function(enabled)
+createToggle("Kill Aura", function(enabled)
     State.killAura = enabled
     notification("Kill Aura " .. (enabled and "enabled" or "disabled"), 3, enabled and "success" or "info")
 end)
 
-createButton("💀 Kill All Players", function()
+createButton("Kill All Players", function()
     notification("Attacking all players...", 3, "info")
     spawn(function()
         local count = 0
@@ -2194,7 +2204,7 @@ createButton("💀 Kill All Players", function()
     end)
 end, Theme.danger)
 
-createButton("🛡️ God All Players", function()
+createButton("God All Players", function()
     local players = {}
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player then
@@ -2205,7 +2215,7 @@ createButton("🛡️ God All Players", function()
     notification(success and "God mode applied to all players" or "No tools found!", 4, success and "success" or "error")
 end, Theme.success)
 
-createButton("📊 Reset Session Stats", function()
+createButton("Reset Session Stats", function()
     Stats.powerGainedThisSession = 0
     Stats.sessionStartTime = tick()
     Stats.lastPowerCheck = Stats.power
@@ -2213,7 +2223,7 @@ createButton("📊 Reset Session Stats", function()
     notification("Session stats reset!", 3, "success")
 end, Theme.warning)
 
-createButton("📋 Show Commands", function()
+createButton("Show Commands", function()
     executeCommand("cmds")
 end, Theme.accent)
 
@@ -2599,10 +2609,10 @@ table.insert(Data.adminPlayers, player.Name)
 spawn(function()
     -- Animate GUI entrance
     mainFrame.Position = UDim2.new(0.5, -225, 1.5, 0)
-    commandBarFrame.Position = UDim2.new(0.5, -300, 0, -80)
+    commandBarFrame.Position = UDim2.new(0.5, -300, 1, 80)
     
     wait(0.5)
-    notification("2take1 Hub Enhanced Loaded! 🚀", 4, "success")
+    notification("2take1 Hub Enhanced Loaded!", 4, "success")
     
     TweenService:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Position = UDim2.new(0.5, -225, 0.5, -350)
@@ -2640,17 +2650,7 @@ spawn(function()
     end
 end)
 
--- Final cleanup on script end
-game:BindToClose(function()
-    -- Save any important data here if needed
-    for _, connection in pairs(Data.connections) do
-        if connection then connection:Disconnect() end
-    end
-    if Data.flyConnection then Data.flyConnection:Disconnect() end
-    if Data.noclipConnection then Data.noclipConnection:Disconnect() end
-    if Data.chatConnection then Data.chatConnection:Disconnect() end
-    if Data.watchConnection then Data.watchConnection:Disconnect() end
-end)
+-- FIXED: Removed BindToClose as it's server-side only and causes errors on the client.
 
 -- Success message
 print("2take1 Hub Enhanced successfully loaded!")
