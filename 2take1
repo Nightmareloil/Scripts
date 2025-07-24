@@ -230,42 +230,15 @@ local function makeDraggable(frame, handle)
     end)
 end
 
--- Enhanced Command Bar Creation with Responsive Positioning
+-- Enhanced Command Bar Creation
 local commandBarFrame = Instance.new("Frame")
 commandBarFrame.Name = "CommandBar"
 commandBarFrame.Size = UDim2.new(0, 600, 0, 60)
-commandBarFrame.Position = UDim2.new(0.5, -300, 0, 50) -- Start at a better position
+commandBarFrame.Position = UDim2.new(0.5, -300, 0, -80)
 commandBarFrame.BackgroundColor3 = Theme.background
 commandBarFrame.BorderSizePixel = 0
 commandBarFrame.Visible = true
 commandBarFrame.Parent = screenGui
-
--- Function to optimize command bar position based on screen size
-local function optimizeCommandBarPosition()
-    local viewport = workspace.CurrentCamera.ViewportSize
-    local screenHeight = viewport.Y
-    
-    -- Calculate optimal position (10% from top of screen)
-    local topOffset = math.max(50, screenHeight * 0.1)
-    
-    -- Hidden position (above screen)
-    local hiddenOffset = -80
-    
-    -- Update positions
-    if State.commandBarVisible then
-        commandBarFrame.Position = UDim2.new(0.5, -300, 0, topOffset)
-    else
-        commandBarFrame.Position = UDim2.new(0.5, -300, 0, hiddenOffset)
-    end
-end
-
--- Connect to viewport size changes for automatic optimization
-workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-    optimizeCommandBarPosition()
-end)
-
--- Initial optimization
-optimizeCommandBarPosition()
 
 -- Add subtle shadow effect
 local commandBarShadow = Instance.new("Frame")
