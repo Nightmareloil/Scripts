@@ -1,4 +1,4 @@
--- Enhanced 2take1 Hub Script - Optimized and Fixed Version
+-- Enhanced 2take1 Hub Script - Fully Optimized Version 2025 with UI Scale Control
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Services = {
@@ -13,20 +13,36 @@ local Services = {
 }
 if not game:IsLoaded() then game.Loaded:Wait() end
 
--- UI Scaling System
-local function getScaleFactor()
-    local viewportHeight = workspace.CurrentCamera.ViewportSize.Y
-    -- Base height where UI has its default size. 900 is a good modern baseline.
-    local baseHeight = 900
-    -- Calculate scale, clamping it to prevent it from being too small or too large.
-    local scale = math.clamp(viewportHeight / baseHeight, 0.75, 1.1)
-    return scale
-end
-local scaleFactor = getScaleFactor()
+-- Enhanced UI Scaling System with User Control
+local UIScale = {
+    userScale = 0.85, -- Default smaller scale (was 1.0)
+    minScale = 0.5,
+    maxScale = 1.5
+}
 
--- Helper function to apply scaling to any pixel value
+local function getScaleFactor()
+    local viewport = workspace.CurrentCamera.ViewportSize
+    local minDimension = math.min(viewport.X, viewport.Y)
+    local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
+    
+    -- Improved scaling algorithm with user control
+    local baseSize = isMobile and 600 or 900
+    local autoScale = math.clamp(minDimension / baseSize, isMobile and 0.7 or 0.6, isMobile and 1.2 or 1.1)
+    local finalScale = autoScale * UIScale.userScale
+    
+    return finalScale, isMobile
+end
+local scaleFactor, isMobile = getScaleFactor()
+
+-- Helper function to apply scaling
 local function S(offset)
-    return math.floor(offset * scaleFactor)
+    return math.floor(offset * scaleFactor + 0.5)
+end
+
+-- Function to update all UI scaling
+local function updateUIScale()
+    scaleFactor, isMobile = getScaleFactor()
+    -- This will be called when user changes scale
 end
 
 -- Configuration
@@ -41,7 +57,7 @@ local State = {
     fastFarm = false, slowFarm = false, godMode = false, killAura = false,
     flying = false, noclip = false, commandBarVisible = false, loopKill = false,
     loopKillTargets = {}, killAllActive = false, infiniteJump = false,
-    watchingPlayer = nil, autoFarm = false, reverseDmg = false
+    watchingPlayer = nil, autoFarm = false, reverseDmg = false, speedHack = false
 }
 
 -- Statistics
@@ -55,22 +71,23 @@ local Stats = {
 local Data = {
     adminPlayers = {}, connections = {}, flyObjects = {}, killAllTargets = {},
     noclipConnection = nil, flyConnection = nil, charDiedFlyConnection = nil, chatConnection = nil,
-    watchConnection = nil, reverseDmgConnection = nil, attackerTracking = {}
+    watchConnection = nil, reverseDmgConnection = nil, attackerTracking = {}, speedConnections = {},
+    uiElements = {} -- Store UI elements for scaling updates
 }
 
--- Theme
+-- Theme (Enhanced with better contrast)
 local Theme = {
-    background = Color3.fromRGB(18, 18, 18),
-    secondary = Color3.fromRGB(28, 28, 28),
-    tertiary = Color3.fromRGB(38, 38, 38),
-    accent = Color3.fromRGB(0, 0, 255),
-    accentHover = Color3.fromRGB(50, 50, 255),
+    background = Color3.fromRGB(15, 15, 20),
+    secondary = Color3.fromRGB(25, 25, 35),
+    tertiary = Color3.fromRGB(35, 35, 45),
+    accent = Color3.fromRGB(70, 130, 255),
+    accentHover = Color3.fromRGB(90, 150, 255),
     text = Color3.fromRGB(255, 255, 255),
-    textSecondary = Color3.fromRGB(180, 180, 180),
+    textSecondary = Color3.fromRGB(190, 190, 200),
     success = Color3.fromRGB(87, 242, 135),
     danger = Color3.fromRGB(237, 66, 69),
     warning = Color3.fromRGB(255, 193, 7),
-    border = Color3.fromRGB(60, 60, 60)
+    border = Color3.fromRGB(70, 70, 80)
 }
 
 -- Utility Functions
@@ -102,36 +119,48 @@ local function formatTime(s)
     return string.format("%02d:%02d:%02d", math.floor(s/3600), math.floor((s%3600)/60), math.floor(s%60))
 end
 
+-- Enhanced Draggable Function with Mobile Support
 local function makeDraggable(frame, handle)
     handle = handle or frame
     local dragging = false
     local dragStart = nil
     local startPos = nil
+    local inputType = nil
 
-    handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    local function beginDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            dragStart = Services.UIS:GetMouseLocation()
+            inputType = input.UserInputType
+            if input.UserInputType == Enum.UserInputType.Touch then
+                dragStart = input.Position
+            else
+                dragStart = Services.UIS:GetMouseLocation()
+            end
             startPos = frame.Position
         end
-    end)
+    end
 
-    handle.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    local function endDrag(input)
+        if input.UserInputType == inputType then
             dragging = false
+            inputType = nil
         end
-    end)
+    end
 
-    Services.UIS.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local currentPos = Services.UIS:GetMouseLocation()
+    local function updateDrag(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement or (dragging and input.UserInputType == Enum.UserInputType.Touch) then
+            local currentPos = input.UserInputType == Enum.UserInputType.Touch and input.Position or Services.UIS:GetMouseLocation()
             local delta = currentPos - dragStart
             frame.Position = UDim2.new(
                 startPos.X.Scale, startPos.X.Offset + delta.X,
                 startPos.Y.Scale, startPos.Y.Offset + delta.Y
             )
         end
-    end)
+    end
+
+    handle.InputBegan:Connect(beginDrag)
+    handle.InputEnded:Connect(endDrag)
+    Services.UIS.InputChanged:Connect(updateDrag)
 end
 
 local function addCornerAndStroke(obj, radius, color)
@@ -146,60 +175,125 @@ local function addCornerAndStroke(obj, radius, color)
     end
 end
 
--- Create Main GUI
+-- UI Rescaling Function
+local function rescaleUI()
+    updateUIScale()
+    
+    -- Update all stored UI elements
+    for _, element in pairs(Data.uiElements) do
+        if element.obj and element.obj.Parent then
+            if element.size then
+                element.obj.Size = UDim2.new(element.size.X.Scale, S(element.size.X.Offset), 
+                                           element.size.Y.Scale, S(element.size.Y.Offset))
+            end
+            if element.position then
+                element.obj.Position = UDim2.new(element.position.X.Scale, S(element.position.X.Offset),
+                                               element.position.Y.Scale, S(element.position.Y.Offset))
+            end
+            if element.textSize then
+                element.obj.TextSize = S(element.textSize)
+            end
+            -- Update corner radius
+            local corner = element.obj:FindFirstChildOfClass("UICorner")
+            if corner and element.cornerRadius then
+                corner.CornerRadius = UDim.new(0, S(element.cornerRadius))
+            end
+            -- Update stroke thickness
+            local stroke = element.obj:FindFirstChildOfClass("UIStroke")
+            if stroke then
+                stroke.Thickness = S(1)
+            end
+        end
+    end
+    
+    -- Update range for combat
+    Config.range = S(15)
+    Config.flySpeed = S(50)
+end
+
+-- Enhanced UI element creation with scaling tracking
+local function createScalableElement(obj, sizeOffsets, positionOffsets, textSize, cornerRadius)
+    local elementData = {
+        obj = obj,
+        size = sizeOffsets and UDim2.new(sizeOffsets.X.Scale, sizeOffsets.X.Offset, sizeOffsets.Y.Scale, sizeOffsets.Y.Offset),
+        position = positionOffsets and UDim2.new(positionOffsets.X.Scale, positionOffsets.X.Offset, positionOffsets.Y.Scale, positionOffsets.Y.Offset),
+        textSize = textSize,
+        cornerRadius = cornerRadius
+    }
+    table.insert(Data.uiElements, elementData)
+    return elementData
+end
+
+-- Create Main GUI with better sizing
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "2take1Hub"
 screenGui.ResetOnSpawn = false
 protectGui(screenGui)
 
--- Command Bar
+-- Command Bar (Improved size and positioning)
 local commandBar = Instance.new("Frame")
-commandBar.Size = UDim2.new(0, S(600), 0, S(60))
-commandBar.Position = UDim2.new(0.5, -S(300), 1, S(80))
+commandBar.Size = UDim2.new(0, S(isMobile and 350 or 600), 0, S(isMobile and 50 or 60))
+commandBar.Position = UDim2.new(0.5, -S(isMobile and 175 or 300), 1, S(100))
 commandBar.BackgroundColor3 = Theme.background
 commandBar.BorderSizePixel = 0
 commandBar.Parent = screenGui
 addCornerAndStroke(commandBar, S(12), Theme.border)
 makeDraggable(commandBar)
+createScalableElement(commandBar, 
+    UDim2.new(0, isMobile and 350 or 600, 0, isMobile and 50 or 60),
+    UDim2.new(0.5, -(isMobile and 175 or 300), 1, 100), nil, 12)
 
 local cmdInput = Instance.new("TextBox")
-cmdInput.Size = UDim2.new(1, -S(200), 1, -S(20))
-cmdInput.Position = UDim2.new(0, S(100), 0, S(10))
+cmdInput.Size = UDim2.new(1, -S(isMobile and 120 or 200), 1, -S(isMobile and 15 or 20))
+cmdInput.Position = UDim2.new(0, S(isMobile and 60 or 100), 0, S(isMobile and 7.5 or 10))
 cmdInput.BackgroundColor3 = Theme.secondary
 cmdInput.Text = ""
 cmdInput.PlaceholderText = "Enter command..."
 cmdInput.TextColor3 = Theme.text
-cmdInput.TextSize = S(14)
+cmdInput.TextSize = S(isMobile and 12 or 14)
 cmdInput.Font = Enum.Font.SourceSans
 cmdInput.Parent = commandBar
 addCornerAndStroke(cmdInput, S(8), Theme.border)
+createScalableElement(cmdInput,
+    UDim2.new(1, -(isMobile and 120 or 200), 1, -(isMobile and 15 or 20)),
+    UDim2.new(0, isMobile and 60 or 100, 0, isMobile and 7.5 or 10),
+    isMobile and 12 or 14, 8)
 
 local execBtn = Instance.new("TextButton")
-execBtn.Size = UDim2.new(0, S(80), 0, S(40))
-execBtn.Position = UDim2.new(1, -S(90), 0, S(10))
+execBtn.Size = UDim2.new(0, S(isMobile and 50 or 80), 0, S(isMobile and 30 or 40))
+execBtn.Position = UDim2.new(1, -S(isMobile and 55 or 90), 0, S(isMobile and 10 or 10))
 execBtn.BackgroundColor3 = Theme.accent
 execBtn.Text = "Execute"
 execBtn.TextColor3 = Theme.text
-execBtn.TextSize = S(14)
+execBtn.TextSize = S(isMobile and 10 or 14)
 execBtn.Font = Enum.Font.SourceSansBold
 execBtn.Parent = commandBar
 addCornerAndStroke(execBtn, S(8))
+createScalableElement(execBtn,
+    UDim2.new(0, isMobile and 50 or 80, 0, isMobile and 30 or 40),
+    UDim2.new(1, -(isMobile and 55 or 90), 0, isMobile and 10 or 10),
+    isMobile and 10 or 14, 8)
 
--- Main Frame
+-- Main Frame (Better proportioned and smaller default)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, S(450), 0, S(650))
-mainFrame.Position = UDim2.new(0.5, -S(225), 0.5, -S(325))
+mainFrame.Size = UDim2.new(0, S(isMobile and 350 or 450), 0, S(isMobile and 500 or 650))
+mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 250 or 325))
 mainFrame.BackgroundColor3 = Theme.background
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 addCornerAndStroke(mainFrame, S(12), Theme.border)
+createScalableElement(mainFrame,
+    UDim2.new(0, isMobile and 350 or 450, 0, isMobile and 500 or 650),
+    UDim2.new(0.5, -(isMobile and 175 or 225), 0.5, -(isMobile and 250 or 325)), nil, 12)
 
 local header = Instance.new("Frame")
-header.Size = UDim2.new(1, 0, 0, S(50))
+header.Size = UDim2.new(1, 0, 0, S(isMobile and 45 or 60))
 header.BackgroundColor3 = Theme.secondary
 header.Parent = mainFrame
 makeDraggable(mainFrame, header)
 addCornerAndStroke(header, S(12))
+createScalableElement(header,
+    UDim2.new(1, 0, 0, isMobile and 45 or 60), nil, nil, 12)
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -S(100), 1, 0)
@@ -207,74 +301,137 @@ title.Position = UDim2.new(0, S(15), 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "2take1 Hub 2025"
 title.TextColor3 = Theme.text
-title.TextSize = S(18)
+title.TextSize = S(isMobile and 16 or 20)
 title.Font = Enum.Font.SourceSansBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
+createScalableElement(title,
+    UDim2.new(1, -100, 1, 0), UDim2.new(0, 15, 0, 0),
+    isMobile and 16 or 20)
+
+-- UI Scale Control in Header
+local scaleLabel = Instance.new("TextLabel")
+scaleLabel.Size = UDim2.new(0, S(40), 1, 0)
+scaleLabel.Position = UDim2.new(1, -S(140), 0, 0)
+scaleLabel.BackgroundTransparency = 1
+scaleLabel.Text = "Scale:"
+scaleLabel.TextColor3 = Theme.textSecondary
+scaleLabel.TextSize = S(isMobile and 10 or 12)
+scaleLabel.Font = Enum.Font.SourceSans
+scaleLabel.TextXAlignment = Enum.TextXAlignment.Left
+scaleLabel.Parent = header
+createScalableElement(scaleLabel,
+    UDim2.new(0, 40, 1, 0), UDim2.new(1, -140, 0, 0),
+    isMobile and 10 or 12)
+
+local scaleInput = Instance.new("TextBox")
+scaleInput.Size = UDim2.new(0, S(45), 0, S(isMobile and 25 or 30))
+scaleInput.Position = UDim2.new(1, -S(90), 0.5, -S(isMobile and 12.5 or 15))
+scaleInput.BackgroundColor3 = Theme.tertiary
+scaleInput.Text = tostring(math.floor(UIScale.userScale * 100 + 0.5)) .. "%"
+scaleInput.PlaceholderText = "85%"
+scaleInput.TextColor3 = Theme.text
+scaleInput.TextSize = S(isMobile and 9 or 11)
+scaleInput.Font = Enum.Font.SourceSans
+scaleInput.Parent = header
+addCornerAndStroke(scaleInput, S(4), Theme.border)
+createScalableElement(scaleInput,
+    UDim2.new(0, 45, 0, isMobile and 25 or 30),
+    UDim2.new(1, -90, 0.5, -(isMobile and 12.5 or 15)),
+    isMobile and 9 or 11, 4)
+
+-- Scale input functionality
+scaleInput.FocusLost:Connect(function(enterPressed)
+    local text = scaleInput.Text:gsub("%%", "")
+    local newScale = tonumber(text)
+    if newScale then
+        newScale = newScale / 100
+        newScale = math.clamp(newScale, UIScale.minScale, UIScale.maxScale)
+        UIScale.userScale = newScale
+        scaleInput.Text = tostring(math.floor(newScale * 100 + 0.5)) .. "%"
+        rescaleUI()
+        notification("UI Scale set to " .. math.floor(newScale * 100 + 0.5) .. "%", 2, "success")
+    else
+        scaleInput.Text = tostring(math.floor(UIScale.userScale * 100 + 0.5)) .. "%"
+        notification("Invalid scale value! Use 50-150", 2, "warning")
+    end
+end)
 
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, S(35), 0, S(30))
-closeBtn.Position = UDim2.new(1, -S(40), 0, S(10))
+closeBtn.Size = UDim2.new(0, S(isMobile and 30 or 40), 0, S(isMobile and 25 or 35))
+closeBtn.Position = UDim2.new(1, -S(isMobile and 35 or 45), 0, S(isMobile and 10 or 12.5))
 closeBtn.BackgroundColor3 = Theme.danger
 closeBtn.Text = "X"
 closeBtn.TextColor3 = Theme.text
-closeBtn.TextSize = S(14)
+closeBtn.TextSize = S(isMobile and 12 or 16)
 closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.Parent = header
 addCornerAndStroke(closeBtn, S(6))
+createScalableElement(closeBtn,
+    UDim2.new(0, isMobile and 30 or 40, 0, isMobile and 25 or 35),
+    UDim2.new(1, -(isMobile and 35 or 45), 0, isMobile and 10 or 12.5),
+    isMobile and 12 or 16, 6)
 
 local content = Instance.new("ScrollingFrame")
-content.Size = UDim2.new(1, -S(20), 1, -S(70))
-content.Position = UDim2.new(0, S(10), 0, S(60))
+content.Size = UDim2.new(1, -S(20), 1, -S(isMobile and 65 or 80))
+content.Position = UDim2.new(0, S(10), 0, S(isMobile and 55 or 70))
 content.BackgroundColor3 = Theme.secondary
 content.BorderSizePixel = 0
-content.ScrollBarThickness = S(6)
+content.ScrollBarThickness = S(isMobile and 8 or 6)
 content.ScrollBarImageColor3 = Theme.accent
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
 content.Parent = mainFrame
 addCornerAndStroke(content, S(8))
+createScalableElement(content,
+    UDim2.new(1, -20, 1, -(isMobile and 65 or 80)),
+    UDim2.new(0, 10, 0, isMobile and 55 or 70), nil, 8)
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, S(10))
 layout.Parent = content
 
--- Stats Frame
+-- Stats Frame (Enhanced)
 local statsFrame = Instance.new("Frame")
-statsFrame.Size = UDim2.new(1, -S(10), 0, S(180))
+statsFrame.Size = UDim2.new(1, -S(10), 0, S(isMobile and 160 or 200))
 statsFrame.BackgroundColor3 = Theme.tertiary
 statsFrame.Parent = content
 addCornerAndStroke(statsFrame, S(8), Theme.border)
+createScalableElement(statsFrame,
+    UDim2.new(1, -10, 0, isMobile and 160 or 200), nil, nil, 8)
 
 local statLabels = {}
 local statData = {
-    {n="title", t="Player Statistics", p=UDim2.new(0,S(10),0,S(5)), s=UDim2.new(1,-S(20),0,S(25)), c=Theme.accent, sz=S(16)},
-    {n="power", t="Power: 0", p=UDim2.new(0,S(15),0,S(35))},
-    {n="kills", t="Kills: 0", p=UDim2.new(0.5,S(5),0,S(35))},
-    {n="health", t="Health: 100", p=UDim2.new(0,S(15),0,S(60))},
-    {n="pps", t="Power/sec: 0", p=UDim2.new(0.5,S(5),0,S(60))},
-    {n="pph", t="Power/hr: 0", p=UDim2.new(0,S(15),0,S(85))},
-    {n="session", t="Session: 0", p=UDim2.new(0.5,S(5),0,S(85))},
-    {n="ping", t="Ping: 0ms", p=UDim2.new(0,S(15),0,S(110))},
-    {n="fps", t="FPS: 0", p=UDim2.new(0.5,S(5),0,S(110))},
-    {n="time", t="Time: 00:00:00", p=UDim2.new(0,S(15),0,S(135)), s=UDim2.new(1,-S(30),0,S(20))},
-    {n="eff", t="Efficiency: N/A", p=UDim2.new(0,S(15),0,S(155)), s=UDim2.new(1,-S(30),0,S(20))}
+    {n="title", t="Player Statistics", p=UDim2.new(0,S(10),0,S(5)), s=UDim2.new(1,-S(20),0,S(isMobile and 20 or 25)), c=Theme.accent, sz=S(isMobile and 14 or 18)},
+    {n="power", t="Power: 0", p=UDim2.new(0,S(15),0,S(isMobile and 28 or 35))},
+    {n="kills", t="Kills: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 28 or 35))},
+    {n="health", t="Health: 100", p=UDim2.new(0,S(15),0,S(isMobile and 48 or 60))},
+    {n="pps", t="Power/sec: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 48 or 60))},
+    {n="pph", t="Power/hr: 0", p=UDim2.new(0,S(15),0,S(isMobile and 68 or 85))},
+    {n="session", t="Session: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 68 or 85))},
+    {n="ping", t="Ping: 0ms", p=UDim2.new(0,S(15),0,S(isMobile and 88 or 110))},
+    {n="fps", t="FPS: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 88 or 110))},
+    {n="time", t="Time: 00:00:00", p=UDim2.new(0,S(15),0,S(isMobile and 108 or 135)), s=UDim2.new(1,-S(30),0,S(18))},
+    {n="eff", t="Efficiency: N/A", p=UDim2.new(0,S(15),0,S(isMobile and 128 or 155)), s=UDim2.new(1,-S(30),0,S(18))}
 }
 
 for _, d in ipairs(statData) do
     local l = Instance.new("TextLabel")
-    l.Size = d.s or UDim2.new(0.48,-S(15),0,S(20))
+    l.Size = d.s or UDim2.new(0.48,-S(15),0,S(18))
     l.Position = d.p
     l.BackgroundTransparency = 1
     l.Text = d.t
     l.TextColor3 = d.c or Theme.text
-    l.TextSize = d.sz or S(12)
+    l.TextSize = d.sz or S(isMobile and 10 or 12)
     l.Font = d.n == "title" and Enum.Font.SourceSansBold or Enum.Font.SourceSans
     l.TextXAlignment = Enum.TextXAlignment.Left
     l.Parent = statsFrame
     statLabels[d.n] = l
+    
+    -- Track these labels for scaling
+    createScalableElement(l, d.s, d.p, d.sz or (isMobile and 10 or 12))
 end
 
--- Tool Functions
+-- Tool Functions (Optimized)
 local function getTools()
     local tools = {}
     for _, c in pairs({player.Character, player:FindFirstChild("Backpack")}) do
@@ -297,7 +454,7 @@ local function getTools()
     return tools
 end
 
--- Player Finding
+-- Player Finding (Enhanced)
 local function findPlayer(n)
     if not n or n == "" then return nil end
     n = n:lower()
@@ -310,16 +467,21 @@ local function findPlayer(n)
         end
         return o
     end
+    -- Enhanced search - exact match first, then partial
     for _, p in pairs(Players:GetPlayers()) do
-        if p.Name:lower() == n or p.DisplayName:lower() == n or
-           p.Name:lower():find(n, 1, true) or p.DisplayName:lower():find(n, 1, true) then
+        if p.Name:lower() == n or p.DisplayName:lower() == n then
+            return p
+        end
+    end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name:lower():find(n, 1, true) or p.DisplayName:lower():find(n, 1, true) then
             return p
         end
     end
     return nil
 end
 
--- Combat Functions
+-- Combat Functions (Optimized)
 local function killPlayer(t)
     if not t or not t.Character or t == player then return false end
     local h = t.Character:FindFirstChildOfClass("Humanoid")
@@ -388,6 +550,81 @@ local function farm(speed)
     end
 end
 
+-- Player Watch Function
+local function watchPlayer(targetName)
+    local target = findPlayer(targetName)
+    if not target or type(target) == "table" then
+        notification("Player not found: " .. tostring(targetName), 2, "error")
+        return
+    end
+    
+    if Data.watchConnection then
+        Data.watchConnection:Disconnect()
+        Data.watchConnection = nil
+        State.watchingPlayer = nil
+    end
+    
+    State.watchingPlayer = target
+    notification("Now watching: " .. target.DisplayName, 3, "success")
+    
+    Data.watchConnection = Services.Run.Heartbeat:Connect(function()
+        if not State.watchingPlayer or not State.watchingPlayer.Character then
+            if Data.watchConnection then
+                Data.watchConnection:Disconnect()
+                Data.watchConnection = nil
+                State.watchingPlayer = nil
+            end
+            return
+        end
+        
+        local char = State.watchingPlayer.Character
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local rootPart = char:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart then
+            local health = math.floor(humanoid.Health)
+            local maxHealth = math.floor(humanoid.MaxHealth)
+            local position = rootPart.Position
+            
+            -- Update a watch label if it exists
+            if statLabels.watch then
+                statLabels.watch.Text = string.format("Watching %s: HP %d/%d Pos(%.1f,%.1f,%.1f)", 
+                    State.watchingPlayer.DisplayName, health, maxHealth, position.X, position.Y, position.Z)
+            end
+        end
+    end)
+end
+
+-- Speed Hack Function
+local function toggleSpeedHack(enabled, speed)
+    if Data.speedConnections then
+        for _, conn in pairs(Data.speedConnections) do
+            if conn then conn:Disconnect() end
+        end
+        Data.speedConnections = {}
+    end
+    
+    State.speedHack = enabled
+    
+    if enabled and player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = speed or 50
+            -- Keep speed persistent
+            table.insert(Data.speedConnections, humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+                if State.speedHack then
+                    humanoid.WalkSpeed = speed or 50
+                end
+            end))
+        end
+    elseif player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = Config.walkSpeed
+        end
+    end
+end
+
 -- Fixed Reverse Damage System
 local function setupReverseDamage()
     if Data.reverseDmgConnection then
@@ -408,7 +645,6 @@ local function setupReverseDamage()
         if not State.reverseDmg then return end
         
         if newHealth < lastHealth and newHealth > 0 then
-            local damageTaken = lastHealth - newHealth
             local closestPlayer = nil
             local closestDistance = 50 
             
@@ -468,7 +704,7 @@ local function setupReverseDamage()
     end)
 end
 
--- Stats Update
+-- Stats Update (Enhanced)
 local powerHistory = {}
 local fpsConnection = nil
 
@@ -569,10 +805,22 @@ end
 -- Forward declare showCommandsUI
 local showCommandsUI
 
--- Command System
+-- Enhanced Command System
 local cmds = {
     {"cmds", "Shows the command list", function()
         if showCommandsUI then showCommandsUI() end
+    end},
+    {"scale [percent]", "Adjust UI scale (50-150%)", function(args)
+        local scalePercent = tonumber(args[2])
+        if scalePercent then
+            local newScale = math.clamp(scalePercent / 100, UIScale.minScale, UIScale.maxScale)
+            UIScale.userScale = newScale
+            scaleInput.Text = tostring(math.floor(newScale * 100 + 0.5)) .. "%"
+            rescaleUI()
+            notification("UI Scale set to " .. math.floor(newScale * 100 + 0.5) .. "%", 2, "success")
+        else
+            notification("Usage: ;scale [50-150] (example: ;scale 75)", 3, "warning")
+        end
     end},
     {"admin [player]", "Add a command admin", function(args)
         local targetName = args[2]
@@ -637,7 +885,7 @@ local cmds = {
                     if p ~= player and killPlayer(p) then c = c + 1 end
                 end
                 notification("Killed " .. c .. " players", 2, "success")
-            elseif t == player then -- FIX: Handle ";kill me"
+            elseif t == player then
                 if t.Character and t.Character:FindFirstChildOfClass("Humanoid") then
                     t.Character.Humanoid.Health = 0
                     notification("You have been killed.", 2, "success")
@@ -738,6 +986,24 @@ local cmds = {
             if Data.charDiedFlyConnection then Data.charDiedFlyConnection:Disconnect(); Data.charDiedFlyConnection = nil end
         end)
     end},
+    {"unfly", "Disable fly", function()
+        if State.flying then
+            State.flying = false
+            if Data.flyConnection then Data.flyConnection:Disconnect(); Data.flyConnection = nil end
+            if Data.charDiedFlyConnection then Data.charDiedFlyConnection:Disconnect(); Data.charDiedFlyConnection = nil end
+            if Data.flyObjects then
+                for _, v in pairs(Data.flyObjects) do if v and v.Parent then v:Destroy() end end
+                Data.flyObjects = {}
+            end
+            if player.Character then
+                local h = player.Character:FindFirstChildOfClass("Humanoid")
+                if h then h.PlatformStand = false end
+            end
+            notification("Fly disabled", 2, "info")
+        else
+            notification("Fly is already disabled", 2, "info")
+        end
+    end},
     {"noclip", "Toggle noclip", function()
         State.noclip = not State.noclip
         notification("Noclip " .. (State.noclip and "ON" or "OFF"), 2, "info")
@@ -753,13 +1019,44 @@ local cmds = {
             if Data.noclipConnection then Data.noclipConnection:Disconnect(); Data.noclipConnection = nil end
         end
     end},
+    {"unnoclip", "Disable noclip", function()
+        if State.noclip then
+            State.noclip = false
+            if Data.noclipConnection then Data.noclipConnection:Disconnect(); Data.noclipConnection = nil end
+            notification("Noclip disabled", 2, "info")
+        else
+            notification("Noclip is already disabled", 2, "info")
+        end
+    end},
     {"speed/ws [num]", "Set walkspeed", function(args)
         local s = tonumber(args[2]) or 16
-        if player.Character then
-            local h = player.Character:FindFirstChildOfClass("Humanoid")
-            if h then h.WalkSpeed = s end
-        end
+        toggleSpeedHack(s ~= 16, s)
         notification("Speed set to " .. s, 2, "success")
+    end},
+    {"unspeed", "Reset walkspeed", function()
+        toggleSpeedHack(false)
+        notification("Speed reset to normal", 2, "info")
+    end},
+    {"watch [player]", "Monitor a player's stats", function(args)
+        if not args[2] then
+            notification("Usage: ;watch [player_name]", 3, "warning")
+            return
+        end
+        watchPlayer(args[2])
+    end},
+    {"unwatch", "Stop watching player", function()
+        if Data.watchConnection then
+            Data.watchConnection:Disconnect()
+            Data.watchConnection = nil
+            State.watchingPlayer = nil
+            if statLabels.watch then
+                statLabels.watch:Destroy()
+                statLabels.watch = nil
+            end
+            notification("Stopped watching player", 2, "info")
+        else
+            notification("Not watching any player", 2, "info")
+        end
     end},
     {"reset", "Reset character", function()
         if player.Character then
@@ -804,54 +1101,73 @@ local function executeCmd(cmd)
     notification("Unknown command: " .. cmdName, 2, "error")
 end
 
--- UI Creation
+-- Enhanced UI Creation Functions
 local function createToggle(text, callback, showSpeed)
     local f = Instance.new("Frame")
-    f.Size = UDim2.new(1, -S(10), 0, S(50))
+    f.Size = UDim2.new(1, -S(10), 0, S(isMobile and 45 or 55))
     f.BackgroundColor3 = Theme.tertiary
     f.Parent = content
     addCornerAndStroke(f, S(8), Theme.border)
+    createScalableElement(f, UDim2.new(1, -10, 0, isMobile and 45 or 55), nil, nil, 8)
     
     local l = Instance.new("TextLabel")
-    l.Size = UDim2.new(1, showSpeed and -S(140) or -S(80), 1, 0)
+    l.Size = UDim2.new(1, showSpeed and -S(isMobile and 120 or 140) or -S(isMobile and 70 or 80), 1, 0)
     l.Position = UDim2.new(0, S(15), 0, 0)
     l.BackgroundTransparency = 1
     l.Text = text
     l.TextColor3 = Theme.text
-    l.TextSize = S(14)
+    l.TextSize = S(isMobile and 12 or 14)
     l.Font = Enum.Font.SourceSans
     l.TextXAlignment = Enum.TextXAlignment.Left
     l.Parent = f
+    createScalableElement(l, 
+        UDim2.new(1, showSpeed and -(isMobile and 120 or 140) or -(isMobile and 70 or 80), 1, 0),
+        UDim2.new(0, 15, 0, 0), isMobile and 12 or 14)
     
     local si
     if showSpeed then
         si = Instance.new("TextBox")
-        si.Size = UDim2.new(0, S(40), 0, S(25))
-        si.Position = UDim2.new(1, -S(115), 0.5, -S(12.5))
+        si.Size = UDim2.new(0, S(isMobile and 35 or 45), 0, S(isMobile and 20 or 25))
+        si.Position = UDim2.new(1, -S(isMobile and 100 or 115), 0.5, -S(isMobile and 10 or 12.5))
         si.BackgroundColor3 = Theme.secondary
         si.Text = tostring(Config.speed)
         si.TextColor3 = Theme.text
-        si.TextSize = S(12)
+        si.TextSize = S(isMobile and 10 or 12)
         si.Font = Enum.Font.SourceSans
         si.Parent = f
         addCornerAndStroke(si, S(4))
-        si.FocusLost:Connect(function()
+        createScalableElement(si,
+            UDim2.new(0, isMobile and 35 or 45, 0, isMobile and 20 or 25),
+            UDim2.new(1, -(isMobile and 100 or 115), 0.5, -(isMobile and 10 or 12.5)),
+            isMobile and 10 or 12, 4)
+        
+        -- Fixed speed input connection
+        si.FocusLost:Connect(function(enterPressed)
             local n = tonumber(si.Text)
-            if n and n >= 1 and n <= 50 then Config.speed = n
-            else si.Text = tostring(Config.speed) end
+            if n and n >= 1 and n <= 50 then 
+                Config.speed = n
+                notification("Farm speed set to: " .. n, 2, "success")
+            else 
+                si.Text = tostring(Config.speed)
+                notification("Invalid speed! Use 1-50", 2, "warning")
+            end
         end)
     end
     
     local t = Instance.new("TextButton")
-    t.Size = UDim2.new(0, S(60), 0, S(30))
-    t.Position = UDim2.new(1, -S(70), 0.5, -S(15))
+    t.Size = UDim2.new(0, S(isMobile and 50 or 60), 0, S(isMobile and 25 or 30))
+    t.Position = UDim2.new(1, -S(isMobile and 60 or 70), 0.5, -S(isMobile and 12.5 or 15))
     t.BackgroundColor3 = Theme.danger
     t.Text = "OFF"
     t.TextColor3 = Theme.text
-    t.TextSize = S(12)
+    t.TextSize = S(isMobile and 10 or 12)
     t.Font = Enum.Font.SourceSansBold
     t.Parent = f
     addCornerAndStroke(t, S(6))
+    createScalableElement(t,
+        UDim2.new(0, isMobile and 50 or 60, 0, isMobile and 25 or 30),
+        UDim2.new(1, -(isMobile and 60 or 70), 0.5, -(isMobile and 12.5 or 15)),
+        isMobile and 10 or 12, 6)
     
     local enabled = false
     t.MouseButton1Click:Connect(function()
@@ -865,32 +1181,35 @@ end
 
 local function createButton(text, callback, color)
     local b = Instance.new("TextButton")
-    b.Size = UDim2.new(1, -S(10), 0, S(45))
+    b.Size = UDim2.new(1, -S(10), 0, S(isMobile and 40 or 50))
     b.BackgroundColor3 = color or Theme.accent
     b.Text = text
     b.TextColor3 = Theme.text
-    b.TextSize = S(14)
+    b.TextSize = S(isMobile and 12 or 14)
     b.Font = Enum.Font.SourceSansBold
     b.Parent = content
     addCornerAndStroke(b, S(8), Theme.border)
+    createScalableElement(b,
+        UDim2.new(1, -10, 0, isMobile and 40 or 50), nil,
+        isMobile and 12 or 14, 8)
     b.MouseButton1Click:Connect(callback)
     return b
 end
 
--- Command List UI Function
+-- Command List UI Function (Enhanced)
 showCommandsUI = function()
     if screenGui:FindFirstChild("CommandsFrame") then return end
 
     local cf = Instance.new("Frame")
     cf.Name = "CommandsFrame"
-    cf.Size = UDim2.new(0, S(400), 0, S(500))
-    cf.Position = UDim2.new(0.5, -S(200), 0.5, -S(250))
+    cf.Size = UDim2.new(0, S(isMobile and 350 or 450), 0, S(isMobile and 400 or 550))
+    cf.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 200 or 275))
     cf.BackgroundColor3 = Theme.background
     cf.Parent = screenGui
     addCornerAndStroke(cf, S(12), Theme.border)
     
     local ch = Instance.new("Frame")
-    ch.Size = UDim2.new(1, 0, 0, S(50))
+    ch.Size = UDim2.new(1, 0, 0, S(isMobile and 45 or 55))
     ch.BackgroundColor3 = Theme.secondary
     ch.Parent = cf
     makeDraggable(cf, ch)
@@ -902,29 +1221,29 @@ showCommandsUI = function()
     ct.BackgroundTransparency = 1
     ct.Text = "Commands"
     ct.TextColor3 = Theme.text
-    ct.TextSize = S(18)
+    ct.TextSize = S(isMobile and 16 or 20)
     ct.Font = Enum.Font.SourceSansBold
     ct.TextXAlignment = Enum.TextXAlignment.Left
     ct.Parent = ch
     
     local cx = Instance.new("TextButton")
-    cx.Size = UDim2.new(0, S(30), 0, S(30))
-    cx.Position = UDim2.new(1, -S(40), 0, S(10))
+    cx.Size = UDim2.new(0, S(isMobile and 25 or 35), 0, S(isMobile and 25 or 35))
+    cx.Position = UDim2.new(1, -S(isMobile and 35 or 45), 0, S(isMobile and 10 or 10))
     cx.BackgroundColor3 = Theme.danger
     cx.Text = "X"
     cx.TextColor3 = Theme.text
-    cx.TextSize = S(14)
+    cx.TextSize = S(isMobile and 12 or 16)
     cx.Font = Enum.Font.SourceSansBold
     cx.Parent = ch
     addCornerAndStroke(cx, S(6))
     cx.MouseButton1Click:Connect(function() cf:Destroy() end)
     
     local cs = Instance.new("ScrollingFrame")
-    cs.Size = UDim2.new(1, -S(20), 1, -S(70))
-    cs.Position = UDim2.new(0, S(10), 0, S(60))
+    cs.Size = UDim2.new(1, -S(20), 1, -S(isMobile and 65 or 75))
+    cs.Position = UDim2.new(0, S(10), 0, S(isMobile and 55 or 65))
     cs.BackgroundColor3 = Theme.secondary
     cs.BorderSizePixel = 0
-    cs.ScrollBarThickness = S(6)
+    cs.ScrollBarThickness = S(isMobile and 8 or 6)
     cs.ScrollBarImageColor3 = Theme.accent
     cs.AutomaticCanvasSize = Enum.AutomaticSize.Y
     cs.Parent = cf
@@ -937,37 +1256,37 @@ showCommandsUI = function()
     
     for i, c in ipairs(cmds) do
         local ci = Instance.new("Frame")
-        ci.Size = UDim2.new(1, 0, 0, S(50))
+        ci.Size = UDim2.new(1, 0, 0, S(isMobile and 45 or 55))
         ci.BackgroundColor3 = Theme.tertiary
         ci.LayoutOrder = i
         ci.Parent = cs
         addCornerAndStroke(ci, S(8), Theme.border)
         
         local cn = Instance.new("TextLabel")
-        cn.Size = UDim2.new(1, -S(20), 0, S(25))
-        cn.Position = UDim2.new(0, S(10), 0, S(5))
+        cn.Size = UDim2.new(1, -S(20), 0, S(isMobile and 20 or 28))
+        cn.Position = UDim2.new(0, S(10), 0, S(3))
         cn.BackgroundTransparency = 1
         cn.Text = Config.commandPrefix .. c[1]
         cn.TextColor3 = Theme.text
-        cn.TextSize = S(14)
+        cn.TextSize = S(isMobile and 12 or 14)
         cn.Font = Enum.Font.SourceSansBold
         cn.TextXAlignment = Enum.TextXAlignment.Left
         cn.Parent = ci
         
         local cd = Instance.new("TextLabel")
-        cd.Size = UDim2.new(1, -S(20), 0, S(20))
-        cd.Position = UDim2.new(0, S(10), 0, S(25))
+        cd.Size = UDim2.new(1, -S(20), 0, S(isMobile and 18 or 22))
+        cd.Position = UDim2.new(0, S(10), 0, S(isMobile and 22 or 28))
         cd.BackgroundTransparency = 1
         cd.Text = c[2]
         cd.TextColor3 = Theme.textSecondary
-        cd.TextSize = S(12)
+        cd.TextSize = S(isMobile and 10 or 12)
         cd.Font = Enum.Font.SourceSans
         cd.TextXAlignment = Enum.TextXAlignment.Left
         cd.Parent = ci
     end
 end
 
--- Create UI Elements
+-- Create UI Elements with Fixed Speed Input
 createToggle("Fast Farm", function(e)
     State.fastFarm = e
     if e and State.slowFarm then State.slowFarm = false end
@@ -1010,13 +1329,13 @@ createButton("Reset Session Stats", function()
 end, Theme.warning)
 createButton("Show Commands", showCommandsUI, Theme.accent)
 
--- Command Bar Logic
+-- Command Bar Logic (Enhanced for Mobile)
 local function showCmd()
     if State.commandBarVisible then return end
     State.commandBarVisible = true
     commandBar.Visible = true
     Services.Tween:Create(commandBar, TweenInfo.new(0.3, Enum.EasingStyle.Quart),
-        {Position = UDim2.new(0.5, -S(300), 1, -S(80))}):Play()
+        {Position = UDim2.new(0.5, -S(isMobile and 175 or 300), 1, -S(isMobile and 60 or 80))}):Play()
     cmdInput:CaptureFocus()
 end
 
@@ -1025,7 +1344,7 @@ local function hideCmd()
     State.commandBarVisible = false
     cmdInput:ReleaseFocus()
     Services.Tween:Create(commandBar, TweenInfo.new(0.3, Enum.EasingStyle.Quart),
-        {Position = UDim2.new(0.5, -S(300), 1, S(80))}):Play(nil, function()
+        {Position = UDim2.new(0.5, -S(isMobile and 175 or 300), 1, S(100))}):Play(nil, function()
             if not State.commandBarVisible then commandBar.Visible = false end
         end)
 end
@@ -1044,32 +1363,47 @@ cmdInput.FocusLost:Connect(function(enter)
     hideCmd()
 end)
 
--- Input Handler
+-- Enhanced Input Handler
 Services.UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.Semicolon and not cmdInput:IsFocused() then
         showCmd()
-        -- Prevent the semicolon from being typed
         task.wait()
         cmdInput.Text = ""
     elseif input.KeyCode == Enum.KeyCode.Escape and State.commandBarVisible then
         hideCmd()
     elseif input.KeyCode == Enum.KeyCode.Insert then
         mainFrame.Visible = not mainFrame.Visible
+    elseif input.KeyCode == Enum.KeyCode.Minus then
+        -- Quick scale down with minus key
+        local newScale = math.clamp(UIScale.userScale - 0.1, UIScale.minScale, UIScale.maxScale)
+        UIScale.userScale = newScale
+        scaleInput.Text = tostring(math.floor(newScale * 100 + 0.5)) .. "%"
+        rescaleUI()
+        notification("UI Scale: " .. math.floor(newScale * 100 + 0.5) .. "%", 1, "info")
+    elseif input.KeyCode == Enum.KeyCode.Equals then
+        -- Quick scale up with equals/plus key
+        local newScale = math.clamp(UIScale.userScale + 0.1, UIScale.minScale, UIScale.maxScale)
+        UIScale.userScale = newScale
+        scaleInput.Text = tostring(math.floor(newScale * 100 + 0.5)) .. "%"
+        rescaleUI()
+        notification("UI Scale: " .. math.floor(newScale * 100 + 0.5) .. "%", 1, "info")
     end
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
-    State.flying = false -- ensure fly is off before destroying
-    executeCmd(";fly") -- call one last time to clean up
+    State.flying = false
+    executeCmd(";unfly")
     for _, c in pairs(Data.connections) do if c then c:Disconnect() end end
     if Data.noclipConnection then Data.noclipConnection:Disconnect() end
     if Data.reverseDmgConnection then Data.reverseDmgConnection:Disconnect() end
+    if Data.watchConnection then Data.watchConnection:Disconnect() end
+    for _, conn in pairs(Data.speedConnections) do if conn then conn:Disconnect() end end
     if fpsConnection then fpsConnection:Disconnect() end
     screenGui:Destroy()
 end)
 
--- Main Loop
+-- Main Loop (Optimized)
 local lastLoop = 0
 local mainLoop = Services.Run.Heartbeat:Connect(function()
     local t = tick()
@@ -1095,15 +1429,16 @@ local mainLoop = Services.Run.Heartbeat:Connect(function()
 end)
 table.insert(Data.connections, mainLoop)
 
--- Character Handler
+-- Character Handler (Enhanced)
 local function onChar(char)
     wait(1)
     if not char then return end
     local h = char:WaitForChild("Humanoid", 5)
     if h then
-        h.WalkSpeed = Config.walkSpeed
+        h.WalkSpeed = State.speedHack and (Config.flySpeed or 50) or Config.walkSpeed
         h.JumpPower = Config.jumpPower
         if State.reverseDmg then setupReverseDamage() end
+        if State.speedHack then toggleSpeedHack(true, Config.flySpeed or 50) end
         if State.noclip and Data.noclipConnection then
             Data.noclipConnection:Disconnect()
             Data.noclipConnection = Services.Run.Stepped:Connect(function()
@@ -1124,7 +1459,7 @@ table.insert(Data.adminPlayers, player.Name)
 Stats.sessionStartTime = tick()
 commandBar.Visible = false
 
--- Chat commands
+-- Chat commands (Enhanced)
 local function processMessage(msg)
     if msg.Text:sub(1, 1) == Config.commandPrefix then
         local sourcePlayer = Players:GetPlayerByUserId(msg.TextSource.UserId)
@@ -1150,15 +1485,28 @@ else
     end)
 end
 
--- Startup
+-- Viewport Size Change Handler (for responsive scaling)
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+    wait(0.1) -- Small delay to prevent rapid firing
+    rescaleUI()
+    notification("UI auto-resized for screen", 1, "info")
+end)
+
+-- Enhanced Startup Animation
 spawn(function()
-    mainFrame.Position = UDim2.new(0.5, -S(225), 1.5, 0)
+    mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 1.5, 0)
     wait(0.5)
-    notification("2take1 Hub Loaded!", 3, "success")
+    notification("2take1 Hub Enhanced - Loaded!", 3, "success")
     Services.Tween:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back),
-        {Position = UDim2.new(0.5, -S(225), 0.5, -S(325))}):Play()
+        {Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 250 or 325))}):Play()
     wait(1)
     notification("Press ; for commands", 3, "info")
     wait(1)
     notification("Press Insert to toggle GUI", 3, "info")
+    wait(1)
+    notification("Use Scale box or -/+ keys to resize UI", 3, "info")
+    if isMobile then
+        wait(1)
+        notification("Mobile-optimized UI ready!", 3, "success")
+    end
 end)
