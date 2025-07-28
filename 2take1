@@ -75,7 +75,7 @@ local Data = {
     uiElements = {} -- Store UI elements for scaling updates
 }
 
--- Theme (Enhanced with better contrast)
+-- Theme (Enhanced with better contrast and modern colors)
 local Theme = {
     background = Color3.fromRGB(15, 15, 20),
     secondary = Color3.fromRGB(25, 25, 35),
@@ -87,7 +87,9 @@ local Theme = {
     success = Color3.fromRGB(87, 242, 135),
     danger = Color3.fromRGB(237, 66, 69),
     warning = Color3.fromRGB(255, 193, 7),
-    border = Color3.fromRGB(70, 70, 80)
+    border = Color3.fromRGB(70, 70, 80),
+    commandBarBg = Color3.fromRGB(20, 20, 30), -- New color for command bar
+    glassBorder = Color3.fromRGB(100, 100, 120) -- Glass effect border
 }
 
 -- Utility Functions
@@ -230,61 +232,97 @@ screenGui.Name = "2take1Hub"
 screenGui.ResetOnSpawn = false
 protectGui(screenGui)
 
--- Command Bar (Improved size and positioning)
+-- Enhanced Command Bar with Modern Glass Effect Design
 local commandBar = Instance.new("Frame")
-commandBar.Size = UDim2.new(0, S(isMobile and 350 or 600), 0, S(isMobile and 50 or 60))
-commandBar.Position = UDim2.new(0.5, -S(isMobile and 175 or 300), 1, S(100))
-commandBar.BackgroundColor3 = Theme.background
+commandBar.Size = UDim2.new(0, S(isMobile and 380 or 650), 0, S(isMobile and 60 or 70))
+commandBar.Position = UDim2.new(0.5, -S(isMobile and 190 or 325), 1, S(100))
+commandBar.BackgroundColor3 = Theme.commandBarBg
 commandBar.BorderSizePixel = 0
+commandBar.BackgroundTransparency = 0.05 -- Slight transparency for glass effect
 commandBar.Parent = screenGui
-addCornerAndStroke(commandBar, S(12), Theme.border)
+addCornerAndStroke(commandBar, S(15), Theme.glassBorder)
 makeDraggable(commandBar)
 createScalableElement(commandBar, 
-    UDim2.new(0, isMobile and 350 or 600, 0, isMobile and 50 or 60),
-    UDim2.new(0.5, -(isMobile and 175 or 300), 1, 100), nil, 12)
+    UDim2.new(0, isMobile and 380 or 650, 0, isMobile and 60 or 70),
+    UDim2.new(0.5, -(isMobile and 190 or 325), 1, 100), nil, 15)
+
+-- Add glass effect gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 55)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 35))
+}
+gradient.Rotation = 45
+gradient.Parent = commandBar
+
+-- Command prefix indicator
+local prefixLabel = Instance.new("TextLabel")
+prefixLabel.Size = UDim2.new(0, S(30), 1, 0)
+prefixLabel.Position = UDim2.new(0, S(15), 0, 0)
+prefixLabel.BackgroundTransparency = 1
+prefixLabel.Text = ";"
+prefixLabel.TextColor3 = Theme.accent
+prefixLabel.TextSize = S(isMobile and 18 or 22)
+prefixLabel.Font = Enum.Font.SourceSansBold
+prefixLabel.TextXAlignment = Enum.TextXAlignment.Center
+prefixLabel.Parent = commandBar
+createScalableElement(prefixLabel,
+    UDim2.new(0, 30, 1, 0),
+    UDim2.new(0, 15, 0, 0),
+    isMobile and 18 or 22)
 
 local cmdInput = Instance.new("TextBox")
-cmdInput.Size = UDim2.new(1, -S(isMobile and 120 or 200), 1, -S(isMobile and 15 or 20))
-cmdInput.Position = UDim2.new(0, S(isMobile and 60 or 100), 0, S(isMobile and 7.5 or 10))
+cmdInput.Size = UDim2.new(1, -S(isMobile and 140 or 220), 1, -S(isMobile and 20 or 25))
+cmdInput.Position = UDim2.new(0, S(isMobile and 50 or 70), 0, S(isMobile and 10 or 12.5))
 cmdInput.BackgroundColor3 = Theme.secondary
+cmdInput.BackgroundTransparency = 0.3
 cmdInput.Text = ""
-cmdInput.PlaceholderText = "Enter command..."
+cmdInput.PlaceholderText = "Enter command (without ;)..."
+cmdInput.PlaceholderColor3 = Theme.textSecondary
 cmdInput.TextColor3 = Theme.text
-cmdInput.TextSize = S(isMobile and 12 or 14)
+cmdInput.TextSize = S(isMobile and 14 or 16)
 cmdInput.Font = Enum.Font.SourceSans
 cmdInput.Parent = commandBar
-addCornerAndStroke(cmdInput, S(8), Theme.border)
+addCornerAndStroke(cmdInput, S(10), Theme.border)
 createScalableElement(cmdInput,
-    UDim2.new(1, -(isMobile and 120 or 200), 1, -(isMobile and 15 or 20)),
-    UDim2.new(0, isMobile and 60 or 100, 0, isMobile and 7.5 or 10),
-    isMobile and 12 or 14, 8)
+    UDim2.new(1, -(isMobile and 140 or 220), 1, -(isMobile and 20 or 25)),
+    UDim2.new(0, isMobile and 50 or 70, 0, isMobile and 10 or 12.5),
+    isMobile and 14 or 16, 10)
 
 local execBtn = Instance.new("TextButton")
-execBtn.Size = UDim2.new(0, S(isMobile and 50 or 80), 0, S(isMobile and 30 or 40))
-execBtn.Position = UDim2.new(1, -S(isMobile and 55 or 90), 0, S(isMobile and 10 or 10))
+execBtn.Size = UDim2.new(0, S(isMobile and 65 or 90), 0, S(isMobile and 35 or 45))
+execBtn.Position = UDim2.new(1, -S(isMobile and 75 or 105), 0, S(isMobile and 12.5 or 12.5))
 execBtn.BackgroundColor3 = Theme.accent
 execBtn.Text = "Execute"
 execBtn.TextColor3 = Theme.text
-execBtn.TextSize = S(isMobile and 10 or 14)
+execBtn.TextSize = S(isMobile and 12 or 16)
 execBtn.Font = Enum.Font.SourceSansBold
 execBtn.Parent = commandBar
-addCornerAndStroke(execBtn, S(8))
+addCornerAndStroke(execBtn, S(10))
 createScalableElement(execBtn,
-    UDim2.new(0, isMobile and 50 or 80, 0, isMobile and 30 or 40),
-    UDim2.new(1, -(isMobile and 55 or 90), 0, isMobile and 10 or 10),
-    isMobile and 10 or 14, 8)
+    UDim2.new(0, isMobile and 65 or 90, 0, isMobile and 35 or 45),
+    UDim2.new(1, -(isMobile and 75 or 105), 0, isMobile and 12.5 or 12.5),
+    isMobile and 12 or 16, 10)
+
+-- Hover effect for execute button
+execBtn.MouseEnter:Connect(function()
+    Services.Tween:Create(execBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.accentHover}):Play()
+end)
+execBtn.MouseLeave:Connect(function()
+    Services.Tween:Create(execBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.accent}):Play()
+end)
 
 -- Main Frame (Better proportioned and smaller default)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, S(isMobile and 350 or 450), 0, S(isMobile and 500 or 650))
-mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 250 or 325))
+mainFrame.Size = UDim2.new(0, S(isMobile and 350 or 450), 0, S(isMobile and 550 or 700))
+mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 275 or 350))
 mainFrame.BackgroundColor3 = Theme.background
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 addCornerAndStroke(mainFrame, S(12), Theme.border)
 createScalableElement(mainFrame,
-    UDim2.new(0, isMobile and 350 or 450, 0, isMobile and 500 or 650),
-    UDim2.new(0.5, -(isMobile and 175 or 225), 0.5, -(isMobile and 250 or 325)), nil, 12)
+    UDim2.new(0, isMobile and 350 or 450, 0, isMobile and 550 or 700),
+    UDim2.new(0.5, -(isMobile and 175 or 225), 0.5, -(isMobile and 275 or 350)), nil, 12)
 
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, S(isMobile and 45 or 60))
@@ -390,14 +428,14 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, S(10))
 layout.Parent = content
 
--- Stats Frame (Enhanced)
+-- Enhanced Stats Frame with Watch Display
 local statsFrame = Instance.new("Frame")
-statsFrame.Size = UDim2.new(1, -S(10), 0, S(isMobile and 160 or 200))
+statsFrame.Size = UDim2.new(1, -S(10), 0, S(isMobile and 260 or 300))
 statsFrame.BackgroundColor3 = Theme.tertiary
 statsFrame.Parent = content
 addCornerAndStroke(statsFrame, S(8), Theme.border)
 createScalableElement(statsFrame,
-    UDim2.new(1, -10, 0, isMobile and 160 or 200), nil, nil, 8)
+    UDim2.new(1, -10, 0, isMobile and 260 or 300), nil, nil, 8)
 
 local statLabels = {}
 local statData = {
@@ -405,13 +443,18 @@ local statData = {
     {n="power", t="Power: 0", p=UDim2.new(0,S(15),0,S(isMobile and 28 or 35))},
     {n="kills", t="Kills: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 28 or 35))},
     {n="health", t="Health: 100", p=UDim2.new(0,S(15),0,S(isMobile and 48 or 60))},
-    {n="pps", t="Power/sec: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 48 or 60))},
-    {n="pph", t="Power/hr: 0", p=UDim2.new(0,S(15),0,S(isMobile and 68 or 85))},
-    {n="session", t="Session: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 68 or 85))},
-    {n="ping", t="Ping: 0ms", p=UDim2.new(0,S(15),0,S(isMobile and 88 or 110))},
-    {n="fps", t="FPS: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 88 or 110))},
-    {n="time", t="Time: 00:00:00", p=UDim2.new(0,S(15),0,S(isMobile and 108 or 135)), s=UDim2.new(1,-S(30),0,S(18))},
-    {n="eff", t="Efficiency: N/A", p=UDim2.new(0,S(15),0,S(isMobile and 128 or 155)), s=UDim2.new(1,-S(30),0,S(18))}
+    {n="tools", t="Tools: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 48 or 60))},
+    {n="pps", t="Power/sec: 0", p=UDim2.new(0,S(15),0,S(isMobile and 68 or 85))},
+    {n="pph", t="Power/hr: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 68 or 85))},
+    {n="session", t="Session: 0", p=UDim2.new(0,S(15),0,S(isMobile and 88 or 110))},
+    {n="ping", t="Ping: 0ms", p=UDim2.new(0.5,S(5),0,S(isMobile and 88 or 110))},
+    {n="fps", t="FPS: 0", p=UDim2.new(0,S(15),0,S(isMobile and 108 or 135))},
+    {n="time", t="Time: 00:00:00", p=UDim2.new(0.5,S(5),0,S(isMobile and 108 or 135))},
+    {n="eff", t="Efficiency: N/A", p=UDim2.new(0,S(15),0,S(isMobile and 128 or 155)), s=UDim2.new(1,-S(30),0,S(18))},
+    {n="watchTitle", t="Watch Status:", p=UDim2.new(0,S(15),0,S(isMobile and 148 or 175)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.textSecondary, sz=S(isMobile and 11 or 13)},
+    {n="watchPlayer", t="Not watching anyone", p=UDim2.new(0,S(15),0,S(isMobile and 164 or 195)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.warning, sz=S(isMobile and 10 or 12)},
+    {n="watchStats", t="", p=UDim2.new(0,S(15),0,S(isMobile and 180 or 215)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.success, sz=S(isMobile and 9 or 11)},
+    {n="watchPos", t="", p=UDim2.new(0,S(15),0,S(isMobile and 196 or 235)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.textSecondary, sz=S(isMobile and 9 or 11)}
 }
 
 for _, d in ipairs(statData) do
@@ -434,15 +477,22 @@ end
 -- Tool Functions (Optimized)
 local function getTools()
     local tools = {}
+    local toolCount = 0
     for _, c in pairs({player.Character, player:FindFirstChild("Backpack")}) do
         if c then
             for _, t in pairs(c:GetChildren()) do
                 if t:IsA("Tool") and t:FindFirstChild("Handle") then
                     table.insert(tools, t.Handle)
+                    toolCount = toolCount + 1
                 end
             end
         end
     end
+    -- Update tool count in stats
+    if statLabels.tools then
+        statLabels.tools.Text = "Tools: " .. toolCount
+    end
+    
     if #tools == 0 then
         local l = workspace:FindFirstChild("load")
         if l and l:FindFirstChild("RemoteEvent") then
@@ -550,7 +600,7 @@ local function farm(speed)
     end
 end
 
--- Player Watch Function
+-- Fixed Player Watch Function with Better UI Layout
 local function watchPlayer(targetName)
     local target = findPlayer(targetName)
     if not target or type(target) == "table" then
@@ -573,6 +623,12 @@ local function watchPlayer(targetName)
                 Data.watchConnection:Disconnect()
                 Data.watchConnection = nil
                 State.watchingPlayer = nil
+                if statLabels.watchPlayer then
+                    statLabels.watchPlayer.Text = "Not watching anyone"
+                    statLabels.watchPlayer.TextColor3 = Theme.warning
+                    statLabels.watchStats.Text = ""
+                    statLabels.watchPos.Text = ""
+                end
             end
             return
         end
@@ -581,16 +637,49 @@ local function watchPlayer(targetName)
         local humanoid = char:FindFirstChildOfClass("Humanoid")
         local rootPart = char:FindFirstChild("HumanoidRootPart")
         
-        if humanoid and rootPart then
+        if humanoid and rootPart and statLabels.watchPlayer then
             local health = math.floor(humanoid.Health)
             local maxHealth = math.floor(humanoid.MaxHealth)
             local position = rootPart.Position
             
-            -- Update a watch label if it exists
-            if statLabels.watch then
-                statLabels.watch.Text = string.format("Watching %s: HP %d/%d Pos(%.1f,%.1f,%.1f)", 
-                    State.watchingPlayer.DisplayName, health, maxHealth, position.X, position.Y, position.Z)
+            -- Get player's power and kills from leaderstats
+            local targetPower = 0
+            local targetKills = 0
+            local ls = State.watchingPlayer:FindFirstChild("leaderstats")
+            if ls then
+                for _, n in ipairs({"Power", "Strength", "Energy", "Points", "Coins"}) do
+                    local s = ls:FindFirstChild(n) or ls:FindFirstChild(n:lower())
+                    if s then targetPower = tonumber(s.Value) or 0 break end
+                end
+                for _, n in ipairs({"Kills", "KOs", "Eliminations"}) do
+                    local s = ls:FindFirstChild(n) or ls:FindFirstChild(n:lower())
+                    if s then targetKills = tonumber(s.Value) or 0 break end
+                end
             end
+            
+            -- Count tools in inventory
+            local toolCount = 0
+            for _, c in pairs({char, State.watchingPlayer:FindFirstChild("Backpack")}) do
+                if c then
+                    for _, t in pairs(c:GetChildren()) do
+                        if t:IsA("Tool") then
+                            toolCount = toolCount + 1
+                        end
+                    end
+                end
+            end
+            
+            -- Update watch labels with clean formatting
+            statLabels.watchPlayer.Text = "Watching: " .. State.watchingPlayer.DisplayName
+            statLabels.watchPlayer.TextColor3 = Theme.success
+            
+            statLabels.watchStats.Text = string.format("HP %d/%d | Power %s | Kills %s | Tools %d", 
+                health, maxHealth, formatNumber(targetPower), formatNumber(targetKills), toolCount)
+            statLabels.watchStats.TextColor3 = Theme.text
+            
+            statLabels.watchPos.Text = string.format("Position: (%.1f, %.1f, %.1f)", 
+                position.X, position.Y, position.Z)
+            statLabels.watchPos.TextColor3 = Theme.textSecondary
         end
     end)
 end
@@ -704,7 +793,7 @@ local function setupReverseDamage()
     end)
 end
 
--- Stats Update (Enhanced)
+-- Enhanced Stats Update with Tool Counting
 local powerHistory = {}
 local fpsConnection = nil
 
@@ -777,6 +866,9 @@ local function updateStats()
             statLabels.health.TextColor3 = hp <= 25 and Theme.danger or hp <= 50 and Theme.warning or hp <= 75 and Theme.text or Theme.success
         end
     end
+    
+    -- Update tool count
+    getTools()
     
     statLabels.power.Text = "Power: " .. formatNumber(Stats.power)
     statLabels.kills.Text = "Kills: " .. formatNumber(Stats.kills)
@@ -1050,8 +1142,8 @@ local cmds = {
             Data.watchConnection = nil
             State.watchingPlayer = nil
             if statLabels.watch then
-                statLabels.watch:Destroy()
-                statLabels.watch = nil
+                statLabels.watch.Text = "Not watching anyone"
+                statLabels.watch.TextColor3 = Theme.warning
             end
             notification("Stopped watching player", 2, "info")
         else
@@ -1141,15 +1233,15 @@ local function createToggle(text, callback, showSpeed)
             UDim2.new(1, -(isMobile and 100 or 115), 0.5, -(isMobile and 10 or 12.5)),
             isMobile and 10 or 12, 4)
         
-        -- Fixed speed input connection
+        -- Enhanced speed input connection with increased maximum to 100
         si.FocusLost:Connect(function(enterPressed)
             local n = tonumber(si.Text)
-            if n and n >= 1 and n <= 50 then 
+            if n and n >= 1 and n <= 100 then  -- Increased from 50 to 100
                 Config.speed = n
                 notification("Farm speed set to: " .. n, 2, "success")
             else 
                 si.Text = tostring(Config.speed)
-                notification("Invalid speed! Use 1-50", 2, "warning")
+                notification("Invalid speed! Use 1-100", 2, "warning")  -- Updated message
             end
         end)
     end
@@ -1286,7 +1378,7 @@ showCommandsUI = function()
     end
 end
 
--- Create UI Elements with Fixed Speed Input
+-- Create UI Elements with Enhanced Speed Input (Maximum 100)
 createToggle("Fast Farm", function(e)
     State.fastFarm = e
     if e and State.slowFarm then State.slowFarm = false end
@@ -1329,13 +1421,23 @@ createButton("Reset Session Stats", function()
 end, Theme.warning)
 createButton("Show Commands", showCommandsUI, Theme.accent)
 
--- Command Bar Logic (Enhanced for Mobile)
+-- Enhanced Command Bar Logic with Modern Animations
 local function showCmd()
     if State.commandBarVisible then return end
     State.commandBarVisible = true
     commandBar.Visible = true
-    Services.Tween:Create(commandBar, TweenInfo.new(0.3, Enum.EasingStyle.Quart),
-        {Position = UDim2.new(0.5, -S(isMobile and 175 or 300), 1, -S(isMobile and 60 or 80))}):Play()
+    
+    -- Enhanced slide-up animation with bounce effect
+    Services.Tween:Create(commandBar, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Position = UDim2.new(0.5, -S(isMobile and 190 or 325), 1, -S(isMobile and 80 or 90))}):Play()
+    
+    -- Glow effect animation
+    local stroke = commandBar:FindFirstChildOfClass("UIStroke")
+    if stroke then
+        Services.Tween:Create(stroke, TweenInfo.new(0.3),
+            {Color = Theme.accent, Transparency = 0}):Play()
+    end
+    
     cmdInput:CaptureFocus()
 end
 
@@ -1343,8 +1445,16 @@ local function hideCmd()
     if not State.commandBarVisible then return end
     State.commandBarVisible = false
     cmdInput:ReleaseFocus()
+    
+    -- Remove glow effect
+    local stroke = commandBar:FindFirstChildOfClass("UIStroke")
+    if stroke then
+        Services.Tween:Create(stroke, TweenInfo.new(0.2),
+            {Color = Theme.glassBorder, Transparency = 0}):Play()
+    end
+    
     Services.Tween:Create(commandBar, TweenInfo.new(0.3, Enum.EasingStyle.Quart),
-        {Position = UDim2.new(0.5, -S(isMobile and 175 or 300), 1, S(100))}):Play(nil, function()
+        {Position = UDim2.new(0.5, -S(isMobile and 190 or 325), 1, S(100))}):Play(nil, function()
             if not State.commandBarVisible then commandBar.Visible = false end
         end)
 end
@@ -1498,13 +1608,15 @@ spawn(function()
     wait(0.5)
     notification("2take1 Hub Enhanced - Loaded!", 3, "success")
     Services.Tween:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back),
-        {Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 250 or 325))}):Play()
+        {Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 275 or 350))}):Play()
     wait(1)
     notification("Press ; for commands", 3, "info")
     wait(1)
     notification("Press Insert to toggle GUI", 3, "info")
     wait(1)
     notification("Use Scale box or -/+ keys to resize UI", 3, "info")
+    wait(1)
+    notification("Auto-farm speed limit increased to 100!", 3, "success")
     if isMobile then
         wait(1)
         notification("Mobile-optimized UI ready!", 3, "success")
