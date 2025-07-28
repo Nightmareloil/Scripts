@@ -1,4 +1,4 @@
--- Enhanced 2take1 Hub Script - Fully Optimized Version 2025 with UI Scale Control
+-- 2take1 Hub Script 2025 with Modern UI
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Services = {
@@ -42,7 +42,6 @@ end
 -- Function to update all UI scaling
 local function updateUIScale()
     scaleFactor, isMobile = getScaleFactor()
-    -- This will be called when user changes scale
 end
 
 -- Configuration
@@ -57,7 +56,8 @@ local State = {
     fastFarm = false, slowFarm = false, godMode = false, killAura = false,
     flying = false, noclip = false, commandBarVisible = false, loopKill = false,
     loopKillTargets = {}, killAllActive = false, infiniteJump = false,
-    watchingPlayer = nil, autoFarm = false, reverseDmg = false, speedHack = false
+    watchingPlayer = nil, autoFarm = false, reverseDmg = false, speedHack = false,
+    protectedPlayer = nil, protectionActive = false
 }
 
 -- Statistics
@@ -72,24 +72,27 @@ local Data = {
     adminPlayers = {}, connections = {}, flyObjects = {}, killAllTargets = {},
     noclipConnection = nil, flyConnection = nil, charDiedFlyConnection = nil, chatConnection = nil,
     watchConnection = nil, reverseDmgConnection = nil, attackerTracking = {}, speedConnections = {},
-    uiElements = {} -- Store UI elements for scaling updates
+    uiElements = {}, protectionConnection = nil, protectedPlayerConnection = nil
 }
 
--- Theme (Enhanced with better contrast and modern colors)
+-- Enhanced Theme with Modern Glass Effects
 local Theme = {
-    background = Color3.fromRGB(15, 15, 20),
-    secondary = Color3.fromRGB(25, 25, 35),
-    tertiary = Color3.fromRGB(35, 35, 45),
-    accent = Color3.fromRGB(70, 130, 255),
-    accentHover = Color3.fromRGB(90, 150, 255),
+    background = Color3.fromRGB(12, 12, 18),
+    secondary = Color3.fromRGB(22, 22, 32),
+    tertiary = Color3.fromRGB(32, 32, 42),
+    accent = Color3.fromRGB(88, 166, 255),
+    accentHover = Color3.fromRGB(108, 186, 255),
     text = Color3.fromRGB(255, 255, 255),
-    textSecondary = Color3.fromRGB(190, 190, 200),
-    success = Color3.fromRGB(87, 242, 135),
-    danger = Color3.fromRGB(237, 66, 69),
-    warning = Color3.fromRGB(255, 193, 7),
-    border = Color3.fromRGB(70, 70, 80),
-    commandBarBg = Color3.fromRGB(20, 20, 30), -- New color for command bar
-    glassBorder = Color3.fromRGB(100, 100, 120) -- Glass effect border
+    textSecondary = Color3.fromRGB(180, 180, 195),
+    success = Color3.fromRGB(76, 217, 100),
+    danger = Color3.fromRGB(255, 69, 58),
+    warning = Color3.fromRGB(255, 214, 10),
+    border = Color3.fromRGB(60, 60, 75),
+    commandBarBg = Color3.fromRGB(16, 16, 28),
+    glassBorder = Color3.fromRGB(120, 120, 140),
+    glassHighlight = Color3.fromRGB(255, 255, 255),
+    protection = Color3.fromRGB(255, 149, 0), -- Orange for protection
+    heal = Color3.fromRGB(50, 205, 50) -- Lime green for healing
 }
 
 -- Utility Functions
@@ -101,10 +104,15 @@ end
 
 local function notification(text, duration, type)
     duration = duration or 3
+    local icon = "rbxassetid://7733964640"
+    if type == "success" then icon = "rbxassetid://7743878358"
+    elseif type == "error" then icon = "rbxassetid://7743877738"
+    elseif type == "warning" then icon = "rbxassetid://7743878496" end
+    
     pcall(function()
         Services.StarterGui:SetCore("SendNotification", {
-            Title = "2take1 Hub", Text = text, Duration = duration,
-            Icon = "rbxassetid://7733964640"
+            Title = "2take1 Hub Pro", Text = text, Duration = duration,
+            Icon = icon
         })
     end)
 end
@@ -165,13 +173,13 @@ local function makeDraggable(frame, handle)
     Services.UIS.InputChanged:Connect(updateDrag)
 end
 
-local function addCornerAndStroke(obj, radius, color)
+local function addCornerAndStroke(obj, radius, color, strokeWidth)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius or S(12))
     corner.Parent = obj
     if color then
         local stroke = Instance.new("UIStroke")
-        stroke.Thickness = S(1)
+        stroke.Thickness = strokeWidth or S(1)
         stroke.Color = color
         stroke.Parent = obj
     end
@@ -181,7 +189,6 @@ end
 local function rescaleUI()
     updateUIScale()
     
-    -- Update all stored UI elements
     for _, element in pairs(Data.uiElements) do
         if element.obj and element.obj.Parent then
             if element.size then
@@ -195,12 +202,10 @@ local function rescaleUI()
             if element.textSize then
                 element.obj.TextSize = S(element.textSize)
             end
-            -- Update corner radius
             local corner = element.obj:FindFirstChildOfClass("UICorner")
             if corner and element.cornerRadius then
                 corner.CornerRadius = UDim.new(0, S(element.cornerRadius))
             end
-            -- Update stroke thickness
             local stroke = element.obj:FindFirstChildOfClass("UIStroke")
             if stroke then
                 stroke.Thickness = S(1)
@@ -208,7 +213,6 @@ local function rescaleUI()
         end
     end
     
-    -- Update range for combat
     Config.range = S(15)
     Config.flySpeed = S(50)
 end
@@ -228,101 +232,143 @@ end
 
 -- Create Main GUI with better sizing
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "2take1Hub"
+screenGui.Name = "2take1HubPro"
 screenGui.ResetOnSpawn = false
 protectGui(screenGui)
 
--- Enhanced Command Bar with Modern Glass Effect Design
+-- Ultra-Modern Command Bar with Advanced Glass Morphism
 local commandBar = Instance.new("Frame")
-commandBar.Size = UDim2.new(0, S(isMobile and 380 or 650), 0, S(isMobile and 60 or 70))
-commandBar.Position = UDim2.new(0.5, -S(isMobile and 190 or 325), 1, S(100))
+commandBar.Size = UDim2.new(0, S(isMobile and 400 or 700), 0, S(isMobile and 65 or 80))
+commandBar.Position = UDim2.new(0.5, -S(isMobile and 200 or 350), 1, S(120))
 commandBar.BackgroundColor3 = Theme.commandBarBg
 commandBar.BorderSizePixel = 0
-commandBar.BackgroundTransparency = 0.05 -- Slight transparency for glass effect
+commandBar.BackgroundTransparency = 0.15
 commandBar.Parent = screenGui
-addCornerAndStroke(commandBar, S(15), Theme.glassBorder)
+addCornerAndStroke(commandBar, S(20), Theme.glassBorder)
 makeDraggable(commandBar)
 createScalableElement(commandBar, 
-    UDim2.new(0, isMobile and 380 or 650, 0, isMobile and 60 or 70),
-    UDim2.new(0.5, -(isMobile and 190 or 325), 1, 100), nil, 15)
+    UDim2.new(0, isMobile and 400 or 700, 0, isMobile and 65 or 80),
+    UDim2.new(0.5, -(isMobile and 200 or 350), 1, 120), nil, 20)
 
--- Add glass effect gradient
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 55)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 35))
+-- Add advanced glass effect with multiple gradients
+local glassGradient = Instance.new("UIGradient")
+glassGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 65)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25, 25, 40)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
 }
-gradient.Rotation = 45
-gradient.Parent = commandBar
+glassGradient.Rotation = 135
+glassGradient.Parent = commandBar
 
--- Command prefix indicator
+-- Add subtle inner shadow effect
+local innerShadow = Instance.new("Frame")
+innerShadow.Size = UDim2.new(1, -S(4), 1, -S(4))
+innerShadow.Position = UDim2.new(0, S(2), 0, S(2))
+innerShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+innerShadow.BackgroundTransparency = 0.7
+innerShadow.Parent = commandBar
+addCornerAndStroke(innerShadow, S(18))
+
+-- Modern command prefix with glow effect
+local prefixContainer = Instance.new("Frame")
+prefixContainer.Size = UDim2.new(0, S(45), 1, -S(20))
+prefixContainer.Position = UDim2.new(0, S(15), 0, S(10))
+prefixContainer.BackgroundColor3 = Theme.accent
+prefixContainer.BackgroundTransparency = 0.2
+prefixContainer.Parent = commandBar
+addCornerAndStroke(prefixContainer, S(12), Theme.accent, S(2))
+createScalableElement(prefixContainer,
+    UDim2.new(0, 45, 1, -20),
+    UDim2.new(0, 15, 0, 10), nil, 12)
+
 local prefixLabel = Instance.new("TextLabel")
-prefixLabel.Size = UDim2.new(0, S(30), 1, 0)
-prefixLabel.Position = UDim2.new(0, S(15), 0, 0)
+prefixLabel.Size = UDim2.new(1, 0, 1, 0)
 prefixLabel.BackgroundTransparency = 1
 prefixLabel.Text = ";"
-prefixLabel.TextColor3 = Theme.accent
-prefixLabel.TextSize = S(isMobile and 18 or 22)
+prefixLabel.TextColor3 = Theme.text
+prefixLabel.TextSize = S(isMobile and 22 or 28)
 prefixLabel.Font = Enum.Font.SourceSansBold
 prefixLabel.TextXAlignment = Enum.TextXAlignment.Center
-prefixLabel.Parent = commandBar
+prefixLabel.Parent = prefixContainer
 createScalableElement(prefixLabel,
-    UDim2.new(0, 30, 1, 0),
-    UDim2.new(0, 15, 0, 0),
-    isMobile and 18 or 22)
+    UDim2.new(1, 0, 1, 0), nil,
+    isMobile and 22 or 28)
+
+-- Modern input field with enhanced styling
+local inputContainer = Instance.new("Frame")
+inputContainer.Size = UDim2.new(1, -S(isMobile and 180 or 260), 1, -S(20))
+inputContainer.Position = UDim2.new(0, S(isMobile and 70 or 90), 0, S(10))
+inputContainer.BackgroundColor3 = Theme.secondary
+inputContainer.BackgroundTransparency = 0.3
+inputContainer.Parent = commandBar
+addCornerAndStroke(inputContainer, S(15), Theme.border)
+createScalableElement(inputContainer,
+    UDim2.new(1, -(isMobile and 180 or 260), 1, -20),
+    UDim2.new(0, isMobile and 70 or 90, 0, 10), nil, 15)
 
 local cmdInput = Instance.new("TextBox")
-cmdInput.Size = UDim2.new(1, -S(isMobile and 140 or 220), 1, -S(isMobile and 20 or 25))
-cmdInput.Position = UDim2.new(0, S(isMobile and 50 or 70), 0, S(isMobile and 10 or 12.5))
-cmdInput.BackgroundColor3 = Theme.secondary
-cmdInput.BackgroundTransparency = 0.3
+cmdInput.Size = UDim2.new(1, -S(20), 1, -S(10))
+cmdInput.Position = UDim2.new(0, S(10), 0, S(5))
+cmdInput.BackgroundTransparency = 1
 cmdInput.Text = ""
-cmdInput.PlaceholderText = "Enter command (without ;)..."
+cmdInput.PlaceholderText = "Enter command (without semicolon)..."
 cmdInput.PlaceholderColor3 = Theme.textSecondary
 cmdInput.TextColor3 = Theme.text
-cmdInput.TextSize = S(isMobile and 14 or 16)
+cmdInput.TextSize = S(isMobile and 16 or 18)
 cmdInput.Font = Enum.Font.SourceSans
-cmdInput.Parent = commandBar
-addCornerAndStroke(cmdInput, S(10), Theme.border)
+cmdInput.TextXAlignment = Enum.TextXAlignment.Left
+cmdInput.Parent = inputContainer
 createScalableElement(cmdInput,
-    UDim2.new(1, -(isMobile and 140 or 220), 1, -(isMobile and 20 or 25)),
-    UDim2.new(0, isMobile and 50 or 70, 0, isMobile and 10 or 12.5),
-    isMobile and 14 or 16, 10)
+    UDim2.new(1, -20, 1, -10),
+    UDim2.new(0, 10, 0, 5),
+    isMobile and 16 or 18)
 
+-- Ultra-modern execute button with hover animations
 local execBtn = Instance.new("TextButton")
-execBtn.Size = UDim2.new(0, S(isMobile and 65 or 90), 0, S(isMobile and 35 or 45))
-execBtn.Position = UDim2.new(1, -S(isMobile and 75 or 105), 0, S(isMobile and 12.5 or 12.5))
+execBtn.Size = UDim2.new(0, S(isMobile and 80 or 120), 0, S(isMobile and 45 or 60))
+execBtn.Position = UDim2.new(1, -S(isMobile and 90 or 130), 0, S(10))
 execBtn.BackgroundColor3 = Theme.accent
 execBtn.Text = "Execute"
 execBtn.TextColor3 = Theme.text
-execBtn.TextSize = S(isMobile and 12 or 16)
+execBtn.TextSize = S(isMobile and 14 or 18)
 execBtn.Font = Enum.Font.SourceSansBold
 execBtn.Parent = commandBar
-addCornerAndStroke(execBtn, S(10))
+addCornerAndStroke(execBtn, S(15), Theme.accent, S(2))
 createScalableElement(execBtn,
-    UDim2.new(0, isMobile and 65 or 90, 0, isMobile and 35 or 45),
-    UDim2.new(1, -(isMobile and 75 or 105), 0, isMobile and 12.5 or 12.5),
-    isMobile and 12 or 16, 10)
+    UDim2.new(0, isMobile and 80 or 120, 0, isMobile and 45 or 60),
+    UDim2.new(1, -(isMobile and 90 or 130), 0, 10),
+    isMobile and 14 or 18, 15)
 
--- Hover effect for execute button
+-- Advanced hover effects for execute button
 execBtn.MouseEnter:Connect(function()
-    Services.Tween:Create(execBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.accentHover}):Play()
-end)
-execBtn.MouseLeave:Connect(function()
-    Services.Tween:Create(execBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.accent}):Play()
+    Services.Tween:Create(execBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quart), 
+        {BackgroundColor3 = Theme.accentHover, Size = UDim2.new(0, S(isMobile and 85 or 125), 0, S(isMobile and 50 or 65))}):Play()
+    local stroke = execBtn:FindFirstChildOfClass("UIStroke")
+    if stroke then
+        Services.Tween:Create(stroke, TweenInfo.new(0.3), {Color = Theme.glassHighlight}):Play()
+    end
 end)
 
--- Main Frame (Better proportioned and smaller default)
+execBtn.MouseLeave:Connect(function()
+    Services.Tween:Create(execBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quart), 
+        {BackgroundColor3 = Theme.accent, Size = UDim2.new(0, S(isMobile and 80 or 120), 0, S(isMobile and 45 or 60))}):Play()
+    local stroke = execBtn:FindFirstChildOfClass("UIStroke")
+    if stroke then
+        Services.Tween:Create(stroke, TweenInfo.new(0.3), {Color = Theme.accent}):Play()
+    end
+end)
+
+-- Main Frame (Optimized for 55% bigger stats layout)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, S(isMobile and 350 or 450), 0, S(isMobile and 550 or 700))
-mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 275 or 350))
+mainFrame.Size = UDim2.new(0, S(isMobile and 420 or 540), 0, S(isMobile and 720 or 860))
+mainFrame.Position = UDim2.new(0.5, -S(isMobile and 210 or 270), 0.5, -S(isMobile and 360 or 430))
 mainFrame.BackgroundColor3 = Theme.background
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 addCornerAndStroke(mainFrame, S(12), Theme.border)
 createScalableElement(mainFrame,
-    UDim2.new(0, isMobile and 350 or 450, 0, isMobile and 550 or 700),
-    UDim2.new(0.5, -(isMobile and 175 or 225), 0.5, -(isMobile and 275 or 350)), nil, 12)
+    UDim2.new(0, isMobile and 420 or 540, 0, isMobile and 720 or 860),
+    UDim2.new(0.5, -(isMobile and 210 or 270), 0.5, -(isMobile and 360 or 430)), nil, 12)
 
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, S(isMobile and 45 or 60))
@@ -337,7 +383,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -S(100), 1, 0)
 title.Position = UDim2.new(0, S(15), 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "2take1 Hub 2025"
+title.Text = "2take1 Hub Pro 2025"
 title.TextColor3 = Theme.text
 title.TextSize = S(isMobile and 16 or 20)
 title.Font = Enum.Font.SourceSansBold
@@ -428,50 +474,68 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, S(10))
 layout.Parent = content
 
--- Enhanced Stats Frame with Watch Display
+-- Enhanced Stats Frame with Watch and Protection Display (55% bigger)
 local statsFrame = Instance.new("Frame")
-statsFrame.Size = UDim2.new(1, -S(10), 0, S(isMobile and 260 or 300))
+statsFrame.Size = UDim2.new(1, -S(10), 0, S(isMobile and 450 or 540))
 statsFrame.BackgroundColor3 = Theme.tertiary
 statsFrame.Parent = content
 addCornerAndStroke(statsFrame, S(8), Theme.border)
 createScalableElement(statsFrame,
-    UDim2.new(1, -10, 0, isMobile and 260 or 300), nil, nil, 8)
+    UDim2.new(1, -10, 0, isMobile and 450 or 540), nil, nil, 8)
 
 local statLabels = {}
 local statData = {
-    {n="title", t="Player Statistics", p=UDim2.new(0,S(10),0,S(5)), s=UDim2.new(1,-S(20),0,S(isMobile and 20 or 25)), c=Theme.accent, sz=S(isMobile and 14 or 18)},
-    {n="power", t="Power: 0", p=UDim2.new(0,S(15),0,S(isMobile and 28 or 35))},
-    {n="kills", t="Kills: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 28 or 35))},
-    {n="health", t="Health: 100", p=UDim2.new(0,S(15),0,S(isMobile and 48 or 60))},
-    {n="tools", t="Tools: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 48 or 60))},
-    {n="pps", t="Power/sec: 0", p=UDim2.new(0,S(15),0,S(isMobile and 68 or 85))},
-    {n="pph", t="Power/hr: 0", p=UDim2.new(0.5,S(5),0,S(isMobile and 68 or 85))},
-    {n="session", t="Session: 0", p=UDim2.new(0,S(15),0,S(isMobile and 88 or 110))},
-    {n="ping", t="Ping: 0ms", p=UDim2.new(0.5,S(5),0,S(isMobile and 88 or 110))},
-    {n="fps", t="FPS: 0", p=UDim2.new(0,S(15),0,S(isMobile and 108 or 135))},
-    {n="time", t="Time: 00:00:00", p=UDim2.new(0.5,S(5),0,S(isMobile and 108 or 135))},
-    {n="eff", t="Efficiency: N/A", p=UDim2.new(0,S(15),0,S(isMobile and 128 or 155)), s=UDim2.new(1,-S(30),0,S(18))},
-    {n="watchTitle", t="Watch Status:", p=UDim2.new(0,S(15),0,S(isMobile and 148 or 175)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.textSecondary, sz=S(isMobile and 11 or 13)},
-    {n="watchPlayer", t="Not watching anyone", p=UDim2.new(0,S(15),0,S(isMobile and 164 or 195)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.warning, sz=S(isMobile and 10 or 12)},
-    {n="watchStats", t="", p=UDim2.new(0,S(15),0,S(isMobile and 180 or 215)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.success, sz=S(isMobile and 9 or 11)},
-    {n="watchPos", t="", p=UDim2.new(0,S(15),0,S(isMobile and 196 or 235)), s=UDim2.new(1,-S(30),0,S(16)), c=Theme.textSecondary, sz=S(isMobile and 9 or 11)}
+    {n="title", t="Player Statistics", p=UDim2.new(0,S(15),0,S(12)), s=UDim2.new(1,-S(30),0,S(50)), c=Theme.accent, sz=S(isMobile and 22 or 28)},
+    
+    -- Main Stats Row 1
+    {n="power", t="Power: 0", p=UDim2.new(0,S(20),0,S(70)), s=UDim2.new(0.48,0,0,S(38))},
+    {n="kills", t="Kills: 0", p=UDim2.new(0.52,0,0,S(70)), s=UDim2.new(0.48,0,0,S(38))},
+    
+    -- Main Stats Row 2
+    {n="health", t="Health: 100", p=UDim2.new(0,S(20),0,S(115)), s=UDim2.new(0.48,0,0,S(38))},
+    {n="tools", t="Tools: 0", p=UDim2.new(0.52,0,0,S(115)), s=UDim2.new(0.48,0,0,S(38))},
+    
+    -- Main Stats Row 3
+    {n="pps", t="Power/sec: 0", p=UDim2.new(0,S(20),0,S(160)), s=UDim2.new(0.48,0,0,S(38))},
+    {n="pph", t="Power/hr: 0", p=UDim2.new(0.52,0,0,S(160)), s=UDim2.new(0.48,0,0,S(38))},
+    
+    -- Main Stats Row 4
+    {n="session", t="Session: 0", p=UDim2.new(0,S(20),0,S(205)), s=UDim2.new(0.48,0,0,S(38))},
+    {n="ping", t="Ping: 0ms", p=UDim2.new(0.52,0,0,S(205)), s=UDim2.new(0.48,0,0,S(38))},
+    
+    -- Main Stats Row 5
+    {n="fps", t="FPS: 0", p=UDim2.new(0,S(20),0,S(250)), s=UDim2.new(0.48,0,0,S(38))},
+    {n="time", t="Time: 00:00:00", p=UDim2.new(0.52,0,0,S(250)), s=UDim2.new(0.48,0,0,S(38))},
+    
+    -- Efficiency (full width)
+    {n="eff", t="Efficiency: N/A", p=UDim2.new(0,S(20),0,S(295)), s=UDim2.new(1,-S(40),0,S(38))},
+    
+    -- Watch Section (inline compact format)
+    {n="watchTitle", t="Watch:", p=UDim2.new(0,S(20),0,S(345)), s=UDim2.new(0.2,0,0,S(30)), c=Theme.textSecondary, sz=S(isMobile and 15 or 18)},
+    {n="watchPlayer", t="Not watching anyone", p=UDim2.new(0.22,0,0,S(345)), s=UDim2.new(0.78,-S(20),0,S(30)), c=Theme.warning, sz=S(isMobile and 14 or 17)},
+    {n="watchStats", t="", p=UDim2.new(0,S(20),0,S(380)), s=UDim2.new(1,-S(40),0,S(30)), c=Theme.success, sz=S(isMobile and 13 or 16)},
+    
+    -- Protection Section (inline compact format)
+    {n="protectionTitle", t="Protection:", p=UDim2.new(0,S(20),0,S(420)), s=UDim2.new(0.25,0,0,S(30)), c=Theme.textSecondary, sz=S(isMobile and 15 or 18)},
+    {n="protectionPlayer", t="No one protected", p=UDim2.new(0.27,0,0,S(420)), s=UDim2.new(0.73,-S(20),0,S(30)), c=Theme.warning, sz=S(isMobile and 14 or 17)},
+    {n="protectionStats", t="", p=UDim2.new(0,S(20),0,S(455)), s=UDim2.new(1,-S(40),0,S(30)), c=Theme.protection, sz=S(isMobile and 13 or 16)}
 }
 
 for _, d in ipairs(statData) do
     local l = Instance.new("TextLabel")
-    l.Size = d.s or UDim2.new(0.48,-S(15),0,S(18))
+    l.Size = d.s or UDim2.new(0.48,-S(15),0,S(38))
     l.Position = d.p
     l.BackgroundTransparency = 1
     l.Text = d.t
     l.TextColor3 = d.c or Theme.text
-    l.TextSize = d.sz or S(isMobile and 10 or 12)
+    l.TextSize = d.sz or S(isMobile and 15 or 18)
     l.Font = d.n == "title" and Enum.Font.SourceSansBold or Enum.Font.SourceSans
     l.TextXAlignment = Enum.TextXAlignment.Left
+    l.TextYAlignment = Enum.TextYAlignment.Center
     l.Parent = statsFrame
     statLabels[d.n] = l
     
-    -- Track these labels for scaling
-    createScalableElement(l, d.s, d.p, d.sz or (isMobile and 10 or 12))
+    createScalableElement(l, d.s, d.p, d.sz or (isMobile and 15 or 18))
 end
 
 -- Tool Functions (Optimized)
@@ -488,7 +552,6 @@ local function getTools()
             end
         end
     end
-    -- Update tool count in stats
     if statLabels.tools then
         statLabels.tools.Text = "Tools: " .. toolCount
     end
@@ -510,14 +573,13 @@ local function findPlayer(n)
     n = n:lower()
     if n == "me" then return player end
     if n == "all" then return Players:GetPlayers() end
-    if n == "others" then
+    if n == "others" or n == "other" then
         local o = {}
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player then table.insert(o, p) end
         end
         return o
     end
-    -- Enhanced search - exact match first, then partial
     for _, p in pairs(Players:GetPlayers()) do
         if p.Name:lower() == n or p.DisplayName:lower() == n then
             return p
@@ -582,6 +644,35 @@ local function godPlayer(t)
     return false
 end
 
+-- New Healing Function
+local function healPlayer(t)
+    local tools = getTools()
+    if #tools == 0 then return false end
+    local targets = type(t) == "table" and t or {t}
+    local tool = tools[1]
+    if tool and tool.Parent then
+        local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
+        if r then
+            for _, p in pairs(targets) do
+                if p and p.Character then
+                    local h = p.Character:FindFirstChildOfClass("Humanoid")
+                    if h and h.Health < h.MaxHealth then
+                        local healAmount = h.MaxHealth - h.Health
+                        pcall(function()
+                            for i = 1, 15 do
+                                r:FireServer(h, -healAmount/15)
+                                wait(0.02)
+                            end
+                        end)
+                    end
+                end
+            end
+            return true
+        end
+    end
+    return false
+end
+
 local function farm(speed)
     if not player.Character then return end
     local tools = getTools()
@@ -600,7 +691,7 @@ local function farm(speed)
     end
 end
 
--- Fixed Player Watch Function with Better UI Layout
+-- Player Watch Function
 local function watchPlayer(targetName)
     local target = findPlayer(targetName)
     if not target or type(target) == "table" then
@@ -642,7 +733,6 @@ local function watchPlayer(targetName)
             local maxHealth = math.floor(humanoid.MaxHealth)
             local position = rootPart.Position
             
-            -- Get player's power and kills from leaderstats
             local targetPower = 0
             local targetKills = 0
             local ls = State.watchingPlayer:FindFirstChild("leaderstats")
@@ -657,7 +747,6 @@ local function watchPlayer(targetName)
                 end
             end
             
-            -- Count tools in inventory
             local toolCount = 0
             for _, c in pairs({char, State.watchingPlayer:FindFirstChild("Backpack")}) do
                 if c then
@@ -669,7 +758,6 @@ local function watchPlayer(targetName)
                 end
             end
             
-            -- Update watch labels with clean formatting
             statLabels.watchPlayer.Text = "Watching: " .. State.watchingPlayer.DisplayName
             statLabels.watchPlayer.TextColor3 = Theme.success
             
@@ -682,6 +770,169 @@ local function watchPlayer(targetName)
             statLabels.watchPos.TextColor3 = Theme.textSecondary
         end
     end)
+end
+
+-- Protection System Implementation
+local function protectPlayer(targetName)
+    local target = findPlayer(targetName)
+    if not target or type(target) == "table" then
+        notification("Player not found: " .. tostring(targetName), 2, "error")
+        return
+    end
+    
+    -- Stop existing protection
+    if Data.protectionConnection then
+        Data.protectionConnection:Disconnect()
+        Data.protectionConnection = nil
+    end
+    if Data.protectedPlayerConnection then
+        Data.protectedPlayerConnection:Disconnect()
+        Data.protectedPlayerConnection = nil
+    end
+    
+    State.protectedPlayer = target
+    State.protectionActive = true
+    notification("Now protecting: " .. target.DisplayName, 3, "success")
+    
+    -- Update protection display
+    if statLabels.protectionPlayer then
+        statLabels.protectionPlayer.Text = "Protecting: " .. target.DisplayName
+        statLabels.protectionPlayer.TextColor3 = Theme.protection
+        statLabels.protectionStats.Text = "Shield active • Auto-retaliation enabled"
+        statLabels.protectionStats.TextColor3 = Theme.success
+    end
+    
+    -- Monitor protected player's health
+    local function setupProtectionForCharacter(character)
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+        
+        local lastHealth = humanoid.Health
+        local lastAttacker = nil
+        
+        Data.protectionConnection = humanoid.HealthChanged:Connect(function(newHealth)
+            if not State.protectionActive or State.protectedPlayer ~= target then return end
+            
+            -- Detect damage (health decrease)
+            if newHealth < lastHealth and newHealth > 0 then
+                -- Find closest player with a tool (potential attacker)
+                local closestAttacker = nil
+                local closestDistance = 50
+                
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            local hasTool = false
+                            for _, child in pairs(p.Character:GetChildren()) do
+                                if child:IsA("Tool") then
+                                    hasTool = true
+                                    break
+                                end
+                            end
+                            
+                            if hasTool then
+                                local dist = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                                if dist < closestDistance then
+                                    closestDistance = dist
+                                    closestAttacker = p
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                -- Heal protected player to full health
+                spawn(function()
+                    if healPlayer(target) then
+                        notification("Protected " .. target.DisplayName .. " - healed to full", 2, "success")
+                    end
+                end)
+                
+                -- Retaliate against attacker
+                if closestAttacker then
+                    lastAttacker = closestAttacker
+                    spawn(function()
+                        wait(0.1) -- Small delay to ensure healing happens first
+                        if killPlayer(closestAttacker) then
+                            notification("Eliminated attacker: " .. closestAttacker.DisplayName, 2, "success")
+                        end
+                    end)
+                end
+            end
+            
+            lastHealth = newHealth
+        end)
+        
+        -- Handle death
+        humanoid.Died:Connect(function()
+            if State.protectionActive and State.protectedPlayer == target then
+                notification("PROTECTION FAILED: " .. target.DisplayName .. " was killed!", 5, "error")
+                
+                -- Retaliate against last known attacker or nearby players
+                if lastAttacker and lastAttacker.Character then
+                    spawn(function()
+                        if killPlayer(lastAttacker) then
+                            notification("Revenge kill on: " .. lastAttacker.DisplayName, 3, "success")
+                        end
+                    end)
+                else
+                    -- Kill all nearby players as retaliation
+                    local killedCount = 0
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p ~= player and p ~= target and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local dist = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                                if dist <= 40 then
+                                    spawn(function()
+                                        if killPlayer(p) then
+                                            killedCount = killedCount + 1
+                                        end
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                    if killedCount > 0 then
+                        notification("Revenge: Eliminated " .. killedCount .. " nearby players", 3, "success")
+                    end
+                end
+            end
+        end)
+    end
+    
+    -- Set up protection for current character
+    if target.Character then
+        setupProtectionForCharacter(target.Character)
+    end
+    
+    -- Set up protection for future characters
+    Data.protectedPlayerConnection = target.CharacterAdded:Connect(function(character)
+        wait(1) -- Wait for character to fully load
+        setupProtectionForCharacter(character)
+    end)
+end
+
+local function stopProtection()
+    if Data.protectionConnection then
+        Data.protectionConnection:Disconnect()
+        Data.protectionConnection = nil
+    end
+    if Data.protectedPlayerConnection then
+        Data.protectedPlayerConnection:Disconnect()
+        Data.protectedPlayerConnection = nil
+    end
+    
+    State.protectedPlayer = nil
+    State.protectionActive = false
+    
+    if statLabels.protectionPlayer then
+        statLabels.protectionPlayer.Text = "No one protected"
+        statLabels.protectionPlayer.TextColor3 = Theme.warning
+        statLabels.protectionStats.Text = ""
+    end
+    
+    notification("Protection system disabled", 2, "info")
 end
 
 -- Speed Hack Function
@@ -699,7 +950,6 @@ local function toggleSpeedHack(enabled, speed)
         local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
         if humanoid then
             humanoid.WalkSpeed = speed or 50
-            -- Keep speed persistent
             table.insert(Data.speedConnections, humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
                 if State.speedHack then
                     humanoid.WalkSpeed = speed or 50
@@ -714,7 +964,7 @@ local function toggleSpeedHack(enabled, speed)
     end
 end
 
--- Fixed Reverse Damage System
+-- Modified Reverse Damage System (Fixed spam and added attacker elimination)
 local function setupReverseDamage()
     if Data.reverseDmgConnection then
         Data.reverseDmgConnection:Disconnect()
@@ -730,12 +980,15 @@ local function setupReverseDamage()
     
     local lastHealth = humanoid.Health
     
+    -- Health change detection (for when not in god mode)
     Data.reverseDmgConnection = humanoid.HealthChanged:Connect(function(newHealth)
         if not State.reverseDmg then return end
         
+        -- If we took damage, heal to full health and kill attacker
         if newHealth < lastHealth and newHealth > 0 then
-            local closestPlayer = nil
-            local closestDistance = 50 
+            -- Find closest attacker
+            local closestAttacker = nil
+            local closestDistance = 20
             
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 for _, p in pairs(Players:GetPlayers()) do
@@ -752,43 +1005,124 @@ local function setupReverseDamage()
                             local dist = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                             if dist < closestDistance then
                                 closestDistance = dist
-                                closestPlayer = p
+                                closestAttacker = p
                             end
                         end
                     end
                 end
             end
             
-            if closestPlayer then
-                spawn(function()
-                    if killPlayer(closestPlayer) then
-                        notification("Reversed damage to: " .. closestPlayer.DisplayName, 2, "success")
+            spawn(function()
+                -- Heal ourselves to full health
+                if healPlayer(player) then
+                    if closestAttacker then
+                        notification("Reverse Damage: Healed + Eliminated " .. closestAttacker.DisplayName, 3, "success")
+                        -- Kill the attacker
+                        killPlayer(closestAttacker)
+                    else
+                        notification("Reverse Damage: Healed to full health", 2, "success")
                     end
-                end)
-            end
+                else
+                    -- Fallback: Use god mode method if heal fails
+                    if godPlayer(player) then
+                        if closestAttacker then
+                            notification("Reverse Damage: Protected + Eliminated " .. closestAttacker.DisplayName, 3, "success")
+                            killPlayer(closestAttacker)
+                        else
+                            notification("Reverse Damage: Health restored", 2, "success")
+                        end
+                    end
+                end
+            end)
         end
         
         lastHealth = newHealth
     end)
     
-    humanoid.Died:Connect(function()
-        if State.reverseDmg then
-            local killedCount = 0
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local dist = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                    if dist <= 30 then
-                        spawn(function()
-                            if killPlayer(p) then
-                                killedCount = killedCount + 1
+    -- Attack detection system (works even with god mode) - FIXED VERSION
+    local function setupAttackDetection()
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+        
+        spawn(function()
+            while State.reverseDmg and player.Character and player.Character:FindFirstChild("HumanoidRootPart") do
+                -- Check for nearby players with tools who might be attacking
+                local myPosition = player.Character.HumanoidRootPart.Position
+                
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        local distance = (p.Character.HumanoidRootPart.Position - myPosition).Magnitude
+                        
+                        -- If player is close enough to attack (within 12 studs)
+                        if distance <= 12 then
+                            -- Check if they have a tool equipped
+                            local hasTool = false
+                            for _, child in pairs(p.Character:GetChildren()) do
+                                if child:IsA("Tool") then
+                                    hasTool = true
+                                    break
+                                end
                             end
-                        end)
+                            
+                            if hasTool then
+                                -- Check if we haven't already processed this attacker recently
+                                local currentTime = tick()
+                                if not Data.attackerTracking[p.Name] or currentTime - Data.attackerTracking[p.Name].lastAction > 3 then
+                                    -- Mark this attacker as processed
+                                    Data.attackerTracking[p.Name] = {
+                                        player = p,
+                                        lastAction = currentTime,
+                                        processed = true
+                                    }
+                                    
+                                    spawn(function()
+                                        -- Heal ourselves to full health
+                                        local healed = false
+                                        if healPlayer(player) then
+                                            healed = true
+                                        elseif godPlayer(player) then
+                                            healed = true
+                                        end
+                                        
+                                        if healed then
+                                            -- Kill the attacker
+                                            if killPlayer(p) then
+                                                notification("Reverse Damage: Protected from " .. p.DisplayName .. " - Attacker eliminated!", 3, "success")
+                                            else
+                                                notification("Reverse Damage: Protected from " .. p.DisplayName .. " - Healed to full", 2, "success")
+                                            end
+                                        end
+                                    end)
+                                end
+                            end
+                        else
+                            -- Player moved away, allow them to be processed again after a delay
+                            if Data.attackerTracking[p.Name] and tick() - Data.attackerTracking[p.Name].lastAction > 2 then
+                                Data.attackerTracking[p.Name] = nil
+                            end
+                        end
                     end
                 end
+                
+                -- Clean up old tracking data (older than 5 seconds)
+                for name, data in pairs(Data.attackerTracking) do
+                    if tick() - data.lastAction > 5 then
+                        Data.attackerTracking[name] = nil
+                    end
+                end
+                
+                wait(0.3) -- Check every 0.3 seconds (reduced frequency to prevent spam)
             end
-            if killedCount > 0 then
-                notification("Reversed death damage to " .. killedCount .. " nearby players", 3, "success")
-            end
+        end)
+    end
+    
+    -- Start attack detection
+    setupAttackDetection()
+    
+    -- Handle death - heal immediately upon respawn
+    humanoid.Died:Connect(function()
+        if State.reverseDmg then
+            notification("Reverse Damage: Will heal upon respawn", 2, "info")
+            Data.attackerTracking = {} -- Clear tracking on death
         end
     end)
 end
@@ -861,13 +1195,16 @@ local function updateStats()
             statLabels.health.Text = "Health: INF"
             statLabels.health.TextColor3 = Color3.fromRGB(255, 215, 0)
         else
-            local hp = math.floor((Stats.health / h.MaxHealth) * 100)
-            statLabels.health.Text = string.format("Health: %d/%d (%d%%)", Stats.health, math.floor(h.MaxHealth), hp)
+            local maxHealth = math.floor(h.MaxHealth)
+            local currentHealth = math.floor(h.Health)
+            local hp = math.floor((currentHealth / maxHealth) * 100)
+            
+            -- Format health display properly
+            statLabels.health.Text = string.format("Health: %d/%d (%d%%)", currentHealth, maxHealth, hp)
             statLabels.health.TextColor3 = hp <= 25 and Theme.danger or hp <= 50 and Theme.warning or hp <= 75 and Theme.text or Theme.success
         end
     end
     
-    -- Update tool count
     getTools()
     
     statLabels.power.Text = "Power: " .. formatNumber(Stats.power)
@@ -897,7 +1234,7 @@ end
 -- Forward declare showCommandsUI
 local showCommandsUI
 
--- Enhanced Command System
+-- Enhanced Command System with New Commands
 local cmds = {
     {"cmds", "Shows the command list", function()
         if showCommandsUI then showCommandsUI() end
@@ -997,11 +1334,45 @@ local cmds = {
             notification("God mode applied", 2, "success")
         end
     end},
-    {"reversedmg", "Toggle reverse damage", function()
+    {"heal [me/other/all/player]", "Heal players to full health", function(args)
+        local target = args[2] or "me"
+        local t = findPlayer(target)
+        if t then
+            if type(t) == "table" then
+                local healedCount = 0
+                for _, p in pairs(t) do
+                    if p and healPlayer(p) then 
+                        healedCount = healedCount + 1 
+                    end
+                end
+                notification("Healed " .. healedCount .. " players to full health", 3, "success")
+            else
+                if healPlayer(t) then
+                    local displayName = t == player and "yourself" or t.DisplayName
+                    notification("Healed " .. displayName .. " to full health", 2, "success")
+                else
+                    notification("Failed to heal " .. (t == player and "yourself" or t.DisplayName), 2, "error")
+                end
+            end
+        else
+            notification("Player not found: " .. target, 2, "error")
+        end
+    end},
+    {"protect [player]", "Protect a player from damage", function(args)
+        if not args[2] then
+            notification("Usage: ;protect [player_name]", 3, "warning")
+            return
+        end
+        protectPlayer(args[2])
+    end},
+    {"unprotect", "Stop protecting current player", function()
+        stopProtection()
+    end},
+    {"reversedmg", "Toggle reverse damage (heals you when damaged)", function()
         State.reverseDmg = not State.reverseDmg
         if State.reverseDmg then
             setupReverseDamage()
-            notification("Reverse Damage ON - Attackers will die", 3, "success")
+            notification("Reverse Damage ON - You'll heal when damaged", 3, "success")
         else
             if Data.reverseDmgConnection then
                 Data.reverseDmgConnection:Disconnect()
@@ -1141,9 +1512,11 @@ local cmds = {
             Data.watchConnection:Disconnect()
             Data.watchConnection = nil
             State.watchingPlayer = nil
-            if statLabels.watch then
-                statLabels.watch.Text = "Not watching anyone"
-                statLabels.watch.TextColor3 = Theme.warning
+            if statLabels.watchPlayer then
+                statLabels.watchPlayer.Text = "Not watching anyone"
+                statLabels.watchPlayer.TextColor3 = Theme.warning
+                statLabels.watchStats.Text = ""
+                statLabels.watchPos.Text = ""
             end
             notification("Stopped watching player", 2, "info")
         else
@@ -1233,15 +1606,14 @@ local function createToggle(text, callback, showSpeed)
             UDim2.new(1, -(isMobile and 100 or 115), 0.5, -(isMobile and 10 or 12.5)),
             isMobile and 10 or 12, 4)
         
-        -- Enhanced speed input connection with increased maximum to 100
         si.FocusLost:Connect(function(enterPressed)
             local n = tonumber(si.Text)
-            if n and n >= 1 and n <= 100 then  -- Increased from 50 to 100
+            if n and n >= 1 and n <= 100 then
                 Config.speed = n
                 notification("Farm speed set to: " .. n, 2, "success")
             else 
                 si.Text = tostring(Config.speed)
-                notification("Invalid speed! Use 1-100", 2, "warning")  -- Updated message
+                notification("Invalid speed! Use 1-100", 2, "warning")
             end
         end)
     end
@@ -1274,9 +1646,9 @@ end
 local function createButton(text, callback, color)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(1, -S(10), 0, S(isMobile and 40 or 50))
-    b.BackgroundColor3 = color or Theme.accent
+    b.BackgroundColor3 = color or Theme.background  -- Use dark blue background instead
     b.Text = text
-    b.TextColor3 = Theme.text
+    b.TextColor3 = Theme.text  -- Keep text white
     b.TextSize = S(isMobile and 12 or 14)
     b.Font = Enum.Font.SourceSansBold
     b.Parent = content
@@ -1294,8 +1666,8 @@ showCommandsUI = function()
 
     local cf = Instance.new("Frame")
     cf.Name = "CommandsFrame"
-    cf.Size = UDim2.new(0, S(isMobile and 350 or 450), 0, S(isMobile and 400 or 550))
-    cf.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 200 or 275))
+    cf.Size = UDim2.new(0, S(isMobile and 370 or 480), 0, S(isMobile and 450 or 600))
+    cf.Position = UDim2.new(0.5, -S(isMobile and 185 or 240), 0.5, -S(isMobile and 225 or 300))
     cf.BackgroundColor3 = Theme.background
     cf.Parent = screenGui
     addCornerAndStroke(cf, S(12), Theme.border)
@@ -1311,7 +1683,7 @@ showCommandsUI = function()
     ct.Size = UDim2.new(1, -S(50), 1, 0)
     ct.Position = UDim2.new(0, S(15), 0, 0)
     ct.BackgroundTransparency = 1
-    ct.Text = "Commands"
+    ct.Text = "Commands - Pro Edition"
     ct.TextColor3 = Theme.text
     ct.TextSize = S(isMobile and 16 or 20)
     ct.Font = Enum.Font.SourceSansBold
@@ -1348,37 +1720,37 @@ showCommandsUI = function()
     
     for i, c in ipairs(cmds) do
         local ci = Instance.new("Frame")
-        ci.Size = UDim2.new(1, 0, 0, S(isMobile and 45 or 55))
+        ci.Size = UDim2.new(1, 0, 0, S(isMobile and 50 or 60))
         ci.BackgroundColor3 = Theme.tertiary
         ci.LayoutOrder = i
         ci.Parent = cs
         addCornerAndStroke(ci, S(8), Theme.border)
         
         local cn = Instance.new("TextLabel")
-        cn.Size = UDim2.new(1, -S(20), 0, S(isMobile and 20 or 28))
+        cn.Size = UDim2.new(1, -S(20), 0, S(isMobile and 22 or 30))
         cn.Position = UDim2.new(0, S(10), 0, S(3))
         cn.BackgroundTransparency = 1
         cn.Text = Config.commandPrefix .. c[1]
         cn.TextColor3 = Theme.text
-        cn.TextSize = S(isMobile and 12 or 14)
+        cn.TextSize = S(isMobile and 13 or 15)
         cn.Font = Enum.Font.SourceSansBold
         cn.TextXAlignment = Enum.TextXAlignment.Left
         cn.Parent = ci
         
         local cd = Instance.new("TextLabel")
-        cd.Size = UDim2.new(1, -S(20), 0, S(isMobile and 18 or 22))
-        cd.Position = UDim2.new(0, S(10), 0, S(isMobile and 22 or 28))
+        cd.Size = UDim2.new(1, -S(20), 0, S(isMobile and 20 or 25))
+        cd.Position = UDim2.new(0, S(10), 0, S(isMobile and 25 or 32))
         cd.BackgroundTransparency = 1
         cd.Text = c[2]
         cd.TextColor3 = Theme.textSecondary
-        cd.TextSize = S(isMobile and 10 or 12)
+        cd.TextSize = S(isMobile and 11 or 13)
         cd.Font = Enum.Font.SourceSans
         cd.TextXAlignment = Enum.TextXAlignment.Left
         cd.Parent = ci
     end
 end
 
--- Create UI Elements with Enhanced Speed Input (Maximum 100)
+-- Create UI Elements with Enhanced Features
 createToggle("Fast Farm", function(e)
     State.fastFarm = e
     if e and State.slowFarm then State.slowFarm = false end
@@ -1411,34 +1783,38 @@ createToggle("Reverse Damage", function(e)
 end)
 
 createButton("Kill All Players", function() executeCmd(";kill all") end, Theme.danger)
-createButton("God All Players", function() executeCmd(";god others") end, Theme.success)
+createButton("God All Players", function() executeCmd(";god others") end, Theme.background)
+createButton("Heal All Players", function() executeCmd(";heal all") end, Theme.background)
 createButton("Reset Session Stats", function()
     Stats.powerGainedThisSession = 0
     Stats.sessionStartTime = tick()
     Stats.basePower = Stats.power
     powerHistory = {}
     notification("Session stats reset!", 3, "success")
-end, Theme.warning)
-createButton("Show Commands", showCommandsUI, Theme.accent)
+end, Theme.background)
+createButton("Show Commands", showCommandsUI, Theme.background)
 
--- Enhanced Command Bar Logic with Modern Animations
+-- Enhanced Command Bar Logic with Ultra-Modern Animations
 local function showCmd()
     if State.commandBarVisible then return end
     State.commandBarVisible = true
     commandBar.Visible = true
     
-    -- Enhanced slide-up animation with bounce effect
-    Services.Tween:Create(commandBar, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        {Position = UDim2.new(0.5, -S(isMobile and 190 or 325), 1, -S(isMobile and 80 or 90))}):Play()
+    -- Ultra-smooth slide-up animation with advanced easing
+    Services.Tween:Create(commandBar, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Position = UDim2.new(0.5, -S(isMobile and 200 or 350), 1, -S(isMobile and 90 or 110))}):Play()
     
-    -- Glow effect animation
+    -- Advanced glow effect with multiple stroke animations
     local stroke = commandBar:FindFirstChildOfClass("UIStroke")
     if stroke then
-        Services.Tween:Create(stroke, TweenInfo.new(0.3),
+        Services.Tween:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Sine),
             {Color = Theme.accent, Transparency = 0}):Play()
     end
     
-    cmdInput:CaptureFocus()
+    spawn(function()
+        wait(0.2)
+        cmdInput:CaptureFocus()
+    end)
 end
 
 local function hideCmd()
@@ -1446,17 +1822,19 @@ local function hideCmd()
     State.commandBarVisible = false
     cmdInput:ReleaseFocus()
     
-    -- Remove glow effect
     local stroke = commandBar:FindFirstChildOfClass("UIStroke")
     if stroke then
-        Services.Tween:Create(stroke, TweenInfo.new(0.2),
+        Services.Tween:Create(stroke, TweenInfo.new(0.3),
             {Color = Theme.glassBorder, Transparency = 0}):Play()
     end
     
-    Services.Tween:Create(commandBar, TweenInfo.new(0.3, Enum.EasingStyle.Quart),
-        {Position = UDim2.new(0.5, -S(isMobile and 190 or 325), 1, S(100))}):Play(nil, function()
-            if not State.commandBarVisible then commandBar.Visible = false end
-        end)
+    Services.Tween:Create(commandBar, TweenInfo.new(0.4, Enum.EasingStyle.Quart),
+        {Position = UDim2.new(0.5, -S(isMobile and 200 or 350), 1, S(120))}):Play()
+    
+    spawn(function()
+        wait(0.4)
+        if not State.commandBarVisible then commandBar.Visible = false end
+    end)
 end
 
 execBtn.MouseButton1Click:Connect(function()
@@ -1485,14 +1863,12 @@ Services.UIS.InputBegan:Connect(function(input, gp)
     elseif input.KeyCode == Enum.KeyCode.Insert then
         mainFrame.Visible = not mainFrame.Visible
     elseif input.KeyCode == Enum.KeyCode.Minus then
-        -- Quick scale down with minus key
         local newScale = math.clamp(UIScale.userScale - 0.1, UIScale.minScale, UIScale.maxScale)
         UIScale.userScale = newScale
         scaleInput.Text = tostring(math.floor(newScale * 100 + 0.5)) .. "%"
         rescaleUI()
         notification("UI Scale: " .. math.floor(newScale * 100 + 0.5) .. "%", 1, "info")
     elseif input.KeyCode == Enum.KeyCode.Equals then
-        -- Quick scale up with equals/plus key
         local newScale = math.clamp(UIScale.userScale + 0.1, UIScale.minScale, UIScale.maxScale)
         UIScale.userScale = newScale
         scaleInput.Text = tostring(math.floor(newScale * 100 + 0.5)) .. "%"
@@ -1508,6 +1884,8 @@ closeBtn.MouseButton1Click:Connect(function()
     if Data.noclipConnection then Data.noclipConnection:Disconnect() end
     if Data.reverseDmgConnection then Data.reverseDmgConnection:Disconnect() end
     if Data.watchConnection then Data.watchConnection:Disconnect() end
+    if Data.protectionConnection then Data.protectionConnection:Disconnect() end
+    if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
     for _, conn in pairs(Data.speedConnections) do if conn then conn:Disconnect() end end
     if fpsConnection then fpsConnection:Disconnect() end
     screenGui:Destroy()
@@ -1602,23 +1980,17 @@ workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(functio
     notification("UI auto-resized for screen", 1, "info")
 end)
 
--- Enhanced Startup Animation
+-- Enhanced Startup Animation with Pro Features Showcase
 spawn(function()
     mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 1.5, 0)
     wait(0.5)
-    notification("2take1 Hub Enhanced - Loaded!", 3, "success")
+    notification("2take1 Hub ProEdition Loaded!", 4, "success")
     Services.Tween:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back),
-        {Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 275 or 350))}):Play()
-    wait(1)
+        {Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 300 or 375))}):Play()
+    wait(1.5)
     notification("Press ; for commands", 3, "info")
-    wait(1)
-    notification("Press Insert to toggle GUI", 3, "info")
-    wait(1)
-    notification("Use Scale box or -/+ keys to resize UI", 3, "info")
-    wait(1)
-    notification("Auto-farm speed limit increased to 100!", 3, "success")
-    if isMobile then
-        wait(1)
-        notification("Mobile-optimized UI ready!", 3, "success")
-    end
+    wait(1.5)
+    notification("Press Insert to toggle • Use -/+ for UI scaling", 3, "info")
+    wait(2)
+    notification("Pro tip: Type ;cmds to see all available commands", 4, "info")
 end)
