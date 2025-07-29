@@ -1,4 +1,4 @@
--- 2take1 Hub Script 2025 with Modern UI
+-- 2take1 Hub Script 2025 with Enhanced Combat Features
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Services = {
@@ -51,13 +51,14 @@ local Config = {
     whitelistedIds = {1234567, 7654321}
 }
 
--- State Management
+-- State Management (Enhanced with new features)
 local State = {
     fastFarm = false, slowFarm = false, godMode = false, killAura = false,
     flying = false, noclip = false, commandBarVisible = false, loopKill = false,
     loopKillTargets = {}, killAllActive = false, infiniteJump = false,
     watchingPlayer = nil, autoFarm = false, reverseDmg = false, speedHack = false,
-    protectedPlayer = nil, protectionActive = false
+    protectedPlayer = nil, protectionActive = false, loopKillActive = false,
+    loopKillConnections = {}
 }
 
 -- Statistics
@@ -538,7 +539,7 @@ for _, d in ipairs(statData) do
     createScalableElement(l, d.s, d.p, d.sz or (isMobile and 15 or 18))
 end
 
--- Tool Functions (Optimized)
+-- Tool Functions (Optimized and Enhanced)
 local function getTools()
     local tools = {}
     local toolCount = 0
@@ -560,7 +561,6 @@ local function getTools()
         local l = workspace:FindFirstChild("load")
         if l and l:FindFirstChild("RemoteEvent") then
             pcall(function() l.RemoteEvent:FireServer() end)
-            wait(0.5)
             return getTools()
         end
     end
@@ -593,9 +593,9 @@ local function findPlayer(n)
     return nil
 end
 
--- Combat Functions (Optimized)
+-- Enhanced Combat Functions (NO DELAYS)
 local function killPlayer(t)
-    if not t or not t.Character or t == player then return false end
+    if not t or not t.Character then return false end
     local h = t.Character:FindFirstChildOfClass("Humanoid")
     if not h or h.Health <= 0 then return false end
     local tools = getTools()
@@ -605,10 +605,37 @@ local function killPlayer(t)
         local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
         if r then
             pcall(function()
-                for i = 1, 20 do
+                for i = 1, 25 do -- Increased iterations, NO DELAYS
                     r:FireServer(h, math.huge)
                     if h.Health <= 0 then break end
-                    wait(0.01)
+                end
+            end)
+            return true
+        end
+    end
+    return false
+end
+
+-- NEW: Enhanced Damage Function with Percentage Support
+local function damagePlayer(t, damagePercent)
+    if not t or not t.Character then return false end
+    local h = t.Character:FindFirstChildOfClass("Humanoid")
+    if not h or h.Health <= 0 then return false end
+    
+    -- Calculate damage amount based on percentage
+    local damageAmount = (damagePercent / 100) * h.MaxHealth
+    
+    local tools = getTools()
+    if #tools == 0 then return false end
+    local tool = tools[1]
+    if tool and tool.Parent then
+        local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
+        if r then
+            pcall(function()
+                -- Apply damage directly, NO DELAYS
+                for i = 1, 15 do
+                    r:FireServer(h, damageAmount)
+                    if h.Health <= 0 then break end
                 end
             end)
             return true
@@ -630,9 +657,8 @@ local function godPlayer(t)
                     local h = p.Character:FindFirstChildOfClass("Humanoid")
                     if h then
                         pcall(function()
-                            for i = 1, 25 do
+                            for i = 1, 30 do -- NO DELAYS
                                 r:FireServer(h, -math.huge)
-                                wait(0.02)
                             end
                         end)
                     end
@@ -644,7 +670,7 @@ local function godPlayer(t)
     return false
 end
 
--- New Healing Function
+-- Enhanced Healing Function (NO DELAYS)
 local function healPlayer(t)
     local tools = getTools()
     if #tools == 0 then return false end
@@ -659,9 +685,9 @@ local function healPlayer(t)
                     if h and h.Health < h.MaxHealth then
                         local healAmount = h.MaxHealth - h.Health
                         pcall(function()
-                            for i = 1, 15 do
-                                r:FireServer(h, -healAmount/15)
-                                wait(0.02)
+                            for i = 1, 20 do -- NO DELAYS
+                                r:FireServer(h, -healAmount/20)
+                                if h.Health >= h.MaxHealth then break end
                             end
                         end)
                     end
@@ -671,6 +697,51 @@ local function healPlayer(t)
         end
     end
     return false
+end
+
+-- NEW: Enhanced Loop Kill System
+local function startLoopKill(targets)
+    -- Stop existing loop kill
+    if State.loopKillActive then
+        for _, conn in pairs(State.loopKillConnections) do
+            if conn then conn:Disconnect() end
+        end
+        State.loopKillConnections = {}
+        State.loopKillActive = false
+    end
+    
+    if not targets then return end
+    
+    State.loopKillActive = true
+    local targetList = type(targets) == "table" and targets or {targets}
+    
+    -- Create aggressive loop kill connection
+    local connection = Services.Run.Heartbeat:Connect(function()
+        if not State.loopKillActive then return end
+        
+        for _, target in pairs(targetList) do
+            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid.Health > 0 then
+                    killPlayer(target)
+                end
+            end
+        end
+    end)
+    
+    table.insert(State.loopKillConnections, connection)
+    notification("Loop kill started on " .. #targetList .. " target(s)", 3, "success")
+end
+
+local function stopLoopKill()
+    if State.loopKillActive then
+        for _, conn in pairs(State.loopKillConnections) do
+            if conn then conn:Disconnect() end
+        end
+        State.loopKillConnections = {}
+        State.loopKillActive = false
+        notification("Loop kill stopped", 2, "info")
+    end
 end
 
 local function farm(speed)
@@ -683,7 +754,7 @@ local function farm(speed)
                 pcall(function()
                     for i = 1, speed do
                         r:FireServer()
-                        if speed > 3 then wait(0.005) end
+                        -- NO DELAYS for maximum speed
                     end
                 end)
             end
@@ -718,7 +789,6 @@ local function watchPlayer(targetName)
                     statLabels.watchPlayer.Text = "Not watching anyone"
                     statLabels.watchPlayer.TextColor3 = Theme.warning
                     statLabels.watchStats.Text = ""
-                    statLabels.watchPos.Text = ""
                 end
             end
             return
@@ -764,15 +834,11 @@ local function watchPlayer(targetName)
             statLabels.watchStats.Text = string.format("HP %d/%d | Power %s | Kills %s | Tools %d", 
                 health, maxHealth, formatNumber(targetPower), formatNumber(targetKills), toolCount)
             statLabels.watchStats.TextColor3 = Theme.text
-            
-            statLabels.watchPos.Text = string.format("Position: (%.1f, %.1f, %.1f)", 
-                position.X, position.Y, position.Z)
-            statLabels.watchPos.TextColor3 = Theme.textSecondary
         end
     end)
 end
 
--- Protection System Implementation
+-- Enhanced Protection System with Instant Retaliation
 local function protectPlayer(targetName)
     local target = findPlayer(targetName)
     if not target or type(target) == "table" then
@@ -792,37 +858,39 @@ local function protectPlayer(targetName)
     
     State.protectedPlayer = target
     State.protectionActive = true
-    notification("Now protecting: " .. target.DisplayName, 3, "success")
+    notification("Enhanced protection active for: " .. target.DisplayName, 3, "success")
     
     -- Update protection display
     if statLabels.protectionPlayer then
         statLabels.protectionPlayer.Text = "Protecting: " .. target.DisplayName
         statLabels.protectionPlayer.TextColor3 = Theme.protection
-        statLabels.protectionStats.Text = "Shield active • Auto-retaliation enabled"
+        statLabels.protectionStats.Text = "Enhanced aura • Instant retaliation enabled"
         statLabels.protectionStats.TextColor3 = Theme.success
     end
     
-    -- Monitor protected player's health
-    local function setupProtectionForCharacter(character)
+    -- Enhanced protection monitoring
+    local function setupEnhancedProtection(character)
         if not character then return end
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         if not humanoid then return end
         
         local lastHealth = humanoid.Health
-        local lastAttacker = nil
         
-        Data.protectionConnection = humanoid.HealthChanged:Connect(function(newHealth)
-            if not State.protectionActive or State.protectedPlayer ~= target then return end
+        -- Continuous protection aura
+        local auraConnection = Services.Run.Heartbeat:Connect(function()
+            if not State.protectionActive or State.protectedPlayer ~= target then
+                auraConnection:Disconnect()
+                return
+            end
             
-            -- Detect damage (health decrease)
-            if newHealth < lastHealth and newHealth > 0 then
-                -- Find closest player with a tool (potential attacker)
-                local closestAttacker = nil
-                local closestDistance = 50
-                
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    for _, p in pairs(Players:GetPlayers()) do
-                        if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                -- Check for nearby attackers and eliminate them instantly
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        local distance = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                        
+                        -- If someone is too close with a tool, eliminate them
+                        if distance <= 15 then
                             local hasTool = false
                             for _, child in pairs(p.Character:GetChildren()) do
                                 if child:IsA("Tool") then
@@ -832,84 +900,74 @@ local function protectPlayer(targetName)
                             end
                             
                             if hasTool then
-                                local dist = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
-                                if dist < closestDistance then
-                                    closestDistance = dist
-                                    closestAttacker = p
-                                end
+                                spawn(function()
+                                    killPlayer(p)
+                                    notification("Protection aura eliminated: " .. p.DisplayName, 2, "success")
+                                end)
                             end
                         end
                     end
                 end
-                
-                -- Heal protected player to full health
+            end
+        end)
+        
+        -- Health change detection
+        Data.protectionConnection = humanoid.HealthChanged:Connect(function(newHealth)
+            if not State.protectionActive or State.protectedPlayer ~= target then return end
+            
+            -- If protected player takes any damage, heal and retaliate
+            if newHealth < lastHealth then
                 spawn(function()
-                    if healPlayer(target) then
-                        notification("Protected " .. target.DisplayName .. " - healed to full", 2, "success")
+                    -- Instant heal to full health
+                    healPlayer(target)
+                    
+                    -- Kill all nearby players as retaliation
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        for _, p in pairs(Players:GetPlayers()) do
+                            if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                                local distance = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                                if distance <= 25 then
+                                    killPlayer(p)
+                                end
+                            end
+                        end
+                        notification("PROTECTION TRIGGERED: Healed " .. target.DisplayName .. " and eliminated attackers!", 3, "success")
                     end
                 end)
-                
-                -- Retaliate against attacker
-                if closestAttacker then
-                    lastAttacker = closestAttacker
-                    spawn(function()
-                        wait(0.1) -- Small delay to ensure healing happens first
-                        if killPlayer(closestAttacker) then
-                            notification("Eliminated attacker: " .. closestAttacker.DisplayName, 2, "success")
-                        end
-                    end)
-                end
             end
             
             lastHealth = newHealth
         end)
         
-        -- Handle death
+        -- Death protection
         humanoid.Died:Connect(function()
             if State.protectionActive and State.protectedPlayer == target then
-                notification("PROTECTION FAILED: " .. target.DisplayName .. " was killed!", 5, "error")
+                notification("PROTECTION BREACH: " .. target.DisplayName .. " was killed!", 5, "error")
                 
-                -- Retaliate against last known attacker or nearby players
-                if lastAttacker and lastAttacker.Character then
-                    spawn(function()
-                        if killPlayer(lastAttacker) then
-                            notification("Revenge kill on: " .. lastAttacker.DisplayName, 3, "success")
-                        end
-                    end)
-                else
-                    -- Kill all nearby players as retaliation
-                    local killedCount = 0
+                -- Massive retaliation - kill everyone nearby
+                spawn(function()
                     for _, p in pairs(Players:GetPlayers()) do
-                        if p ~= player and p ~= target and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            if character and character:FindFirstChild("HumanoidRootPart") then
-                                local dist = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
-                                if dist <= 40 then
-                                    spawn(function()
-                                        if killPlayer(p) then
-                                            killedCount = killedCount + 1
-                                        end
-                                    end)
-                                end
-                            end
+                        if p ~= player and p ~= target then
+                            killPlayer(p)
                         end
                     end
-                    if killedCount > 0 then
-                        notification("Revenge: Eliminated " .. killedCount .. " nearby players", 3, "success")
-                    end
-                end
+                    notification("REVENGE MODE: Eliminated all potential attackers!", 4, "success")
+                end)
             end
         end)
+        
+        table.insert(State.loopKillConnections, auraConnection)
     end
     
     -- Set up protection for current character
     if target.Character then
-        setupProtectionForCharacter(target.Character)
+        setupEnhancedProtection(target.Character)
     end
     
     -- Set up protection for future characters
     Data.protectedPlayerConnection = target.CharacterAdded:Connect(function(character)
-        wait(1) -- Wait for character to fully load
-        setupProtectionForCharacter(character)
+        task.wait(1) -- Wait for character to fully load
+        setupEnhancedProtection(character)
     end)
 end
 
@@ -964,7 +1022,7 @@ local function toggleSpeedHack(enabled, speed)
     end
 end
 
--- Modified Reverse Damage System (Fixed spam and added attacker elimination)
+-- Modified Reverse Damage System (NO DELAYS)
 local function setupReverseDamage()
     if Data.reverseDmgConnection then
         Data.reverseDmgConnection:Disconnect()
@@ -980,11 +1038,10 @@ local function setupReverseDamage()
     
     local lastHealth = humanoid.Health
     
-    -- Health change detection (for when not in god mode)
+    -- Health change detection
     Data.reverseDmgConnection = humanoid.HealthChanged:Connect(function(newHealth)
         if not State.reverseDmg then return end
         
-        -- If we took damage, heal to full health and kill attacker
         if newHealth < lastHealth and newHealth > 0 then
             -- Find closest attacker
             local closestAttacker = nil
@@ -1013,11 +1070,10 @@ local function setupReverseDamage()
             end
             
             spawn(function()
-                -- Heal ourselves to full health
+                -- Instant heal
                 if healPlayer(player) then
                     if closestAttacker then
                         notification("Reverse Damage: Healed + Eliminated " .. closestAttacker.DisplayName, 3, "success")
-                        -- Kill the attacker
                         killPlayer(closestAttacker)
                     else
                         notification("Reverse Damage: Healed to full health", 2, "success")
@@ -1039,22 +1095,19 @@ local function setupReverseDamage()
         lastHealth = newHealth
     end)
     
-    -- Attack detection system (works even with god mode) - FIXED VERSION
+    -- Enhanced attack detection system (NO DELAYS)
     local function setupAttackDetection()
         if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
         
         spawn(function()
             while State.reverseDmg and player.Character and player.Character:FindFirstChild("HumanoidRootPart") do
-                -- Check for nearby players with tools who might be attacking
                 local myPosition = player.Character.HumanoidRootPart.Position
                 
                 for _, p in pairs(Players:GetPlayers()) do
                     if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         local distance = (p.Character.HumanoidRootPart.Position - myPosition).Magnitude
                         
-                        -- If player is close enough to attack (within 12 studs)
                         if distance <= 12 then
-                            -- Check if they have a tool equipped
                             local hasTool = false
                             for _, child in pairs(p.Character:GetChildren()) do
                                 if child:IsA("Tool") then
@@ -1064,10 +1117,8 @@ local function setupReverseDamage()
                             end
                             
                             if hasTool then
-                                -- Check if we haven't already processed this attacker recently
                                 local currentTime = tick()
-                                if not Data.attackerTracking[p.Name] or currentTime - Data.attackerTracking[p.Name].lastAction > 3 then
-                                    -- Mark this attacker as processed
+                                if not Data.attackerTracking[p.Name] or currentTime - Data.attackerTracking[p.Name].lastAction > 2 then
                                     Data.attackerTracking[p.Name] = {
                                         player = p,
                                         lastAction = currentTime,
@@ -1075,7 +1126,7 @@ local function setupReverseDamage()
                                     }
                                     
                                     spawn(function()
-                                        -- Heal ourselves to full health
+                                        -- Instant healing and retaliation
                                         local healed = false
                                         if healPlayer(player) then
                                             healed = true
@@ -1084,7 +1135,6 @@ local function setupReverseDamage()
                                         end
                                         
                                         if healed then
-                                            -- Kill the attacker
                                             if killPlayer(p) then
                                                 notification("Reverse Damage: Protected from " .. p.DisplayName .. " - Attacker eliminated!", 3, "success")
                                             else
@@ -1095,34 +1145,31 @@ local function setupReverseDamage()
                                 end
                             end
                         else
-                            -- Player moved away, allow them to be processed again after a delay
-                            if Data.attackerTracking[p.Name] and tick() - Data.attackerTracking[p.Name].lastAction > 2 then
+                            if Data.attackerTracking[p.Name] and tick() - Data.attackerTracking[p.Name].lastAction > 1.5 then
                                 Data.attackerTracking[p.Name] = nil
                             end
                         end
                     end
                 end
                 
-                -- Clean up old tracking data (older than 5 seconds)
+                -- Clean up old tracking data
                 for name, data in pairs(Data.attackerTracking) do
-                    if tick() - data.lastAction > 5 then
+                    if tick() - data.lastAction > 3 then
                         Data.attackerTracking[name] = nil
                     end
                 end
                 
-                wait(0.3) -- Check every 0.3 seconds (reduced frequency to prevent spam)
+                task.wait(0.2) -- Reduced delay for faster response
             end
         end)
     end
     
-    -- Start attack detection
     setupAttackDetection()
     
-    -- Handle death - heal immediately upon respawn
     humanoid.Died:Connect(function()
         if State.reverseDmg then
             notification("Reverse Damage: Will heal upon respawn", 2, "info")
-            Data.attackerTracking = {} -- Clear tracking on death
+            Data.attackerTracking = {}
         end
     end)
 end
@@ -1199,7 +1246,6 @@ local function updateStats()
             local currentHealth = math.floor(h.Health)
             local hp = math.floor((currentHealth / maxHealth) * 100)
             
-            -- Format health display properly
             statLabels.health.Text = string.format("Health: %d/%d (%d%%)", currentHealth, maxHealth, hp)
             statLabels.health.TextColor3 = hp <= 25 and Theme.danger or hp <= 50 and Theme.warning or hp <= 75 and Theme.text or Theme.success
         end
@@ -1234,7 +1280,7 @@ end
 -- Forward declare showCommandsUI
 local showCommandsUI
 
--- Enhanced Command System with New Commands
+-- Enhanced Command System with NEW COMMANDS
 local cmds = {
     {"cmds", "Shows the command list", function()
         if showCommandsUI then showCommandsUI() end
@@ -1305,19 +1351,19 @@ local cmds = {
             notification("Player not found!", 2, "error")
         end
     end},
-    {"kill [player/all]", "Kill players", function(args)
+    {"kill [player/all/me]", "Kill players (including yourself)", function(args)
         local t = findPlayer(args[2])
         if t then
             if type(t) == "table" then
                 local c = 0
                 for _, p in pairs(t) do
-                    if p ~= player and killPlayer(p) then c = c + 1 end
+                    if killPlayer(p) then c = c + 1 end
                 end
                 notification("Killed " .. c .. " players", 2, "success")
             elseif t == player then
                 if t.Character and t.Character:FindFirstChildOfClass("Humanoid") then
                     t.Character.Humanoid.Health = 0
-                    notification("You have been killed.", 2, "success")
+                    notification("You have been eliminated.", 2, "success")
                 end
             else
                 if killPlayer(t) then
@@ -1327,6 +1373,47 @@ local cmds = {
         else
             notification("Player not found: " .. tostring(args[2]), 2, "error")
         end
+    end},
+    {"dmg [player] [percent]", "Apply percentage damage to player", function(args)
+        local targetName = args[2]
+        local damagePercent = tonumber(args[3])
+        
+        if not targetName or not damagePercent then
+            notification("Usage: ;dmg [player] [percent] (e.g., ;dmg john 40)", 3, "warning")
+            return
+        end
+        
+        local target = findPlayer(targetName)
+        if not target or type(target) == "table" then
+            notification("Player not found: " .. targetName, 2, "error")
+            return
+        end
+        
+        -- Clamp damage percent between 1 and 100
+        damagePercent = math.clamp(damagePercent, 1, 100)
+        
+        if damagePlayer(target, damagePercent) then
+            notification(string.format("Applied %d%% damage to %s", damagePercent, target.DisplayName), 3, "success")
+        else
+            notification("Failed to damage " .. target.DisplayName, 2, "error")
+        end
+    end},
+    {"loopkill [player/all]", "Continuously kill target(s)", function(args)
+        local targetName = args[2]
+        if not targetName then
+            notification("Usage: ;loopkill [player/all]", 3, "warning")
+            return
+        end
+        
+        local targets = findPlayer(targetName)
+        if targets then
+            startLoopKill(targets)
+        else
+            notification("Player not found: " .. targetName, 2, "error")
+        end
+    end},
+    {"unloopkill/stoploopkill", "Stop loop kill", function()
+        stopLoopKill()
     end},
     {"god [player/all/me]", "God mode", function(args)
         local t = findPlayer(args[2] or "me")
@@ -1358,7 +1445,7 @@ local cmds = {
             notification("Player not found: " .. target, 2, "error")
         end
     end},
-    {"protect [player]", "Protect a player from damage", function(args)
+    {"protect [player]", "Protect a player with enhanced aura", function(args)
         if not args[2] then
             notification("Usage: ;protect [player_name]", 3, "warning")
             return
@@ -1368,11 +1455,11 @@ local cmds = {
     {"unprotect", "Stop protecting current player", function()
         stopProtection()
     end},
-    {"reversedmg", "Toggle reverse damage (heals you when damaged)", function()
+    {"reversedmg", "Toggle reverse damage (heals + kills attackers)", function()
         State.reverseDmg = not State.reverseDmg
         if State.reverseDmg then
             setupReverseDamage()
-            notification("Reverse Damage ON - You'll heal when damaged", 3, "success")
+            notification("Reverse Damage ON - You'll heal and kill attackers", 3, "success")
         else
             if Data.reverseDmgConnection then
                 Data.reverseDmgConnection:Disconnect()
@@ -1381,7 +1468,7 @@ local cmds = {
             notification("Reverse Damage OFF", 2, "info")
         end
     end},
-    {"fly", "Toggle fly", function()
+    {"fly", "Toggle fly mode", function()
         State.flying = not State.flying
         notification("Fly " .. (State.flying and "ON" or "OFF"), 2, "info")
 
@@ -1516,7 +1603,6 @@ local cmds = {
                 statLabels.watchPlayer.Text = "Not watching anyone"
                 statLabels.watchPlayer.TextColor3 = Theme.warning
                 statLabels.watchStats.Text = ""
-                statLabels.watchPos.Text = ""
             end
             notification("Stopped watching player", 2, "info")
         else
@@ -1531,10 +1617,10 @@ local cmds = {
     end}
 }
 
--- Command Debounce & Execution
+-- Command Debounce & Execution (NO DELAYS)
 local lastCommandFired = ""
 local lastCommandTime = 0
-local commandDebounce = 0.2
+local commandDebounce = 0 -- Removed debounce delay
 
 local function executeCmd(cmd)
     local currentTime = tick()
@@ -1646,9 +1732,9 @@ end
 local function createButton(text, callback, color)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(1, -S(10), 0, S(isMobile and 40 or 50))
-    b.BackgroundColor3 = color or Theme.background  -- Use dark blue background instead
+    b.BackgroundColor3 = color or Theme.background
     b.Text = text
-    b.TextColor3 = Theme.text  -- Keep text white
+    b.TextColor3 = Theme.text
     b.TextSize = S(isMobile and 12 or 14)
     b.Font = Enum.Font.SourceSansBold
     b.Parent = content
@@ -1683,7 +1769,7 @@ showCommandsUI = function()
     ct.Size = UDim2.new(1, -S(50), 1, 0)
     ct.Position = UDim2.new(0, S(15), 0, 0)
     ct.BackgroundTransparency = 1
-    ct.Text = "Commands - Pro Edition"
+    ct.Text = "Commands - Enhanced Combat Edition"
     ct.TextColor3 = Theme.text
     ct.TextSize = S(isMobile and 16 or 20)
     ct.Font = Enum.Font.SourceSansBold
@@ -1768,7 +1854,7 @@ createToggle("God Mode", function(e)
     notification("God Mode " .. (e and "ON" or "OFF"), 2, e and "success" or "info")
     if e then
         spawn(function()
-            while State.godMode and player.Character do godPlayer(player); wait(0.3) end
+            while State.godMode and player.Character do godPlayer(player) end
         end)
     end
 end)
@@ -1887,15 +1973,16 @@ closeBtn.MouseButton1Click:Connect(function()
     if Data.protectionConnection then Data.protectionConnection:Disconnect() end
     if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
     for _, conn in pairs(Data.speedConnections) do if conn then conn:Disconnect() end end
+    for _, conn in pairs(State.loopKillConnections) do if conn then conn:Disconnect() end end
     if fpsConnection then fpsConnection:Disconnect() end
     screenGui:Destroy()
 end)
 
--- Main Loop (Optimized)
+-- Enhanced Main Loop (NO DELAYS, Maximum Performance)
 local lastLoop = 0
 local mainLoop = Services.Run.Heartbeat:Connect(function()
     local t = tick()
-    if t - lastLoop < 0.033 then return end
+    if t - lastLoop < 0.016 then return end -- Reduced for faster execution
     lastLoop = t
     pcall(updateStats)
     if not player.Character then return end
@@ -1903,8 +1990,12 @@ local mainLoop = Services.Run.Heartbeat:Connect(function()
     local h = char:FindFirstChildOfClass("Humanoid")
     local rp = char:FindFirstChild("HumanoidRootPart")
     if not h or not rp or h.Health <= 0 then return end
+    
+    -- Enhanced farming with NO DELAYS
     if State.fastFarm then farm(Config.speed)
     elseif State.slowFarm then farm(2) end
+    
+    -- Enhanced kill aura with NO DELAYS
     if State.killAura then
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
@@ -1917,9 +2008,8 @@ local mainLoop = Services.Run.Heartbeat:Connect(function()
 end)
 table.insert(Data.connections, mainLoop)
 
--- Character Handler (Enhanced)
+-- Enhanced Character Handler
 local function onChar(char)
-    wait(1)
     if not char then return end
     local h = char:WaitForChild("Humanoid", 5)
     if h then
@@ -1947,7 +2037,7 @@ table.insert(Data.adminPlayers, player.Name)
 Stats.sessionStartTime = tick()
 commandBar.Visible = false
 
--- Chat commands (Enhanced)
+-- Enhanced Chat Commands Handler
 local function processMessage(msg)
     if msg.Text:sub(1, 1) == Config.commandPrefix then
         local sourcePlayer = Players:GetPlayerByUserId(msg.TextSource.UserId)
@@ -1975,22 +2065,34 @@ end
 
 -- Viewport Size Change Handler (for responsive scaling)
 workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-    wait(0.1) -- Small delay to prevent rapid firing
+    task.wait(0.1)
     rescaleUI()
     notification("UI auto-resized for screen", 1, "info")
 end)
 
--- Enhanced Startup Animation with Pro Features Showcase
+-- Enhanced Startup Animation with Combat Features Showcase
 spawn(function()
     mainFrame.Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 1.5, 0)
-    wait(0.5)
-    notification("2take1 Hub ProEdition Loaded!", 4, "success")
+    task.wait(0.5)
+    notification("2take1 Hub Enhanced Combat Edition Loaded!", 4, "success")
     Services.Tween:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back),
         {Position = UDim2.new(0.5, -S(isMobile and 175 or 225), 0.5, -S(isMobile and 300 or 375))}):Play()
-    wait(1.5)
-    notification("Press ; for commands", 3, "info")
-    wait(1.5)
-    notification("Press Insert to toggle • Use -/+ for UI scaling", 3, "info")
-    wait(2)
-    notification("Pro tip: Type ;cmds to see all available commands", 4, "info")
+    task.wait(1.5)
+    notification("NEW: ;dmg [player] [percent] - Apply percentage damage!", 3, "info")
+    task.wait(1.5)
+    notification("NEW: ;loopkill [player/all] - Continuous killing!", 3, "info")
+    task.wait(1.5)
+    notification("ENHANCED: Protection system with instant retaliation!", 3, "info")
+    task.wait(2)
+    notification("All delays removed for maximum performance! Press ; for commands", 4, "success")
+end)
+
+-- Performance monitor for optimal combat performance
+spawn(function()
+    while true do
+        if Stats.fps < 30 then
+            notification("Low FPS detected - Consider enabling performance mode", 2, "warning")
+        end
+        task.wait(30)
+    end
 end)
