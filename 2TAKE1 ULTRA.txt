@@ -1,9 +1,9 @@
--- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 2.2 --
+-- 2take1 Hub Script 2025 Ultra Edition
 --[!] PATCH NOTES:
---    - Fixed command execution order: Commands like ';kill all' now correctly process all other players *before* processing the command issuer. This applies to UI buttons as well.
---    - Hardened admin command logic: Targeting for 'me', 'others', and 'all' is now universally consistent for both the script owner and designated admins.
---    - 'dmg' command correctly accepts decimal values (e.g., 'dmg player 50.5').
---    - UI resizing input remains patched for decimal percentages.
+--    - ';dmg' command now supports 'all' and 'others' targets.
+--    - ';admin' and ';unadmin' commands now support 'all' and 'others' targets.
+--    - Command execution order (others first, then self) is now respected for the ';dmg' command.
+--    - Hardened admin command logic remains consistent across all commands.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -946,13 +946,11 @@ local function killPlayer(t)
 		return false
 	end
 
-	-- Use a more reliable client-side method for the person running the command
 	if t == player then
 		t.Character.Humanoid.Health = 0
 		return true
 	end
 
-	-- Use the remote event method for other players
 	local tools = getTools()
 	if #tools == 0 then return false end
 	local tool = #tools > 1 and tools[2] or tools[1]
@@ -1021,7 +1019,7 @@ local function healPlayer(t)
 end
 
 -- Patched damagePlayer to correctly handle decimals from the 'dmg' command
-local function damagePlayer(t, damageAmount) -- damageAmount is now a direct value, not a percentage
+local function damagePlayer(t, damageAmount)
     if not t or not t.Character then return false end
     local h = t.Character:FindFirstChildOfClass("Humanoid")
     if not h or h.Health <= 0 then return false end
@@ -1107,7 +1105,7 @@ scaleInput.FocusLost:Connect(function(enterPressed)
     if not (enterPressed and canExecuteInput("scaleChange", "command")) then return end
     if not screenGui or not screenGui.Parent then return end
 
-    local cleanText = string.gsub(scaleInput.Text, "%%", "") -- Remove percentage sign
+    local cleanText = string.gsub(scaleInput.Text, "%%", "")
     local newScalePercent = tonumber(cleanText)
 
     if newScalePercent then
@@ -1127,7 +1125,7 @@ scaleInput.FocusLost:Connect(function(enterPressed)
     end
 end)
 
--- [FIX] Patched startLoopKill to respect execution order
+-- Patched startLoopKill to respect execution order
 local function startLoopKill(targets, sourcePlayer)
     if State.loopKillActive then
         stopLoopKill()
@@ -1554,47 +1552,72 @@ local cmds = {
             notification("Usage: ;scale [60-140] (example: ;scale 85.5)", 3, "warning")
         end
     end},
-    {"admin [player]", "Grant command admin to a player", function(args, sourcePlayer)
-        local targetName = args[2]
-        if not targetName then
-            notification("Usage: ;admin [player name]", 3, "warning")
+    -- [FIX] Command handler for 'admin' with group support
+    {"admin [player/all/others]", "Grant command admin to players", function(args, sourcePlayer)
+        local targets = findPlayer(args[2] or "me", sourcePlayer)
+        if not targets then
+            notification("Player not found: " .. tostring(args[2]), 2, "error")
             return
         end
-        local targetPlayer = findPlayer(targetName, sourcePlayer)
-        if targetPlayer and type(targetPlayer) ~= "table" then
-            if table.find(Data.adminPlayers, targetPlayer.Name) then
-                notification(targetPlayer.DisplayName .. " is already an admin.", 2, "info")
-            else
-                table.insert(Data.adminPlayers, targetPlayer.Name)
-                notification("Admin granted to " .. targetPlayer.DisplayName, 3, "success")
+
+        if type(targets) == "table" then
+            local count = 0
+            for _, p in pairs(targets) do
+                if p ~= player and not table.find(Data.adminPlayers, p.Name) then
+                    table.insert(Data.adminPlayers, p.Name)
+                    count = count + 1
+                end
             end
+            notification("Admin granted to " .. count .. " players", 3, "success")
         else
-            notification("Player not found: " .. targetName, 3, "error")
+            if targets ~= player and not table.find(Data.adminPlayers, targets.Name) then
+                table.insert(Data.adminPlayers, targets.Name)
+                notification("Admin granted to " .. targets.DisplayName, 3, "success")
+            elseif targets == player then
+                notification("You are the owner.", 2, "info")
+            else
+                notification(targets.DisplayName .. " is already an admin.", 2, "info")
+            end
         end
     end},
-    {"unadmin [player]", "Revoke command admin from a player", function(args, sourcePlayer)
-        local targetName = args[2]
-        if not targetName then
-            notification("Usage: ;unadmin [player name]", 3, "warning")
+    -- [FIX] Command handler for 'unadmin' with group support
+    {"unadmin [player/all/others]", "Revoke command admin from players", function(args, sourcePlayer)
+        local targets = findPlayer(args[2] or "me", sourcePlayer)
+        if not targets then
+            notification("Player not found: " .. tostring(args[2]), 2, "error")
             return
         end
-        local targetPlayer = findPlayer(targetName, sourcePlayer)
-        local lowerTargetName = targetName:lower()
-        if targetPlayer and type(targetPlayer) ~= "table" then
-            lowerTargetName = targetPlayer.Name:lower()
-        end
-        local foundIndex
-        for i, name in ipairs(Data.adminPlayers) do
-            if name:lower() == lowerTargetName then
-                foundIndex = i
-                break
+
+        local function revokeAdmin(targetPlayer)
+            if targetPlayer == player then return false end
+            local foundIndex
+            for i, name in ipairs(Data.adminPlayers) do
+                if name == targetPlayer.Name then
+                    foundIndex = i
+                    break
+                end
             end
+            if foundIndex then
+                table.remove(Data.adminPlayers, foundIndex)
+                return true
+            end
+            return false
         end
-        if foundIndex then
-            local removedName = table.remove(Data.adminPlayers, foundIndex)
-            notification("Admin revoked from " .. (targetPlayer and targetPlayer.DisplayName or removedName), 3, "success")
+
+        if type(targets) == "table" then
+            local count = 0
+            for _, p in pairs(targets) do
+                if revokeAdmin(p) then
+                    count = count + 1
+                end
+            end
+            notification("Admin revoked from " .. count .. " players", 3, "success")
         else
-            notification("Player not found or not an admin: " .. targetName, 2, "error")
+            if revokeAdmin(targets) then
+                notification("Admin revoked from " .. targets.DisplayName, 3, "success")
+            else
+                notification("Could not revoke admin from " .. targets.DisplayName, 2, "error")
+            end
         end
     end},
     {"tp/to [player]", "Teleport to a player", function(args, sourcePlayer)
@@ -1606,7 +1629,6 @@ local cmds = {
             notification("Player not found or character missing.", 2, "error")
         end
     end},
-    -- [FIX] Command handler for 'kill' with corrected execution order
     {"kill [player/all/others/me]", "Eliminate players", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
         if not targets then
@@ -1633,33 +1655,50 @@ local cmds = {
             end
         end
     end},
-    {"dmg [player] [percent]", "Apply damage to a player (accepts decimals)", function(args, sourcePlayer)
+    -- [FIX] Command handler for 'dmg' with group support and correct execution order
+    {"dmg [player/all/others] [percent]", "Apply damage to players (accepts decimals)", function(args, sourcePlayer)
         local targetName = args[2]
         local damagePercent = tonumber(args[3])
 
         if not targetName or not damagePercent then
-            notification("Usage: ;dmg [player] [percent] (e.g., ;dmg john 40.5)", 3, "warning")
+            notification("Usage: ;dmg [target] [percent] (e.g., ;dmg all 50.5)", 3, "warning")
             return
         end
 
-        local target = findPlayer(targetName, sourcePlayer)
-        if not target or type(target) == "table" or not target.Character then
-            notification("Player not found: " .. targetName, 2, "error")
+        local targets = findPlayer(targetName, sourcePlayer)
+        if not targets then
+            notification("Target not found: " .. targetName, 2, "error")
             return
         end
         
-        local h = target.Character:FindFirstChildOfClass("Humanoid")
-        if not h then
-             notification("Could not find humanoid for " .. target.DisplayName, 2, "error")
-             return
+        local function applyDamage(target)
+            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                local h = target.Character.Humanoid
+                local damageAmount = (damagePercent / 100) * h.MaxHealth
+                return damagePlayer(target, damageAmount)
+            end
+            return false
         end
 
-        local damageAmount = (damagePercent / 100) * h.MaxHealth
-
-        if damagePlayer(target, damageAmount) then
-            notification(string.format("Applied %.1f%% damage to %s", damagePercent, target.DisplayName), 3, "success")
+        if type(targets) == "table" then
+            local others_list, self_target, count = {}, nil, 0
+            for _, p in pairs(targets) do
+                if p == sourcePlayer then self_target = p else table.insert(others_list, p) end
+            end
+            
+            for _, p in pairs(others_list) do
+                if applyDamage(p) then count = count + 1 end
+                task.wait()
+            end
+            if self_target and applyDamage(self_target) then count = count + 1 end
+            
+            notification(string.format("Applied %.1f%% damage to %d players", damagePercent, count), 3, "success")
         else
-            notification("Failed to apply damage to " .. target.DisplayName, 2, "error")
+            if applyDamage(targets) then
+                notification(string.format("Applied %.1f%% damage to %s", damagePercent, targets.DisplayName), 3, "success")
+            else
+                notification("Failed to apply damage to " .. targets.DisplayName, 2, "error")
+            end
         end
     end},
     {"loopkill [player/all/others/me]", "Continuously eliminate target(s)", function(args, sourcePlayer)
@@ -1673,7 +1712,6 @@ local cmds = {
     {"unloopkill/stoploopkill", "Deactivate loop kill", function()
         stopLoopKill()
     end},
-    -- [FIX] Command handler for 'god' with corrected execution order
     {"god [player/all/others/me]", "Activate god mode", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
         if not targets then
