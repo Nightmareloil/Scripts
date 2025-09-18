@@ -1,12 +1,9 @@
--- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 2.7 --
+-- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 3.4 --
 --[!] PATCH NOTES:
---    - Fixed the ';heal' command to consistently restore players to their maximum health.
---    - Fixed the ';heal', ';god', and ';dmg' commands to correctly process multi-target arguments (e.g., 'all', 'others'), mirroring the functionality of the ';kill' command.
---    - Standardized remote event loops for multi-target commands to enhance reliability.
---    - Fixed FPS counter to provide an accurate, real-time value.
---    - Fixed 'Damage Dealt' and 'Damage Taken' statistics to correctly track values.
---    - Fixed the ';watch' command to display the target player's stats in the main panel, reverting to self on ';unwatch'.
---    - Removed the manual UI scale input box and the 'Accuracy' statistic as requested.
+--    - Fixed Reverse Damage to work while God Mode is active. God Mode's healing is now automatically paused when Reverse Damage is enabled, allowing retaliation to trigger correctly.
+--    - God Mode healing automatically resumes when Reverse Damage is turned off (if God Mode is still enabled).
+--    - Added clear notifications to inform the user when God Mode's healing is paused or resumed.
+--    - Maintained one-shot protection for both Reverse Damage and Protect.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -176,10 +173,10 @@ local Stats = {
 
 -- Data Storage
 local Data = {
-    adminPlayers = {}, connections = {}, flyObjects = {},
+    adminPlayers = {}, connections = { reverseDmg = nil }, flyObjects = {},
     noclipConnection = nil, flyConnection = nil, charDiedFlyConnection = nil,
-    watchConnection = nil, reverseDmgConnection = nil, speedConnections = {},
-    uiElements = {}, protectionConnection = nil, protectedPlayerConnection = nil,
+    watchConnection = nil, speedConnections = {},
+    uiElements = { godModeToggle = nil }, protectionConnection = nil, protectedPlayerConnection = nil,
     toolCache = {},
     originalUISize = nil
 }
@@ -657,7 +654,7 @@ addCornerAndStroke(mainFrame, S(14), Theme.glassBorder, S(1))
 createScalableElement(mainFrame,
     UDim2.new(0, isMobile and 380 or 480, 0, isMobile and 720 or 820),
     UDim2.new(0.5, -(isMobile and 190 or 240), 0.5, -(isMobile and 360 or 410)), nil, 14)
-Data.originalUISize = mainFrame.Size -- Store original size
+Data.originalUISize = mainFrame.Size 
 
 local mainGradient = Instance.new("UIGradient")
 mainGradient.Color = ColorSequence.new{
@@ -720,15 +717,12 @@ task.spawn(function()
     end
 end)
 
--- [[REMOVED]] Manual Scale Input Box was here
-
--- [[FIX]] Minimize Button Improved
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Size = UDim2.new(0, S(30), 0, S(30))
 minimizeBtn.Position = UDim2.new(1, -S(72), 0.5, -S(15))
 minimizeBtn.BackgroundColor3 = Theme.info
 minimizeBtn.BackgroundTransparency = 0.3
-minimizeBtn.Text = "-" -- Changed icon
+minimizeBtn.Text = "-"
 minimizeBtn.TextColor3 = Theme.text
 minimizeBtn.TextSize = S(isMobile and 20 or 24)
 minimizeBtn.Font = Enum.Font.SourceSansBold
@@ -810,11 +804,11 @@ minimizeBtn.MouseButton1Click:Connect(function()
 
     if State.isMinimized then
         content.Visible = false
-        minimizeBtn.Text = "☐" -- Changed icon
+        minimizeBtn.Text = "☐"
         Services.Tween:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = minimizedSize }):Play()
     else
         content.Visible = true
-        minimizeBtn.Text = "-" -- Changed icon
+        minimizeBtn.Text = "-"
         Services.Tween:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = Data.originalUISize }):Play()
     end
 end)
@@ -893,7 +887,6 @@ for _, stat in ipairs(statPositions) do
     label.Parent = statsFrame
     statLabels[stat.name] = label
 end
-
 
 -- [[ SCRIPT LOGIC AND FIXES ]] --
 
@@ -987,7 +980,6 @@ local function killPlayer(t)
 	return false
 end
 
--- [[FIXED]] Refactored godPlayer to take a single target, to be used in a loop like killPlayer.
 local function godPlayer(t)
     if not t or not t.Character or not t.Character:FindFirstChildOfClass("Humanoid") then
 		return false
@@ -1007,7 +999,6 @@ local function godPlayer(t)
     return false
 end
 
--- [[FIXED]] healPlayer correctly heals to MaxHealth.
 local function healPlayer(t)
     if not t or not t.Character then return false end
     local h = t.Character:FindFirstChildOfClass("Humanoid")
@@ -1044,71 +1035,63 @@ local function damagePlayer(t, damageAmount)
         local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
         if r then
             pcall(function() r:FireServer(h, damageAmount) end)
-            -- Track damage dealt and notify
             Stats.damageDealt = Stats.damageDealt + damageAmount
-            -- Notification moved to the command handler for multi-target commands
             return true
         end
     end
     return false
 end
 
+-- [[FIXED]] This pure retaliation system works even on one-shot kills.
 local function setupReverseDamage()
-    if Data.reverseDmgConnection then Data.reverseDmgConnection:Disconnect() end
+    if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect() end
     if not State.reverseDmg or not player.Character then return end
+
     local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
 
     local lastHealth = humanoid.Health
-    local lastDamageTime = 0
+    local lastAttackTime = 0
 
-    Data.reverseDmgConnection = humanoid.HealthChanged:Connect(function(newHealth)
-        if not State.reverseDmg then return end
-        
-        if newHealth < lastHealth and newHealth > 0 then
+    Data.connections.reverseDmg = humanoid.HealthChanged:Connect(function(newHealth)
+        if not State.reverseDmg then lastHealth = newHealth; return end
+
+        if newHealth < lastHealth then
             local currentTime = tick()
-            -- [[NOTE]] Damage received is now tracked globally in onChar()
-
-            if currentTime - lastDamageTime < 0.1 then return end
-            lastDamageTime = currentTime
+            if currentTime - lastAttackTime < 0.25 then lastHealth = newHealth; return end
+            lastAttackTime = currentTime
 
             task.spawn(function()
-                local closestAttacker = nil
-                local closestDistance = 30
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    for _, p in pairs(Players:GetPlayers()) do
-                        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            local dist = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                            if dist < closestDistance then
-                                closestDistance = dist
-                                closestAttacker = p
+                local creatorTag = humanoid:FindFirstChild("creator")
+                local attacker = nil
+                
+                if creatorTag and creatorTag.Value and creatorTag.Value:IsA("Player") then
+                    attacker = creatorTag.Value
+                else
+                    local closestDistance = 40
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        for _, p in pairs(Players:GetPlayers()) do
+                            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                                if p.Character:FindFirstChildOfClass("Tool") then
+                                    local dist = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                                    if dist < closestDistance then
+                                        closestDistance = dist
+                                        attacker = p
+                                    end
+                                end
                             end
                         end
                     end
                 end
                 
-                healPlayer(player) 
-                playSound("shield")
-
-                if closestAttacker then
-                    killPlayer(closestAttacker)
-                    notification("Reversed: Healed & eliminated " .. closestAttacker.DisplayName, 3, "combat")
-                else
-                    notification("Reversed damage: Healed", 2, "success")
+                if attacker then
+                    playSound("combat")
+                    killPlayer(attacker)
+                    notification("Retaliation! Eliminated " .. attacker.DisplayName, 3, "combat")
                 end
             end)
         end
         lastHealth = newHealth
-    end)
-
-    humanoid.Died:Connect(function()
-        if State.reverseDmg then
-            local creatorTag = humanoid:FindFirstChild("creator")
-            if creatorTag and creatorTag.Value then
-                notification("Eliminated by: " .. creatorTag.Value.Name, 4, "error")
-            end
-            notification("Reverse damage will reactivate on respawn.", 2, "info")
-        end
     end)
 end
 
@@ -1180,7 +1163,6 @@ local function farm(speed)
     end
 end
 
--- [[FIX]] watchPlayer command now just sets the target for the main update loop
 local function watchPlayer(targetName)
     local target = findPlayer(targetName)
     if not target or type(target) == "table" then
@@ -1192,6 +1174,7 @@ local function watchPlayer(targetName)
     notification("Now watching " .. target.DisplayName, 3, "success")
 end
 
+-- [[FIXED]] This is the pure retaliation protection system.
 local function protectPlayer(targetName)
     local target = findPlayer(targetName)
     if not target or type(target) == "table" then
@@ -1199,14 +1182,8 @@ local function protectPlayer(targetName)
         return
     end
 
-    if Data.protectionConnection then
-        Data.protectionConnection:Disconnect()
-        Data.protectionConnection = nil
-    end
-    if Data.protectedPlayerConnection then
-        Data.protectedPlayerConnection:Disconnect()
-        Data.protectedPlayerConnection = nil
-    end
+    if Data.protectionConnection then Data.protectionConnection:Disconnect() end
+    if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
 
     State.protectedPlayer = target
     State.protectionActive = true
@@ -1222,60 +1199,44 @@ local function protectPlayer(targetName)
         local lastAttackTime = 0
 
         Data.protectionConnection = humanoid.HealthChanged:Connect(function(newHealth)
-            if not State.protectionActive or State.protectedPlayer ~= target then return end
+            if not State.protectionActive or State.protectedPlayer ~= target then lastHealth = newHealth; return end
 
             if newHealth < lastHealth then
                 local currentTime = tick()
-
-                if currentTime - lastAttackTime < 1 then return end
+                if currentTime - lastAttackTime < 0.5 then lastHealth = newHealth; return end
                 lastAttackTime = currentTime
 
                 task.spawn(function()
-                    healPlayer(target)
-                    playSound("shield")
+                    local creatorTag = humanoid:FindFirstChild("creator")
+                    local attacker = nil
 
-                    local closestAttacker = nil
-                    local closestDistance = 30
-
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        for _, p in pairs(Players:GetPlayers()) do
-                            if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                                local hasTool = false
-                                for _, child in pairs(p.Character:GetChildren()) do
-                                    if child:IsA("Tool") then
-                                        hasTool = true
-                                        break
-                                    end
-                                end
-
-                                if hasTool then
-                                    local distance = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
-                                    if distance < closestDistance then
-                                        closestDistance = distance
-                                        closestAttacker = p
+                    if creatorTag and creatorTag.Value and creatorTag.Value:IsA("Player") then
+                        attacker = creatorTag.Value
+                    else
+                        local closestDistance = 40
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            for _, p in pairs(Players:GetPlayers()) do
+                                if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                                    if p.Character:FindFirstChildOfClass("Tool") then
+                                        local distance = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                                        if distance < closestDistance then
+                                            closestDistance = distance
+                                            attacker = p
+                                        end
                                     end
                                 end
                             end
                         end
                     end
-
-                    if closestAttacker then
-                        killPlayer(closestAttacker)
-                        notification("Protected: Healed " .. target.DisplayName .. " and eliminated " .. closestAttacker.DisplayName, 3, "combat")
-                    else
-                        notification("Protected: Healed " .. target.DisplayName, 2, "success")
+                    
+                    if attacker then
+                        playSound("combat")
+                        killPlayer(attacker)
+                        notification("Protected " .. target.DisplayName .. "! Eliminated " .. attacker.DisplayName, 3, "combat")
                     end
                 end)
             end
-
             lastHealth = newHealth
-        end)
-
-        humanoid.Died:Connect(function()
-            if State.protectionActive and State.protectedPlayer == target then
-                notification("Protection failed: " .. target.DisplayName .. " was eliminated", 5, "error")
-                playSound("error")
-            end
         end)
     end
 
@@ -1290,14 +1251,8 @@ local function protectPlayer(targetName)
 end
 
 local function stopProtection()
-    if Data.protectionConnection then
-        Data.protectionConnection:Disconnect()
-        Data.protectionConnection = nil
-    end
-    if Data.protectedPlayerConnection then
-        Data.protectedPlayerConnection:Disconnect()
-        Data.protectedPlayerConnection = nil
-    end
+    if Data.protectionConnection then Data.protectionConnection:Disconnect() end
+    if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
 
     State.protectedPlayer = nil
     State.protectionActive = false
@@ -1334,7 +1289,6 @@ end
 
 local powerHistory = {}
 
--- [[FIX]] updateStats now handles both local player and watched player
 local function updateStats()
     local targetPlayer = State.watchingPlayer or player
     local isWatching = (targetPlayer ~= player)
@@ -1342,8 +1296,7 @@ local function updateStats()
     statLabels.title.Text = isWatching and ("Watching: " .. targetPlayer.DisplayName) or "Player Statistics & Analytics"
     statLabels.title.TextColor3 = isWatching and Theme.warning or Theme.accent
 
-    -- == TARGET PLAYER STATS ==
-    local target_power, target_kills, target_health, target_maxHealth, target_deaths, target_ks, target_best_ks, tool_count
+    local target_power, target_kills, target_health, target_maxHealth, tool_count
     
     local ls = targetPlayer:FindFirstChild("leaderstats")
     if ls then
@@ -1384,7 +1337,6 @@ local function updateStats()
         statLabels.health.TextColor3 = Theme.textMuted
     end
 
-    -- == LOCAL PLAYER STATS (ALWAYS) ==
     local currentTime = tick()
     local sessionTime = currentTime - Stats.sessionStartTime
 
@@ -1444,6 +1396,39 @@ local function updateStats()
     end
     statLabels.eff.Text = "Efficiency: " .. eff
     statLabels.eff.TextColor3 = ec
+end
+
+-- [[FIXED]] This function now pauses healing if Reverse Damage is active.
+local function setLocalGodMode(enabled)
+    if State.godMode == enabled then return end
+    State.godMode = enabled
+
+    local t = Data.uiElements.godModeToggle
+    if t then
+        t.Text = enabled and "ON" or "OFF"
+        Services.Tween:Create(t, TweenInfo.new(0.25), {
+            BackgroundColor3 = enabled and Theme.success or Theme.danger,
+        }):Play()
+    end
+
+    if State.coroutines.godMode then
+        task.cancel(State.coroutines.godMode)
+        State.coroutines.godMode = nil
+    end
+
+    notification("God mode " .. (enabled and "activated" or "deactivated"), 2, enabled and "success" or "info")
+
+    if enabled then
+        State.coroutines.godMode = task.spawn(function()
+            while State.godMode and player.Character do
+                -- This is the crucial fix: only heal if Reverse Damage is OFF.
+                if not State.reverseDmg then
+                    godPlayer(player)
+                end
+                task.wait(1)
+            end
+        end)
+    end
 end
 
 local showCommandsUI
@@ -1554,7 +1539,6 @@ local cmds = {
             end
         end
     end},
-    -- [[FIXED]] Command logic now mirrors the kill command structure for reliability.
     {"dmg [player/all/others] [percent]", "Apply damage to players", function(args, sourcePlayer)
         local targetName = args[2]
         local damagePercent = tonumber(args[3])
@@ -1611,7 +1595,6 @@ local cmds = {
     {"unloopkill/stoploopkill", "Deactivate loop kill", function()
         stopLoopKill()
     end},
-    -- [[FIXED]] God command logic now mirrors the kill command structure.
     {"god [player/all/others/me]", "Activate god mode", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
         if not targets then
@@ -1619,19 +1602,21 @@ local cmds = {
             return
         end
         
-        if type(targets) == "table" then
-            local others_list, self_target, count = {}, nil, 0
-            for _, p in pairs(targets) do
-                if p == sourcePlayer then self_target = p else table.insert(others_list, p) end
-            end
+        if targets == player then
+            setLocalGodMode(true)
+            return
+        end
 
-            for _, p in pairs(others_list) do
+        if type(targets) == "table" then
+            local list, count = {}, 0
+            for _, p in pairs(targets) do
+                if p ~= player then table.insert(list, p) end
+            end
+            for _, p in pairs(list) do
                 if godPlayer(p) then count = count + 1 end
                 task.wait()
             end
-            if self_target and godPlayer(self_target) then count = count + 1 end
-            
-            notification("God mode activated on " .. count .. " players.", 2, "success")
+            notification("God mode activated on " .. count .. " other players.", 2, "success")
         else
             if godPlayer(targets) then
                 notification("God mode activated for " .. targets.DisplayName, 2, "success")
@@ -1640,7 +1625,14 @@ local cmds = {
             end
         end
     end},
-    -- [[FIXED]] Heal command logic now mirrors the kill command structure.
+    {"ungod [me]", "Deactivate your god mode", function(args, sourcePlayer)
+        local targetName = args[2] or "me"
+        if targetName:lower() ~= "me" then
+            notification("You can only use 'ungod' on yourself. Use 'kill' for others.", 3, "warning")
+            return
+        end
+        setLocalGodMode(false)
+    end},
     {"heal [player/all/others/me]", "Restore health to full for players", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
         if not targets then
@@ -1669,27 +1661,24 @@ local cmds = {
             end
         end
     end},
-    {"protect [player]", "Protect a player by healing on damage", function(args)
+    {"protect [player]", "Protect a player from attackers", function(args)
         if not args[2] then
             notification("Usage: ;protect [player name]", 3, "warning")
             return
         end
         protectPlayer(args[2])
     end},
-    {"unprotect", "Deactivate protection for current player", function()
+    {"unprotect", "Deactivate protection", function()
         stopProtection()
     end},
-    {"reversedmg", "Toggle reverse damage to heal on damage", function()
+    {"reversedmg", "Toggle instant retaliation on attackers", function()
         State.reverseDmg = not State.reverseDmg
         if State.reverseDmg then
+            notification("Reverse Damage ON. God Mode healing is paused.", 3, "success")
             setupReverseDamage()
-            notification("Reverse Damage ON. Provides invincibility. Standard god mode is paused.", 3, "success")
         else
-            if Data.reverseDmgConnection then
-                Data.reverseDmgConnection:Disconnect()
-                Data.reverseDmgConnection = nil
-            end
-            notification("Reverse Damage OFF. Standard god mode will resume if enabled.", 2, "info")
+            notification("Reverse Damage OFF. God Mode healing will resume if enabled.", 2, "info")
+            if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect(); Data.connections.reverseDmg = nil end
         end
     end},
     {"fly", "Toggle flight mode", function(args, sourcePlayer)
@@ -1819,7 +1808,6 @@ local cmds = {
         end
         watchPlayer(args[2])
     end},
-    -- [[FIX]] Simplified unwatch command
     {"unwatch", "Stop monitoring player", function()
         if State.watchingPlayer then
             State.watchingPlayer = nil
@@ -1959,12 +1947,12 @@ local function createToggle(text, callback, showSpeed)
         enabled = not enabled
         playSound("click")
 
+        t.Text = enabled and "ON" or "OFF"
+        
         Services.Tween:Create(t, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
             BackgroundColor3 = enabled and Theme.success or Theme.danger,
             Rotation = enabled and 180 or 0
         }):Play()
-
-        t.Text = enabled and "ON" or "OFF"
 
         callback(enabled)
     end)
@@ -2256,27 +2244,10 @@ createToggle("Slow Farm", function(e)
     end
 end)
 
-createToggle("God Mode", function(e)
-    State.godMode = e
-
-    if State.coroutines.godMode then
-        task.cancel(State.coroutines.godMode)
-        State.coroutines.godMode = nil
-    end
-
-    notification("God mode " .. (e and "activated" or "deactivated"), 2, e and "success" or "info")
-
-    if e then
-        State.coroutines.godMode = task.spawn(function()
-            while State.godMode and player.Character do
-                if not State.reverseDmg then
-                    godPlayer(player)
-                end
-                task.wait(1)
-            end
-        end)
-    end
+local godFrame, godToggleBtn = createToggle("God Mode", function(enabled)
+    setLocalGodMode(enabled)
 end)
+Data.uiElements.godModeToggle = godToggleBtn
 
 createToggle("Kill Aura", function(e)
     State.killAura = e
@@ -2314,7 +2285,7 @@ createToggle("Reverse Damage", function(e)
 end)
 
 createButton("Eliminate All Players", function() executeCmd(";kill all", player) end, Theme.danger)
-createButton("God Mode All Players", function() executeCmd(";god all", player) end, Theme.accent)
+createButton("God Mode Others", function() executeCmd(";god others", player) end, Theme.accent)
 createButton("Heal All Players", function() executeCmd(";heal all", player) end, Theme.heal)
 createButton("Reset Session Statistics", function()
     Stats.powerGainedThisSession = 0
@@ -2411,9 +2382,8 @@ closeBtn.MouseButton1Click:Connect(function()
     State.flying = false
     executeCmd(";unfly", player)
 
-    for _, c in pairs(Data.connections) do if c then c:Disconnect() end end
+    for name, c in pairs(Data.connections) do if c then c:Disconnect() end end
     if Data.noclipConnection then Data.noclipConnection:Disconnect() end
-    if Data.reverseDmgConnection then Data.reverseDmgConnection:Disconnect() end
     if Data.watchConnection then Data.watchConnection:Disconnect() end
     if Data.protectionConnection then Data.protectionConnection:Disconnect() end
     if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
@@ -2442,7 +2412,6 @@ end)
 local lastLoop = 0
 local updateInterval = 0.05
 
--- [[FIX]] Accurate FPS counter
 Services.Run.Heartbeat:Connect(function(step)
     Performance.fps = math.floor(1/step)
 end)
@@ -2455,7 +2424,6 @@ local mainLoop = Services.Run.Heartbeat:Connect(function()
     pcall(updatePerformanceMetrics)
     pcall(updateStats)
 end)
-
 table.insert(Data.connections, mainLoop)
 
 local function onChar(char)
@@ -2471,7 +2439,6 @@ local function onChar(char)
 
     local h = char:WaitForChild("Humanoid", 5)
     if h then
-        -- [[FIX]] Add global damage/death tracking
         local lastHealth = h.Health
         h.HealthChanged:Connect(function(newHealth)
             if newHealth < lastHealth then
@@ -2479,15 +2446,32 @@ local function onChar(char)
             end
             lastHealth = newHealth
         end)
+        
+        -- This is the guaranteed revenge kill failsafe.
         h.Died:Connect(function()
             Stats.deaths = Stats.deaths + 1
             Stats.killStreak = 0
+
+            if State.reverseDmg then
+                task.wait(0.1) 
+                local creatorTag = h:FindFirstChild("creator")
+                if creatorTag and creatorTag.Value and creatorTag.Value:IsA("Player") then
+                    local killer = creatorTag.Value
+                    if killer ~= player then
+                        notification("Avenging death...", 2, "combat")
+                        playSound("combat")
+                        killPlayer(killer) 
+                        notification("Avenged! Eliminated " .. killer.DisplayName, 3, "success")
+                    end
+                end
+            end
         end)
 
         h.WalkSpeed = State.speedHack and (Config.flySpeed or 50) or Config.walkSpeed
         h.JumpPower = Config.jumpPower
+        
+        setupReverseDamage()
 
-        if State.reverseDmg then setupReverseDamage() end
         if State.speedHack then toggleSpeedHack(true, Config.flySpeed or 50) end
 
         if State.noclip and Data.noclipConnection then
@@ -2504,7 +2488,7 @@ local function onChar(char)
         if State.godMode then
             task.spawn(function()
                 task.wait(1)
-                godPlayer(player)
+                setLocalGodMode(true) -- Re-apply god mode state correctly
             end)
         end
     end
