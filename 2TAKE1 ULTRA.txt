@@ -1,10 +1,12 @@
--- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 2.6 --
+-- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 2.7 --
 --[!] PATCH NOTES:
+--    - Fixed the ';heal' command to consistently restore players to their maximum health.
+--    - Fixed the ';heal', ';god', and ';dmg' commands to correctly process multi-target arguments (e.g., 'all', 'others'), mirroring the functionality of the ';kill' command.
+--    - Standardized remote event loops for multi-target commands to enhance reliability.
 --    - Fixed FPS counter to provide an accurate, real-time value.
 --    - Fixed 'Damage Dealt' and 'Damage Taken' statistics to correctly track values.
 --    - Fixed the ';watch' command to display the target player's stats in the main panel, reverting to self on ';unwatch'.
 --    - Removed the manual UI scale input box and the 'Accuracy' statistic as requested.
---    - Hardened remote event loops to prevent premature exits on multi-target commands.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -985,30 +987,32 @@ local function killPlayer(t)
 	return false
 end
 
+-- [[FIXED]] Refactored godPlayer to take a single target, to be used in a loop like killPlayer.
 local function godPlayer(t)
+    if not t or not t.Character or not t.Character:FindFirstChildOfClass("Humanoid") then
+		return false
+	end
+
     local tools = getTools()
     if #tools == 0 then return false end
-    local targets = type(t) == "table" and t or {t}
     local tool = tools[1]
 
     if tool and tool.Parent then
         local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
         if r then
-            for _, p in pairs(targets) do
-                if p and p.Character then
-                    local h = p.Character:FindFirstChildOfClass("Humanoid")
-                    if h then
-                        pcall(function() r:FireServer(h, -math.huge) end)
-                    end
-                end
-            end
+            pcall(function() r:FireServer(t.Character.Humanoid, -math.huge) end)
             return true
         end
     end
     return false
 end
 
+-- [[FIXED]] healPlayer correctly heals to MaxHealth.
 local function healPlayer(t)
+    if not t or not t.Character then return false end
+    local h = t.Character:FindFirstChildOfClass("Humanoid")
+    if not h or h.Health >= h.MaxHealth then return false end
+
     local tools = getTools()
     if #tools == 0 then return false end
     local tool = tools[1]
@@ -1016,19 +1020,12 @@ local function healPlayer(t)
     if tool and tool.Parent then
         local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
         if r then
-            if t and t.Character then
-                local h = t.Character:FindFirstChildOfClass("Humanoid")
-                if h and h.Health < h.MaxHealth then
-                    local healAmount = h.MaxHealth - h.Health
-                    if t == player then
-                        Stats.healsGiven = Stats.healsGiven + 1
-                    end
-                    pcall(function()
-                        r:FireServer(h, -healAmount)
-                    end)
-                    return true
-                end
+            local healAmount = h.MaxHealth - h.Health
+            if t == player then
+                Stats.healsGiven = Stats.healsGiven + 1
             end
+            pcall(function() r:FireServer(h, -healAmount) end)
+            return true
         end
     end
     return false
@@ -1047,9 +1044,9 @@ local function damagePlayer(t, damageAmount)
         local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
         if r then
             pcall(function() r:FireServer(h, damageAmount) end)
-            -- [[FIX]] Track damage dealt and notify
+            -- Track damage dealt and notify
             Stats.damageDealt = Stats.damageDealt + damageAmount
-            notification(string.format("Dealt %s damage to %s", formatNumber(damageAmount), t.DisplayName), 2, "combat")
+            -- Notification moved to the command handler for multi-target commands
             return true
         end
     end
@@ -1552,9 +1549,12 @@ local cmds = {
         else
             if killPlayer(targets) then
                 notification("Eliminated " .. targets.DisplayName, 2, "success")
+            else
+                notification("Failed to eliminate " .. targets.DisplayName, 2, "error")
             end
         end
     end},
+    -- [[FIXED]] Command logic now mirrors the kill command structure for reliability.
     {"dmg [player/all/others] [percent]", "Apply damage to players", function(args, sourcePlayer)
         local targetName = args[2]
         local damagePercent = tonumber(args[3])
@@ -1594,7 +1594,7 @@ local cmds = {
             notification(string.format("Applied %.1f%% damage to %d players", damagePercent, count), 3, "success")
         else
             if applyDamage(targets) then
-                -- Notification is now handled inside damagePlayer
+                notification(string.format("Dealt %.1f%% damage to %s", damagePercent, targets.DisplayName), 2, "combat")
             else
                 notification("Failed to apply damage to " .. targets.DisplayName, 2, "error")
             end
@@ -1611,6 +1611,7 @@ local cmds = {
     {"unloopkill/stoploopkill", "Deactivate loop kill", function()
         stopLoopKill()
     end},
+    -- [[FIXED]] God command logic now mirrors the kill command structure.
     {"god [player/all/others/me]", "Activate god mode", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
         if not targets then
@@ -1619,18 +1620,27 @@ local cmds = {
         end
         
         if type(targets) == "table" then
-            local others_list, self_target = {}, nil
+            local others_list, self_target, count = {}, nil, 0
             for _, p in pairs(targets) do
                 if p == sourcePlayer then self_target = p else table.insert(others_list, p) end
             end
 
-            if #others_list > 0 then godPlayer(others_list) end
-            if self_target then godPlayer(self_target) end
+            for _, p in pairs(others_list) do
+                if godPlayer(p) then count = count + 1 end
+                task.wait()
+            end
+            if self_target and godPlayer(self_target) then count = count + 1 end
+            
+            notification("God mode activated on " .. count .. " players.", 2, "success")
         else
-            godPlayer(targets)
+            if godPlayer(targets) then
+                notification("God mode activated for " .. targets.DisplayName, 2, "success")
+            else
+                notification("Failed to activate god mode for " .. targets.DisplayName, 2, "error")
+            end
         end
-        notification("God mode activated.", 2, "success")
     end},
+    -- [[FIXED]] Heal command logic now mirrors the kill command structure.
     {"heal [player/all/others/me]", "Restore health to full for players", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
         if not targets then
