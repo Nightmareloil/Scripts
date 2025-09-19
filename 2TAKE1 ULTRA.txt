@@ -1,9 +1,11 @@
--- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 3.4 --
+-- 2take1 Hub Script 2025 Ultra Edition - Optimized & Patched Version 3.5 --
 --[!] PATCH NOTES:
---    - Fixed Reverse Damage to work while God Mode is active. God Mode's healing is now automatically paused when Reverse Damage is enabled, allowing retaliation to trigger correctly.
---    - God Mode healing automatically resumes when Reverse Damage is turned off (if God Mode is still enabled).
---    - Added clear notifications to inform the user when God Mode's healing is paused or resumed.
---    - Maintained one-shot protection for both Reverse Damage and Protect.
+--    - Integrated new "Enhanced Reverse Damage System with God Mode Integration".
+--    - Reverse Damage now correctly pauses God Mode's healing effect to ensure retaliation triggers successfully.
+--    - God Mode healing automatically resumes when Reverse Damage is turned off.
+--    - Added advanced attacker detection with multiple fallback methods (creator tag, damage history, proximity).
+--    - Included enhanced notifications for retaliation, providing confidence levels and detection methods.
+--    - Maintained one-shot protection for both Reverse Damage and the 'protect' command.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -1042,57 +1044,256 @@ local function damagePlayer(t, damageAmount)
     return false
 end
 
--- [[FIXED]] This pure retaliation system works even on one-shot kills.
-local function setupReverseDamage()
-    if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect() end
-    if not State.reverseDmg or not player.Character then return end
+-- [[ NEW ]] Enhanced Reverse Damage System with God Mode Integration
+local attackerHistory = {} -- Track recent attackers with timestamps
+local godModeOriginalState = nil -- Store God Mode state before pausing
 
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
+-- Configuration for reverse damage
+local REVERSE_CONFIG = {
+    ATTACK_COOLDOWN = 0.25,        -- Minimum time between retaliation triggers
+    ATTACKER_MEMORY = 2.0,         -- How long to remember attackers
+    MAX_SEARCH_DISTANCE = 50,      -- Maximum distance to search for attackers
+    CLEANUP_INTERVAL = 5.0         -- How often to clean old attacker data
+}
 
-    local lastHealth = humanoid.Health
-    local lastAttackTime = 0
-
-    Data.connections.reverseDmg = humanoid.HealthChanged:Connect(function(newHealth)
-        if not State.reverseDmg then lastHealth = newHealth; return end
-
-        if newHealth < lastHealth then
-            local currentTime = tick()
-            if currentTime - lastAttackTime < 0.25 then lastHealth = newHealth; return end
-            lastAttackTime = currentTime
-
-            task.spawn(function()
-                local creatorTag = humanoid:FindFirstChild("creator")
-                local attacker = nil
-                
-                if creatorTag and creatorTag.Value and creatorTag.Value:IsA("Player") then
-                    attacker = creatorTag.Value
-                else
-                    local closestDistance = 40
-                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        for _, p in pairs(Players:GetPlayers()) do
-                            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-                                if p.Character:FindFirstChildOfClass("Tool") then
-                                    local dist = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                                    if dist < closestDistance then
-                                        closestDistance = dist
-                                        attacker = p
-                                    end
-                                end
-                            end
-                        end
+-- Enhanced attacker detection with multiple fallback methods
+local function detectAttacker(humanoid, damageAmount)
+    local bestAttacker = nil
+    local confidence = 0
+    
+    -- Method 1: Creator tag (highest priority)
+    local creatorTag = humanoid:FindFirstChild("creator")
+    if creatorTag and creatorTag.Value and creatorTag.Value:IsA("Player") and creatorTag.Value ~= player then
+        bestAttacker = creatorTag.Value
+        confidence = 100
+        attackerHistory[creatorTag.Value] = {
+            timestamp = tick(),
+            method = "creator_tag",
+            damage = damageAmount
+        }
+    end
+    
+    -- Method 2: Check recent damage dealers from history
+    if confidence < 90 then
+        local currentTime = tick()
+        local recentAttacker = nil
+        local mostRecentTime = 0
+        
+        for attacker, data in pairs(attackerHistory) do
+            if currentTime - data.timestamp < REVERSE_CONFIG.ATTACKER_MEMORY then
+                if data.timestamp > mostRecentTime then
+                    mostRecentTime = data.timestamp
+                    recentAttacker = attacker
+                end
+            end
+        end
+        
+        if recentAttacker and confidence < 80 then
+            bestAttacker = recentAttacker
+            confidence = 80
+        end
+    end
+    
+    -- Method 3: Proximity-based detection with weapon check
+    if confidence < 70 and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local playerPos = player.Character.HumanoidRootPart.Position
+        local closestDistance = REVERSE_CONFIG.MAX_SEARCH_DISTANCE
+        local proximityAttacker = nil
+        
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local pHumanoid = p.Character:FindFirstChildOfClass("Humanoid")
+                if pHumanoid and pHumanoid.Health > 0 then
+                    local distance = (p.Character.HumanoidRootPart.Position - playerPos).Magnitude
+                    
+                    -- Check if player has weapon or recently had one
+                    local hasWeapon = p.Character:FindFirstChildOfClass("Tool") or
+                                    p.Backpack:FindFirstChildOfClass("Tool")
+                    
+                    if hasWeapon and distance < closestDistance then
+                        closestDistance = distance
+                        proximityAttacker = p
                     end
                 end
-                
-                if attacker then
-                    playSound("combat")
-                    killPlayer(attacker)
-                    notification("Retaliation! Eliminated " .. attacker.DisplayName, 3, "combat")
-                end
-            end)
+            end
         end
+        
+        if proximityAttacker then
+            bestAttacker = proximityAttacker
+            confidence = math.max(30, 70 - (closestDistance / REVERSE_CONFIG.MAX_SEARCH_DISTANCE) * 40)
+            
+            -- Store in history for future reference
+            attackerHistory[proximityAttacker] = {
+                timestamp = tick(),
+                method = "proximity",
+                damage = damageAmount,
+                distance = closestDistance
+            }
+        end
+    end
+    
+    return bestAttacker, confidence
+end
+
+-- Pause God Mode healing to allow retaliation
+local function pauseGodMode()
+    if State.godMode and not godModeOriginalState then
+        godModeOriginalState = true
+        State.godMode = false -- Temporarily disable God Mode
+        
+        -- Schedule re-enable after brief delay
+        task.spawn(function()
+            task.wait(0.1) -- Brief pause to allow damage registration
+            if godModeOriginalState then
+                State.godMode = true
+                godModeOriginalState = nil
+            end
+        end)
+    end
+end
+
+-- Resume God Mode if it was paused
+local function resumeGodMode()
+    if godModeOriginalState then
+        State.godMode = true
+        godModeOriginalState = nil
+    end
+end
+
+-- Clean up old attacker data
+local function cleanupAttackerHistory()
+    local currentTime = tick()
+    for attacker, data in pairs(attackerHistory) do
+        if currentTime - data.timestamp > REVERSE_CONFIG.ATTACKER_MEMORY then
+            attackerHistory[attacker] = nil
+        end
+    end
+end
+
+-- Enhanced retaliation with better feedback
+local function executeRetaliation(attacker, confidence, damageAmount)
+    if not attacker or not attacker.Character then return false end
+    
+    -- Pause God Mode to ensure retaliation works
+    pauseGodMode()
+    
+    local success = pcall(function()
+        playSound("combat")
+        killPlayer(attacker)
+        
+        -- Enhanced notification with confidence and method info
+        local method = attackerHistory[attacker] and attackerHistory[attacker].method or "unknown"
+        local message = string.format("⚡ Retaliation! Eliminated %s (%.0f%% confidence, %s)", 
+            attacker.DisplayName, confidence, method)
+        
+        notification(message, 3, "combat")
+    end)
+    
+    -- Clean up attacker from history after successful retaliation
+    if success then
+        attackerHistory[attacker] = nil
+    end
+    
+    return success
+end
+
+-- Main reverse damage setup function
+local function setupReverseDamage()
+    -- Clean up existing connection
+    if Data.connections.reverseDmg then 
+        Data.connections.reverseDmg:Disconnect() 
+        Data.connections.reverseDmg = nil
+    end
+    
+    -- Clear cleanup timer if exists
+    if Data.connections.reverseDmgCleanup then
+        if type(Data.connections.reverseDmgCleanup) == "table" then
+             task.cancel(Data.connections.reverseDmgCleanup)
+        elseif type(Data.connections.reverseDmgCleanup) == "thread" then
+             -- For older task.spawn implementations
+             coroutine.close(Data.connections.reverseDmgCleanup)
+        else
+             -- For RBXScriptConnection
+             Data.connections.reverseDmgCleanup:Disconnect()
+        end
+        Data.connections.reverseDmgCleanup = nil
+    end
+    
+    -- Validate state and character
+    if not State.reverseDmg or not player.Character then 
+        attackerHistory = {} -- Clear history when disabled
+        return 
+    end
+    
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    
+    local lastHealth = humanoid.Health
+    local lastAttackTime = 0
+    
+    -- Set up periodic cleanup
+    Data.connections.reverseDmgCleanup = task.spawn(function()
+        while State.reverseDmg do
+            task.wait(REVERSE_CONFIG.CLEANUP_INTERVAL)
+            cleanupAttackerHistory()
+        end
+    end)
+    
+    -- Main health change handler
+    Data.connections.reverseDmg = humanoid.HealthChanged:Connect(function(newHealth)
+        if not State.reverseDmg then 
+            lastHealth = newHealth
+            return 
+        end
+        
+        -- Only trigger on damage (health decrease)
+        if newHealth >= lastHealth then
+            lastHealth = newHealth
+            return
+        end
+        
+        local damageAmount = lastHealth - newHealth
+        local currentTime = tick()
+        
+        -- Prevent spam triggering with cooldown
+        if currentTime - lastAttackTime < REVERSE_CONFIG.ATTACK_COOLDOWN then
+            lastHealth = newHealth
+            return
+        end
+        
+        lastAttackTime = currentTime
+        
+        -- Handle retaliation asynchronously
+        task.spawn(function()
+            local attacker, confidence = detectAttacker(humanoid, damageAmount)
+            
+            if attacker and attacker.Character then
+                local success = executeRetaliation(attacker, confidence, damageAmount)
+                
+                if not success then
+                    -- Fallback notification if retaliation failed
+                    notification("⚠️ Retaliation failed - target may be protected", 2, "warning")
+                end
+            else
+                -- Optional: Notify when no attacker found (for debugging)
+                if damageAmount > 10 then -- Only for significant damage
+                    notification("🔍 No attacker identified for retaliation", 1.5, "info")
+                end
+            end
+        end)
+        
         lastHealth = newHealth
     end)
+    
+    -- Handle character respawning
+    if not Data.connections.reverseDmgRespawn then
+        Data.connections.reverseDmgRespawn = player.CharacterAdded:Connect(function()
+            task.wait(1) -- Wait for character to fully load
+            if State.reverseDmg then
+                setupReverseDamage() -- Reinitialize on respawn
+            end
+        end)
+    end
 end
 
 local function startLoopKill(targets, sourcePlayer)
@@ -1421,8 +1622,9 @@ local function setLocalGodMode(enabled)
     if enabled then
         State.coroutines.godMode = task.spawn(function()
             while State.godMode and player.Character do
-                -- This is the crucial fix: only heal if Reverse Damage is OFF.
-                if not State.reverseDmg then
+                -- This check works with the new system because the new system
+                -- will temporarily set State.godMode to false when retaliation is needed.
+                if State.godMode then
                     godPlayer(player)
                 end
                 task.wait(1)
@@ -1671,14 +1873,35 @@ local cmds = {
     {"unprotect", "Deactivate protection", function()
         stopProtection()
     end},
+    -- [[ UPDATED ]] Command now uses the new enhanced system.
     {"reversedmg", "Toggle instant retaliation on attackers", function()
         State.reverseDmg = not State.reverseDmg
+        
         if State.reverseDmg then
-            notification("Reverse Damage ON. God Mode healing is paused.", 3, "success")
             setupReverseDamage()
+            notification("Reverse Damage: ON - God Mode healing paused", 2, "success")
         else
-            notification("Reverse Damage OFF. God Mode healing will resume if enabled.", 2, "info")
-            if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect(); Data.connections.reverseDmg = nil end
+            -- Clean shutdown
+            if Data.connections.reverseDmg then
+                Data.connections.reverseDmg:Disconnect()
+                Data.connections.reverseDmg = nil
+            end
+            if Data.connections.reverseDmgCleanup then
+                if type(Data.connections.reverseDmgCleanup) == "table" then
+                    task.cancel(Data.connections.reverseDmgCleanup)
+                else
+                    pcall(function() Data.connections.reverseDmgCleanup:Disconnect() end)
+                end
+                Data.connections.reverseDmgCleanup = nil
+            end
+            
+            -- Resume God Mode if it was paused
+            resumeGodMode()
+            
+            -- Clear history
+            attackerHistory = {}
+            
+            notification("Reverse Damage: OFF - God Mode healing resumed", 2, "info")
         end
     end},
     {"fly", "Toggle flight mode", function(args, sourcePlayer)
@@ -2382,13 +2605,13 @@ closeBtn.MouseButton1Click:Connect(function()
     State.flying = false
     executeCmd(";unfly", player)
 
-    for name, c in pairs(Data.connections) do if c then c:Disconnect() end end
-    if Data.noclipConnection then Data.noclipConnection:Disconnect() end
-    if Data.watchConnection then Data.watchConnection:Disconnect() end
-    if Data.protectionConnection then Data.protectionConnection:Disconnect() end
-    if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
-    for _, conn in pairs(Data.speedConnections) do if conn then conn:Disconnect() end end
-    for _, conn in pairs(State.loopKillConnections) do if conn then conn:Disconnect() end end
+    for name, c in pairs(Data.connections) do if c then pcall(function() c:Disconnect() end) end end
+    if Data.noclipConnection then pcall(function() Data.noclipConnection:Disconnect() end) end
+    if Data.watchConnection then pcall(function() Data.watchConnection:Disconnect() end) end
+    if Data.protectionConnection then pcall(function() Data.protectionConnection:Disconnect() end) end
+    if Data.protectedPlayerConnection then pcall(function() Data.protectedPlayerConnection:Disconnect() end) end
+    for _, conn in pairs(Data.speedConnections) do if conn then pcall(function() conn:Disconnect() end) end end
+    for _, conn in pairs(State.loopKillConnections) do if conn then pcall(function() conn:Disconnect() end) end end
 
     for _, coroutine in pairs(State.coroutines) do
         if coroutine then task.cancel(coroutine) end
@@ -2447,7 +2670,7 @@ local function onChar(char)
             lastHealth = newHealth
         end)
         
-        -- This is the guaranteed revenge kill failsafe.
+        -- This is the guaranteed revenge kill failsafe for the NEW system.
         h.Died:Connect(function()
             Stats.deaths = Stats.deaths + 1
             Stats.killStreak = 0
@@ -2459,9 +2682,8 @@ local function onChar(char)
                     local killer = creatorTag.Value
                     if killer ~= player then
                         notification("Avenging death...", 2, "combat")
-                        playSound("combat")
-                        killPlayer(killer) 
-                        notification("Avenged! Eliminated " .. killer.DisplayName, 3, "success")
+                        -- The new system uses executeRetaliation.
+                        executeRetaliation(killer, 100, "Died")
                     end
                 end
             end
@@ -2470,7 +2692,10 @@ local function onChar(char)
         h.WalkSpeed = State.speedHack and (Config.flySpeed or 50) or Config.walkSpeed
         h.JumpPower = Config.jumpPower
         
-        setupReverseDamage()
+        -- This will set up the new system on character load
+        if State.reverseDmg then
+            setupReverseDamage()
+        end
 
         if State.speedHack then toggleSpeedHack(true, Config.flySpeed or 50) end
 
