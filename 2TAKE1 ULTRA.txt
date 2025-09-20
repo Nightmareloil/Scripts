@@ -1058,7 +1058,7 @@ end
 local REVERSE_CONFIG = {
     ATTACK_COOLDOWN = 0.1,         -- Minimum time between retaliation triggers per attacker
     CLEANUP_INTERVAL = 5.0,        -- How often to clean old attacker data
-    PROXIMITY_RANGE = 15           -- Range to check for potential attackers
+    PROXIMITY_RANGE = 5           -- Range to check for potential attackers
 }
 
 local attackerHistory = {} -- Track recent attackers
