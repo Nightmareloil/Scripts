@@ -1053,26 +1053,69 @@ local function damagePlayer(t, damageAmount)
     return false
 end
 
--- [[ FIXED REVERSE DAMAGE SYSTEM - DETECTS ATTACKS WITH GOD MODE ]] --
+-- [[ FIXED REVERSE DAMAGE SYSTEM - SIMPLIFIED AND RELIABLE ]] --
 -- Configuration for reverse damage
 local REVERSE_CONFIG = {
-    ATTACK_COOLDOWN = 0.25,        -- Minimum time between retaliation triggers per attacker
-    PROXIMITY_DISTANCE = 15,       -- Distance to monitor for attackers
-    TOOL_CHECK_INTERVAL = 0.1,     -- How often to check for attacking players
-    CLEANUP_INTERVAL = 5.0         -- How often to clean old attacker data
+    ATTACK_COOLDOWN = 0.1,         -- Minimum time between retaliation triggers per attacker
+    CLEANUP_INTERVAL = 5.0,        -- How often to clean old attacker data
+    PROXIMITY_RANGE = 15           -- Range to check for potential attackers
 }
 
 local attackerHistory = {} -- Track recent attackers
-local proximityMonitor = nil
+local lastHealthSnapshot = 0
+local healthMonitorActive = false
 
--- Detect players attempting to attack (even with God Mode on)
-local function detectAttackAttempt()
-    if not State.reverseDmg or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return
+-- Clean up old attacker data
+local function cleanupAttackerHistory()
+    local currentTime = tick()
+    for attacker, data in pairs(attackerHistory) do
+        if currentTime - data.timestamp > 8 then
+            attackerHistory[attacker] = nil
+        end
+    end
+end
+
+-- Execute retaliation against attacker
+local function executeRetaliation(attacker, method, extraInfo)
+    if not attacker or not attacker.Character then return false end
+    
+    local currentTime = tick()
+    local lastAttackTime = attackerHistory[attacker] and attackerHistory[attacker].timestamp or 0
+    
+    -- Check cooldown to prevent spam
+    if currentTime - lastAttackTime < REVERSE_CONFIG.ATTACK_COOLDOWN then
+        return false
+    end
+    
+    -- Record the attack
+    attackerHistory[attacker] = {
+        timestamp = currentTime,
+        method = method,
+        info = extraInfo
+    }
+    
+    local success = pcall(function()
+        playSound("combat")
+        killPlayer(attacker)
+        notification(string.format("⚡ Retaliation! Eliminated %s (%s)", 
+            attacker.DisplayName, method), 3, "combat")
+    end)
+    
+    if not success then
+        notification("⚠️ Retaliation failed - target may be protected", 2, "warning")
+    end
+    
+    return success
+end
+
+-- Find nearby players with weapons
+local function findNearbyAttackers()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return {}
     end
     
     local playerPos = player.Character.HumanoidRootPart.Position
-    local currentTime = tick()
+    local nearbyAttackers = {}
     
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -1080,140 +1123,46 @@ local function detectAttackAttempt()
             if pHumanoid and pHumanoid.Health > 0 then
                 local distance = (p.Character.HumanoidRootPart.Position - playerPos).Magnitude
                 
-                -- Check if player is close enough and has a weapon equipped
-                if distance <= REVERSE_CONFIG.PROXIMITY_DISTANCE then
+                if distance <= REVERSE_CONFIG.PROXIMITY_RANGE then
+                    -- Check if they have a weapon
                     local equippedTool = p.Character:FindFirstChildOfClass("Tool")
+                    local hasBackpackTool = p.Backpack:FindFirstChildOfClass("Tool")
                     
-                    if equippedTool then
-                        -- Check if this player recently attacked
-                        local lastAttackTime = attackerHistory[p] and attackerHistory[p].timestamp or 0
-                        
-                        if currentTime - lastAttackTime >= REVERSE_CONFIG.ATTACK_COOLDOWN then
-                            -- Mark as attacker and retaliate
-                            attackerHistory[p] = {
-                                timestamp = currentTime,
-                                method = "proximity_weapon",
-                                distance = distance,
-                                weapon = equippedTool.Name
-                            }
-                            
-                            -- Execute retaliation
-                            task.spawn(function()
-                                local success = pcall(function()
-                                    playSound("combat")
-                                    killPlayer(p)
-                                    notification(string.format("⚡ Attack Detected! Eliminated %s (Distance: %.1f, Weapon: %s)", 
-                                        p.DisplayName, distance, equippedTool.Name), 3, "combat")
-                                end)
-                                
-                                if not success then
-                                    notification("⚠️ Retaliation failed - target may be protected", 2, "warning")
-                                end
-                            end)
-                        end
+                    if equippedTool or hasBackpackTool then
+                        table.insert(nearbyAttackers, {
+                            player = p,
+                            distance = distance,
+                            tool = equippedTool and equippedTool.Name or "Unknown"
+                        })
                     end
                 end
             end
         end
     end
-end
-
--- Enhanced detection using RemoteEvent monitoring
-local function monitorDamageAttempts()
-    -- Monitor for damage RemoteEvent calls targeting the player
-    local originalNamecall
-    originalNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-        
-        if method == "FireServer" and self.Name == "RemoteEvent" and self.Parent and self.Parent.Name == "dmg" then
-            -- Check if the damage is targeting the player
-            if args[1] and args[1] == player.Character:FindFirstChildOfClass("Humanoid") and args[2] and args[2] > 0 then
-                -- Someone is trying to damage the player
-                local attacker = Players:GetPlayerByUserId(game.Players.LocalPlayer.UserId) -- This gets overridden in real execution
-                
-                -- Try to find the actual attacker by checking who owns the tool
-                for _, p in pairs(Players:GetPlayers()) do
-                    if p ~= player and p.Character then
-                        local tool = p.Character:FindFirstChildOfClass("Tool")
-                        if tool and tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent") == self then
-                            attacker = p
-                            break
-                        end
-                    end
-                end
-                
-                if attacker and attacker ~= player then
-                    local currentTime = tick()
-                    local lastAttackTime = attackerHistory[attacker] and attackerHistory[attacker].timestamp or 0
-                    
-                    if currentTime - lastAttackTime >= REVERSE_CONFIG.ATTACK_COOLDOWN then
-                        attackerHistory[attacker] = {
-                            timestamp = currentTime,
-                            method = "remote_intercept",
-                            damage_attempted = args[2]
-                        }
-                        
-                        task.spawn(function()
-                            playSound("combat")
-                            killPlayer(attacker)
-                            notification(string.format("⚡ Attack Intercepted! Eliminated %s (Damage: %s)", 
-                                attacker.DisplayName, tostring(args[2])), 3, "combat")
-                        end)
-                    end
-                end
-            end
-        end
-        
-        return originalNamecall(self, ...)
-    end)
     
-    return originalNamecall
+    return nearbyAttackers
 end
 
--- Clean up old attacker data
-local function cleanupAttackerHistory()
-    local currentTime = tick()
-    for attacker, data in pairs(attackerHistory) do
-        if currentTime - data.timestamp > 10 then -- Keep history for 10 seconds
-            attackerHistory[attacker] = nil
-        end
-    end
-end
-
--- Alternative method: Monitor for creator tags being added
-local function monitorCreatorTags()
+-- Monitor for creator tags being added
+local function setupCreatorTagMonitoring()
     if not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") then return end
     
     local humanoid = player.Character.Humanoid
     
-    -- Watch for creator tags being added (indicates damage attempt)
-    local tagConnection
-    tagConnection = humanoid.ChildAdded:Connect(function(child)
+    local tagConnection = humanoid.ChildAdded:Connect(function(child)
+        if not State.reverseDmg then return end
+        
         if child.Name == "creator" and child:IsA("ObjectValue") and child.Value and child.Value:IsA("Player") then
             local attacker = child.Value
             if attacker ~= player then
-                local currentTime = tick()
-                local lastAttackTime = attackerHistory[attacker] and attackerHistory[attacker].timestamp or 0
-                
-                if currentTime - lastAttackTime >= REVERSE_CONFIG.ATTACK_COOLDOWN then
-                    attackerHistory[attacker] = {
-                        timestamp = currentTime,
-                        method = "creator_tag",
-                    }
-                    
-                    task.spawn(function()
-                        playSound("combat")
-                        killPlayer(attacker)
-                        notification(string.format("⚡ Creator Tag Detected! Eliminated %s", 
-                            attacker.DisplayName), 3, "combat")
-                    end)
-                end
+                task.spawn(function()
+                    executeRetaliation(attacker, "Creator Tag", "Direct hit detected")
+                end)
             end
             
-            -- Clean up the creator tag
+            -- Clean up the creator tag quickly
             task.spawn(function()
-                task.wait(0.1)
+                task.wait(0.05)
                 if child and child.Parent then
                     child:Destroy()
                 end
@@ -1224,6 +1173,90 @@ local function monitorCreatorTags()
     return tagConnection
 end
 
+-- Enhanced health monitoring that works with God Mode
+local function setupHealthMonitoring()
+    if not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") then return end
+    
+    local humanoid = player.Character.Humanoid
+    lastHealthSnapshot = humanoid.Health
+    
+    -- Monitor health changes (catches brief damage even with god mode)
+    local healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
+        if not State.reverseDmg then return end
+        
+        -- If health decreased OR if we have god mode and health changed at all
+        if newHealth < lastHealthSnapshot or (State.godMode and newHealth ~= lastHealthSnapshot) then
+            -- Find the most likely attacker
+            local nearbyAttackers = findNearbyAttackers()
+            if #nearbyAttackers > 0 then
+                -- Get the closest attacker with a weapon
+                table.sort(nearbyAttackers, function(a, b) return a.distance < b.distance end)
+                local closestAttacker = nearbyAttackers[1]
+                
+                task.spawn(function()
+                    executeRetaliation(closestAttacker.player, "Health Change", 
+                        string.format("Distance: %.1f, Weapon: %s", closestAttacker.distance, closestAttacker.tool))
+                end)
+            end
+        end
+        
+        lastHealthSnapshot = newHealth
+    end)
+    
+    return healthConnection
+end
+
+-- Heartbeat monitoring for rapid detection
+local function setupHeartbeatMonitoring()
+    local lastCheck = 0
+    
+    local heartbeatConnection = Services.Run.Heartbeat:Connect(function()
+        if not State.reverseDmg or not player.Character then return end
+        
+        local currentTime = tick()
+        if currentTime - lastCheck < 0.05 then return end -- Check every 0.05 seconds (faster)
+        lastCheck = currentTime
+        
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+        
+        local nearbyAttackers = findNearbyAttackers()
+        
+        -- ALWAYS check for nearby armed players regardless of god mode status
+        for _, attackerData in ipairs(nearbyAttackers) do
+            local distance = attackerData.distance
+            local hasEquippedWeapon = attackerData.player.Character:FindFirstChildOfClass("Tool")
+            
+            -- Trigger if someone is close with a weapon equipped
+            if hasEquippedWeapon and distance <= 10 then
+                task.spawn(function()
+                    executeRetaliation(attackerData.player, "Armed Proximity", 
+                        string.format("Sword equipped at %.1f studs", distance))
+                end)
+                break
+            end
+        end
+        
+        -- Also monitor health changes for non-god mode scenarios
+        local currentHealth = humanoid.Health
+        if not State.godMode and currentHealth ~= lastHealthSnapshot then
+            for _, attackerData in ipairs(nearbyAttackers) do
+                if attackerData.distance <= 8 then
+                    task.spawn(function()
+                        executeRetaliation(attackerData.player, "You have been hit.", 
+                            string.format("Distance: %.1f studs", attackerData.distance))
+                    end)
+                    break
+                end
+            end
+        end
+        
+        lastHealthSnapshot = currentHealth
+    end)
+    
+    return heartbeatConnection
+end
+
 -- Main reverse damage setup function
 local function setupReverseDamage()
     -- Clean up existing connections
@@ -1232,14 +1265,14 @@ local function setupReverseDamage()
         Data.connections.reverseDmg = nil
     end
     
-    if Data.connections.reverseDmgProximity then
-        Data.connections.reverseDmgProximity:Disconnect()
-        Data.connections.reverseDmgProximity = nil
-    end
-    
     if Data.connections.reverseDmgCreator then
         Data.connections.reverseDmgCreator:Disconnect()
         Data.connections.reverseDmgCreator = nil
+    end
+    
+    if Data.connections.reverseDmgHeartbeat then
+        Data.connections.reverseDmgHeartbeat:Disconnect()
+        Data.connections.reverseDmgHeartbeat = nil
     end
     
     if Data.connections.reverseDmgCleanup then
@@ -1254,8 +1287,11 @@ local function setupReverseDamage()
     -- Validate state and character
     if not State.reverseDmg or not player.Character then 
         attackerHistory = {}
+        healthMonitorActive = false
         return 
     end
+    
+    healthMonitorActive = true
     
     -- Set up periodic cleanup
     Data.connections.reverseDmgCleanup = task.spawn(function()
@@ -1265,32 +1301,16 @@ local function setupReverseDamage()
         end
     end)
     
-    -- Method 1: Proximity and weapon detection
-    Data.connections.reverseDmgProximity = Services.Run.Heartbeat:Connect(function()
-        if State.reverseDmg then
-            detectAttackAttempt()
-        end
-    end)
+    -- Method 1: Creator tag monitoring (most reliable)
+    Data.connections.reverseDmgCreator = setupCreatorTagMonitoring()
     
-    -- Method 2: Creator tag monitoring  
-    Data.connections.reverseDmgCreator = monitorCreatorTags()
+    -- Method 2: Health change monitoring
+    Data.connections.reverseDmg = setupHealthMonitoring()
     
-    -- Method 3: Try to hook RemoteEvents (may not work in all executors)
-    pcall(function()
-        if hookmetamethod then
-            Data.connections.reverseDmgRemote = monitorDamageAttempts()
-        end
-    end)
+    -- Method 3: Heartbeat monitoring for rapid detection
+    Data.connections.reverseDmgHeartbeat = setupHeartbeatMonitoring()
     
-    -- Handle character respawning
-    if not Data.connections.reverseDmgRespawn then
-        Data.connections.reverseDmgRespawn = player.CharacterAdded:Connect(function()
-            task.wait(1)
-            if State.reverseDmg then
-                setupReverseDamage()
-            end
-        end)
-    end
+    notification("Reverse Damage: ON", 2, "success")
 end
 
 local function startLoopKill(targets, sourcePlayer)
