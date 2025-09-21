@@ -1,0 +1,149 @@
+-- Make sure to define these at the top of your script
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Get swords function (you'll need to implement this based on your setup)
+local function getSwords()
+    -- Replace this with your actual sword getting logic
+    -- Example: return game.ReplicatedStorage.Swords:GetChildren()
+    return {}  -- placeholder
+end
+
+local swords = getSwords()
+local spinSpeed = 2  -- Increased for more noticeable spinning
+local radius = 8     -- Distance from player center
+local height = 0     -- Height offset (0 = at torso level)
+local rotating = true
+local rotationAngle = 0
+
+-- Create attachment point for swords on the character
+local attachment = Instance.new("Attachment")
+attachment.Name = "SwordSpinAttachment"
+attachment.Parent = humanoidRootPart
+
+-- Set up each sword
+for i, sword in ipairs(swords) do
+    if sword and sword:FindFirstChild("Handle") then
+        sword.Parent = character
+        
+        -- Make handle massless and non-colliding for smooth movement
+        sword.Handle.Massless = true
+        sword.Handle.CanCollide = false  -- Changed to false to prevent interference
+        
+        -- Create a BodyPosition for smooth positioning
+        local bodyPosition = Instance.new("BodyPosition")
+        bodyPosition.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyPosition.P = 3000
+        bodyPosition.D = 500
+        bodyPosition.Parent = sword.Handle
+        
+        -- Create a BodyAngularVelocity for rotation
+        local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+        bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
+        bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+        bodyAngularVelocity.Parent = sword.Handle
+        
+        -- Store reference to body movers
+        sword.Handle:SetAttribute("BodyPosition", bodyPosition)
+        sword.Handle:SetAttribute("BodyAngularVelocity", bodyAngularVelocity)
+        sword.Handle:SetAttribute("SwordIndex", i)
+    end
+end
+
+-- Main spinning loop
+local connection = RunService.Heartbeat:Connect(function(dt)
+    if not rotating or not character or not humanoidRootPart then
+        return
+    end
+    
+    -- Update rotation angle
+    rotationAngle = rotationAngle + (spinSpeed * dt)
+    
+    -- Position each sword in a circle
+    for i, sword in ipairs(swords) do
+        if sword and sword.Handle and sword.Handle.Parent then
+            local bodyPosition = sword.Handle:GetAttribute("BodyPosition")
+            if bodyPosition then
+                -- Calculate position in circle
+                local angleForThisSword = rotationAngle + ((i - 1) / #swords) * (2 * math.pi)
+                
+                -- Calculate world position
+                local xOffset = radius * math.cos(angleForThisSword)
+                local zOffset = radius * math.sin(angleForThisSword)
+                
+                local worldPosition = humanoidRootPart.Position + Vector3.new(xOffset, height, zOffset)
+                bodyPosition.Position = worldPosition
+                
+                -- Make sword point outward from center
+                local lookDirection = (worldPosition - humanoidRootPart.Position).Unit
+                sword.Handle.CFrame = CFrame.lookAt(worldPosition, worldPosition + lookDirection)
+            end
+        end
+    end
+end)
+
+-- Input handling for stopping/starting rotation
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.X then
+        rotating = not rotating  -- Toggle rotation instead of just stopping
+        print("Sword rotation:", rotating and "ON" or "OFF")
+    elseif input.KeyCode == Enum.KeyCode.Z then
+        -- Increase spin speed
+        spinSpeed = math.min(spinSpeed + 0.5, 10)  -- Cap at 10
+        print("Spin speed:", spinSpeed)
+    elseif input.KeyCode == Enum.KeyCode.C then
+        -- Decrease spin speed
+        spinSpeed = math.max(spinSpeed - 0.5, 0.1)  -- Minimum 0.1
+        print("Spin speed:", spinSpeed)
+    end
+end)
+
+-- Clean up function
+local function cleanup()
+    if connection then
+        connection:Disconnect()
+    end
+    
+    for _, sword in ipairs(swords) do
+        if sword and sword.Handle then
+            -- Remove body movers
+            for _, child in ipairs(sword.Handle:GetChildren()) do
+                if child:IsA("BodyPosition") or child:IsA("BodyAngularVelocity") then
+                    child:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Clean up when character is removed
+Players.LocalPlayer.CharacterRemoving:Connect(cleanup)
+
+-- Optional: Add a remote event for server-side replication if needed
+-- This would make the spinning visible to all players more reliably
+--[[
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local remoteEvent = ReplicatedStorage:FindFirstChild("SwordSpinEvent") -- Create this in ServerStorage/ReplicatedStorage
+
+if remoteEvent then
+    RunService.Heartbeat:Connect(function()
+        if rotating then
+            -- Send rotation data to server
+            remoteEvent:FireServer(rotationAngle, swords)
+        end
+    end)
+end
+--]]
+
+print("Sword spinner loaded!")
+print("Controls:")
+print("X - Toggle rotation on/off")
+print("Z - Increase spin speed")
+print("C - Decrease spin speed")
