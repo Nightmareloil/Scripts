@@ -1,0 +1,175 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local backpack = player.Backpack
+
+-- Improved function to get all tools
+local function getAllTools()
+    local tools = {}
+    
+    -- Get tools from backpack
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+            table.insert(tools, tool)
+        end
+    end
+    
+    -- Get tools already equipped in character
+    for _, tool in pairs(character:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+            table.insert(tools, tool)
+        end
+    end
+    
+    return tools
+end
+
+-- Enhanced sword positions for better shoulder mounting
+local swordPositions = {
+    -- Right shoulder cluster
+    CFrame.new(1.8, 1.2, -0.8) * CFrame.Angles(math.rad(15), math.rad(45), math.rad(160)),
+    CFrame.new(2.2, 0.8, -0.5) * CFrame.Angles(math.rad(10), math.rad(35), math.rad(155)),
+    CFrame.new(2.0, 0.4, -0.9) * CFrame.Angles(math.rad(20), math.rad(50), math.rad(165)),
+    
+    -- Left shoulder cluster  
+    CFrame.new(-1.8, 1.2, -0.8) * CFrame.Angles(math.rad(15), math.rad(-45), math.rad(-160)),
+    CFrame.new(-2.2, 0.8, -0.5) * CFrame.Angles(math.rad(10), math.rad(-35), math.rad(-155)),
+    CFrame.new(-2.0, 0.4, -0.9) * CFrame.Angles(math.rad(20), math.rad(-50), math.rad(-165)),
+    
+    -- Back center (between shoulders)
+    CFrame.new(0, 1.0, -1.2) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(180)),
+    CFrame.new(0.3, 0.6, -1.1) * CFrame.Angles(math.rad(5), math.rad(15), math.rad(175)),
+    CFrame.new(-0.3, 0.6, -1.1) * CFrame.Angles(math.rad(5), math.rad(-15), math.rad(-175)),
+    
+    -- Additional right shoulder positions
+    CFrame.new(1.9, 1.5, -0.6) * CFrame.Angles(math.rad(25), math.rad(40), math.rad(150)),
+    CFrame.new(2.1, 0.0, -0.7) * CFrame.Angles(math.rad(0), math.rad(45), math.rad(170)),
+    CFrame.new(1.7, 0.8, -1.0) * CFrame.Angles(math.rad(30), math.rad(55), math.rad(145)),
+    
+    -- Additional left shoulder positions
+    CFrame.new(-1.9, 1.5, -0.6) * CFrame.Angles(math.rad(25), math.rad(-40), math.rad(-150)),
+    CFrame.new(-2.1, 0.0, -0.7) * CFrame.Angles(math.rad(0), math.rad(-45), math.rad(-170)),
+    CFrame.new(-1.7, 0.8, -1.0) * CFrame.Angles(math.rad(30), math.rad(-55), math.rad(-145)),
+    
+    -- More back positions
+    CFrame.new(0.6, 0.2, -1.3) * CFrame.Angles(math.rad(-5), math.rad(25), math.rad(185)),
+    CFrame.new(-0.6, 0.2, -1.3) * CFrame.Angles(math.rad(-5), math.rad(-25), math.rad(-185)),
+    CFrame.new(0, 1.4, -1.0) * CFrame.Angles(math.rad(10), math.rad(0), math.rad(180)),
+    
+    -- Extra positions for many tools
+    CFrame.new(1.5, -0.3, -0.8) * CFrame.Angles(math.rad(-10), math.rad(40), math.rad(160)),
+    CFrame.new(-1.5, -0.3, -0.8) * CFrame.Angles(math.rad(-10), math.rad(-40), math.rad(-160)),
+    CFrame.new(0.9, 0.8, -1.4) * CFrame.Angles(math.rad(15), math.rad(20), math.rad(170)),
+    CFrame.new(-0.9, 0.8, -1.4) * CFrame.Angles(math.rad(15), math.rad(-20), math.rad(-170)),
+}
+
+-- Main function to equip tools on shoulders
+local function equipToolsOnShoulders()
+    print("=== SHOULDER TOOL EQUIPPING ===")
+    
+    local tools = getAllTools()
+    print("Found", #tools, "tools to equip")
+    
+    if #tools == 0 then
+        warn("No tools found in inventory!")
+        return
+    end
+    
+    local equippedCount = 0
+    
+    for i, tool in ipairs(tools) do
+        local position = swordPositions[i]
+        if not position then
+            print("No more shoulder positions available for:", tool.Name)
+            break
+        end
+        
+        -- Ensure tool is in character for equipping
+        if tool.Parent == backpack then
+            tool.Parent = character
+            wait(0.1) -- Small delay to ensure proper parenting
+        end
+        
+        -- Configure the tool handle
+        if tool:FindFirstChild("Handle") then
+            local handle = tool.Handle
+            handle.Massless = true
+            handle.CanCollide = false
+            
+            -- Remove any existing body movers that might interfere
+            for _, child in pairs(handle:GetChildren()) do
+                if child:IsA("BodyPosition") or child:IsA("BodyAngularVelocity") or child:IsA("BodyVelocity") then
+                    child:Destroy()
+                end
+            end
+        end
+        
+        -- Set the grip (tool position relative to character)
+        tool.Grip = position
+        
+        equippedCount = equippedCount + 1
+        print("Equipped on shoulder:", tool.Name, "at position", i)
+    end
+    
+    print("✅ Successfully equipped", equippedCount, "tools on shoulders!")
+    
+    -- Optional: Add a slight animation effect
+    spawn(function()
+        wait(0.5)
+        print("💪 Tools are now mounted on your shoulders!")
+        print("You look awesome with", equippedCount, "tools equipped!")
+    end)
+end
+
+-- Function to unequip all shoulder tools
+local function unequipAllTools()
+    print("Unequipping all shoulder tools...")
+    
+    local unequippedCount = 0
+    for _, tool in pairs(character:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = backpack
+            unequippedCount = unequippedCount + 1
+        end
+    end
+    
+    print("Unequipped", unequippedCount, "tools back to backpack")
+end
+
+-- Enhanced button function (improved version of your original)
+local function SwordShoulder()
+    equipToolsOnShoulders()
+end
+
+-- Optional: Add some extra utility functions
+local function adjustToolPosition(toolIndex, newPosition)
+    local tools = {}
+    for _, tool in pairs(character:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(tools, tool)
+        end
+    end
+    
+    if tools[toolIndex] then
+        tools[toolIndex].Grip = newPosition
+        print("Adjusted position for:", tools[toolIndex].Name)
+    end
+end
+
+-- Run the shoulder equipping function
+SwordShoulder()
+
+print("")
+print("=== SHOULDER TOOL SYSTEM LOADED ===")
+print("All available tools have been equipped on your shoulders!")
+print("")
+print("Features:")
+print("- Tools positioned realistically on shoulders and back")
+print("- Handles made massless and non-colliding")
+print("- Supports up to", #swordPositions, "tools")
+print("- Tools remain visible to other players")
+print("")
+print("The tools are now part of your character's equipment!")
