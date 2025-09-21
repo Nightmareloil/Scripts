@@ -1,7 +1,7 @@
---[!] PATCH NOTES VERSION 4.2 (GEMINI'S FARM SCALING & PING FIX):
---    - REBALANCED: Fast Farm now uses a tiered scaling system. Lower speed settings (1-7) are significantly gentler on your network to prevent ping spikes.
---    - OPTIMIZED: Higher speed settings (8-10) now ramp up dramatically, providing maximum farming speed for those who want it, as requested.
---    - FIXED: The dedicated "Slow Farm" toggle remains tuned to be very slow and stable for a reliable, low-impact option.
+--[!] PATCH NOTES VERSION 4.0 (GEMINI'S FINAL ADJUSTMENTS):
+--    - CHANGED: The delay between sequential command actions on players has been reduced from 0.2s to 0.1s for faster execution, as requested.
+--    - REMOVED: All per-player "extra" notifications during multi-target commands have been removed. The script will now only notify at the start and provide a final summary at the end.
+--    - APPLIED: These changes affect all relevant commands (kill, god, heal, dmg) and the UI buttons that trigger them.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -144,7 +144,7 @@ end
 
 -- Configuration
 local Config = {
-    speed = 8, range = S(15), walkSpeed = 16, jumpPower = 50, flySpeed = S(40),
+    speed = 4, range = S(15), walkSpeed = 16, jumpPower = 50, flySpeed = S(40),
     commandPrefix = ";", antiLagEnabled = false, performanceMode = false,
     whitelistedIds = {1234567, 7654321}
 }
@@ -1020,7 +1020,7 @@ local function killPlayerWithVerification(target)
         return true
     end
     local maxRetries = 3
-    local retryDelay = 0.2
+    local retryDelay = 0.1
     for i = 1, maxRetries do
         killPlayer(target)
         task.wait(retryDelay)
@@ -1035,8 +1035,8 @@ local function healPlayerWithVerification(target)
     if not target or not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") then return true end
     local h = target.Character.Humanoid
     if h.Health >= h.MaxHealth then return true end
-    local maxRetries = 3
-    local retryDelay = 0.2
+    local maxRetries = 6
+    local retryDelay = 0.1
     for i = 1, maxRetries do
         healPlayer(target)
         task.wait(retryDelay)
@@ -1070,52 +1070,285 @@ local function executeSequentially(targetList, actionFunction, actionName)
 end
 -- [[ END OF NEW SYSTEM ]] --
 
--- [[ REBALANCED FARMING LOGIC ]] --
-local function fastFarmAction(speed)
-    if not player.Character then return end
-    
-    local tools = getTools()
-    local remoteEvent = nil
-    
-    for _, h in pairs(tools) do
-        if h and h.Parent then
-            remoteEvent = h:FindFirstChild("up") and h.up:FindFirstChild("RemoteEvent")
-            if remoteEvent then break end
-        end
-    end
+-- [[ FIXED REVERSE DAMAGE SYSTEM - SIMPLIFIED AND RELIABLE ]] --
+-- Configuration for reverse damage
+local REVERSE_CONFIG = {
+    ATTACK_COOLDOWN = 0.1,         -- Minimum time between retaliation triggers per attacker
+    CLEANUP_INTERVAL = 5.0,        -- How often to clean old attacker data
+    PROXIMITY_RANGE = 4           -- Range to check for potential attackers
+}
 
-    if remoteEvent then
-        -- New non-linear scaling: Gentle at low speeds, aggressive at high speeds.
-        local burstAmount = 1
-        if speed <= 7 then
-            burstAmount = math.ceil(speed * 1.5) -- Very slow increase for speeds 1-7
-        else
-            -- Exponential jump for speeds 8, 9, 10
-            burstAmount = math.ceil(10 + (speed - 7)^3 * 2)
-        end
-        
-        for i = 1, burstAmount do
-            remoteEvent:FireServer()
+local attackerHistory = {} -- Track recent attackers
+local lastHealthSnapshot = 0
+local healthMonitorActive = false
+
+-- Clean up old attacker data
+local function cleanupAttackerHistory()
+    local currentTime = tick()
+    for attacker, data in pairs(attackerHistory) do
+        if currentTime - data.timestamp > 8 then
+            attackerHistory[attacker] = nil
         end
     end
 end
 
-local function slowFarmAction()
+-- Execute retaliation against attacker
+local function executeRetaliation(attacker, method, extraInfo)
+    if not attacker or not attacker.Character then return false end
+    
+    local currentTime = tick()
+    local lastAttackTime = attackerHistory[attacker] and attackerHistory[attacker].timestamp or 0
+    
+    -- Check cooldown to prevent spam
+    if currentTime - lastAttackTime < REVERSE_CONFIG.ATTACK_COOLDOWN then
+        return false
+    end
+    
+    -- Record the attack
+    attackerHistory[attacker] = {
+        timestamp = currentTime,
+        method = method,
+        info = extraInfo
+    }
+    
+    local success = pcall(function()
+        playSound("combat")
+        killPlayerWithVerification(attacker) -- Use the reliable version
+        notification(string.format("⚡ Retaliation! Eliminated %s (%s)", 
+            attacker.DisplayName, method), 3, "combat")
+    end)
+    
+    if not success then
+        notification("⚠️ Retaliation failed - target may be protected", 2, "warning")
+    end
+    
+    return success
+end
+
+-- Find nearby players with weapons
+local function findNearbyAttackers()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return {}
+    end
+    
+    local playerPos = player.Character.HumanoidRootPart.Position
+    local nearbyAttackers = {}
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local pHumanoid = p.Character:FindFirstChildOfClass("Humanoid")
+            if pHumanoid and pHumanoid.Health > 0 then
+                local distance = (p.Character.HumanoidRootPart.Position - playerPos).Magnitude
+                
+                if distance <= REVERSE_CONFIG.PROXIMITY_RANGE then
+                    -- Check if they have a weapon
+                    local equippedTool = p.Character:FindFirstChildOfClass("Tool")
+                    local hasBackpackTool = p.Backpack:FindFirstChildOfClass("Tool")
+                    
+                    if equippedTool or hasBackpackTool then
+                        table.insert(nearbyAttackers, {
+                            player = p,
+                            distance = distance,
+                            tool = equippedTool and equippedTool.Name or "Unknown"
+                        })
+                    end
+                end
+            end
+        end
+    end
+    
+    return nearbyAttackers
+end
+
+-- Monitor for creator tags being added
+local function setupCreatorTagMonitoring()
+    if not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") then return end
+    
+    local humanoid = player.Character.Humanoid
+    
+    local tagConnection = humanoid.ChildAdded:Connect(function(child)
+        if not State.reverseDmg then return end
+        
+        if child.Name == "creator" and child:IsA("ObjectValue") and child.Value and child.Value:IsA("Player") then
+            local attacker = child.Value
+            if attacker ~= player then
+                task.spawn(function()
+                    executeRetaliation(attacker, "Creator Tag", "Direct hit detected")
+                end)
+            end
+            
+            -- Clean up the creator tag quickly
+            task.spawn(function()
+                task.wait(0.05)
+                if child and child.Parent then
+                    child:Destroy()
+                end
+            end)
+        end
+    end)
+    
+    return tagConnection
+end
+
+-- Enhanced health monitoring that works with God Mode
+local function setupHealthMonitoring()
+    if not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") then return end
+    
+    local humanoid = player.Character.Humanoid
+    lastHealthSnapshot = humanoid.Health
+    
+    -- Monitor health changes (catches brief damage even with god mode)
+    local healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
+        if not State.reverseDmg then return end
+        
+        -- If health decreased OR if we have god mode and health changed at all
+        if newHealth < lastHealthSnapshot or (State.godMode and newHealth ~= lastHealthSnapshot) then
+            -- Find the most likely attacker
+            local nearbyAttackers = findNearbyAttackers()
+            if #nearbyAttackers > 0 then
+                -- Get the closest attacker with a weapon
+                table.sort(nearbyAttackers, function(a, b) return a.distance < b.distance end)
+                local closestAttacker = nearbyAttackers[1]
+                
+                task.spawn(function()
+                    executeRetaliation(closestAttacker.player, "Health Change", 
+                        string.format("Distance: %.1f, Weapon: %s", closestAttacker.distance, closestAttacker.tool))
+                end)
+            end
+        end
+        
+        lastHealthSnapshot = newHealth
+    end)
+    
+    return healthConnection
+end
+
+-- Heartbeat monitoring for rapid detection
+local function setupHeartbeatMonitoring()
+    local lastCheck = 0
+    
+    local heartbeatConnection = Services.Run.Heartbeat:Connect(function()
+        if not State.reverseDmg or not player.Character then return end
+        
+        local currentTime = tick()
+        if currentTime - lastCheck < 0.05 then return end -- Check every 0.05 seconds (faster)
+        lastCheck = currentTime
+        
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+        
+        local nearbyAttackers = findNearbyAttackers()
+        
+        -- ALWAYS check for nearby armed players regardless of god mode status
+        for _, attackerData in ipairs(nearbyAttackers) do
+            local distance = attackerData.distance
+            local hasEquippedWeapon = attackerData.player.Character:FindFirstChildOfClass("Tool")
+            
+            -- Trigger if someone is close with a weapon equipped
+            if hasEquippedWeapon and distance <= 10 then
+                task.spawn(function()
+                    executeRetaliation(attackerData.player, "Armed Proximity", 
+                        string.format("Sword equipped at %.1f studs", distance))
+                end)
+                break
+            end
+        end
+        
+        -- Also monitor health changes for non-god mode scenarios
+        local currentHealth = humanoid.Health
+        if not State.godMode and currentHealth ~= lastHealthSnapshot then
+            for _, attackerData in ipairs(nearbyAttackers) do
+                if attackerData.distance <= 8 then
+                    task.spawn(function()
+                        executeRetaliation(attackerData.player, "You have been hit.", 
+                            string.format("Distance: %.1f studs", attackerData.distance))
+                    end)
+                    break
+                end
+            end
+        end
+        
+        lastHealthSnapshot = currentHealth
+    end)
+    
+    return heartbeatConnection
+end
+
+-- Main reverse damage setup function
+local function setupReverseDamage()
+    -- Clean up existing connections
+    if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect(); Data.connections.reverseDmg = nil; end
+    if Data.connections.reverseDmgCreator then Data.connections.reverseDmgCreator:Disconnect(); Data.connections.reverseDmgCreator = nil; end
+    if Data.connections.reverseDmgHeartbeat then Data.connections.reverseDmgHeartbeat:Disconnect(); Data.connections.reverseDmgHeartbeat = nil; end
+    if Data.connections.reverseDmgCleanup then
+        if type(Data.connections.reverseDmgCleanup) == "table" then task.cancel(Data.connections.reverseDmgCleanup)
+        else Data.connections.reverseDmgCleanup:Disconnect() end
+        Data.connections.reverseDmgCleanup = nil
+    end
+    
+    -- Validate state and character
+    if not State.reverseDmg or not player.Character then 
+        attackerHistory = {}; healthMonitorActive = false; return 
+    end
+    
+    healthMonitorActive = true
+    
+    -- Set up periodic cleanup
+    Data.connections.reverseDmgCleanup = task.spawn(function()
+        while State.reverseDmg do
+            task.wait(REVERSE_CONFIG.CLEANUP_INTERVAL); cleanupAttackerHistory()
+        end
+    end)
+    
+    Data.connections.reverseDmgCreator = setupCreatorTagMonitoring()
+    Data.connections.reverseDmg = setupHealthMonitoring()
+    Data.connections.reverseDmgHeartbeat = setupHeartbeatMonitoring()
+    
+    notification("Reverse Damage: ON", 2, "success")
+end
+
+local function startLoopKill(targets, sourcePlayer)
+    if State.loopKillActive then stopLoopKill() end
+    if not targets then return end
+
+    State.loopKillActive = true
+    local targetList = type(targets) == "table" and targets or {targets}
+    
+    local connection = Services.Run.Heartbeat:Connect(function()
+        if not State.loopKillActive then return end
+        for _, target in pairs(targetList) do
+            if target then task.spawn(killPlayer, target) end
+        end
+        task.wait(0.5)
+    end)
+
+    table.insert(State.loopKillConnections, connection)
+    notification("Loop kill activated on " .. #targetList .. " targets", 3, "success")
+end
+
+local function stopLoopKill()
+    if State.loopKillActive then
+        for _, conn in pairs(State.loopKillConnections) do
+            if conn then conn:Disconnect() end
+        end
+        State.loopKillConnections = {}
+        State.loopKillActive = false
+        notification("Loop kill deactivated", 2, "info")
+    end
+end
+
+local function farm(speed)
     if not player.Character then return end
     local tools = getTools()
     for _, h in pairs(tools) do
         if h and h.Parent then
             local r = h:FindFirstChild("up") and h.up:FindFirstChild("RemoteEvent")
             if r then
-                pcall(function()
-                    r:FireServer()
-                end)
-                break 
+                pcall(function() for i = 1, speed do r:FireServer(); task.wait() end end)
             end
         end
     end
 end
--- [[ END OF REBALANCED FARMING LOGIC ]] --
 
 local function watchPlayer(targetName)
     local target = findPlayer(targetName)
@@ -1462,7 +1695,7 @@ local function createToggle(text, callback, showSpeed)
     local si; if showSpeed then
         si = Instance.new("TextBox"); si.Size = UDim2.new(0, S(isMobile and 35 or 45), 0, S(isMobile and 22 or 27)); si.Position = UDim2.new(1, -S(isMobile and 95 or 105), 0.5, -S(isMobile and 11 or 13.5)); si.BackgroundColor3 = Theme.secondary; si.BackgroundTransparency = 0.6; si.Text = tostring(Config.speed); si.TextColor3 = Theme.text; si.TextSize = S(isMobile and 9 or 11); si.Font = Enum.Font.Gotham; si.Parent = f; addCornerAndStroke(si, S(5)); createScalableElement(si, UDim2.new(0, isMobile and 35 or 45, 0, isMobile and 22 or 27), UDim2.new(1, -(isMobile and 95 or 105), 0.5, -(isMobile and 11 or 13.5)), isMobile and 9 or 11, 5)
         si.FocusLost:Connect(function(enterPressed)
-            local n = tonumber(si.Text); if n and n >= 1 and n <= 10 then Config.speed = n; notification("Farm speed set to " .. n, 2, "success") else si.Text = tostring(Config.speed); notification("Invalid speed. Use 1 to 10.", 2, "warning") end
+            local n = tonumber(si.Text); if n and n >= 1 and n <= 100 then Config.speed = n; notification("Farm speed set to " .. n, 2, "success") else si.Text = tostring(Config.speed); notification("Invalid speed. Use 1 to 100.", 2, "warning") end
         end)
     end
     local t = Instance.new("TextButton"); t.Size = UDim2.new(0, S(isMobile and 50 or 60), 0, S(isMobile and 27 or 32)); t.Position = UDim2.new(1, -S(isMobile and 60 or 70), 0.5, -S(isMobile and 13.5 or 16)); t.BackgroundColor3 = Theme.danger; t.BackgroundTransparency = 0.3; t.Text = "OFF"; t.TextColor3 = Theme.text; t.TextSize = S(isMobile and 9 or 11); t.Font = Enum.Font.GothamBold; t.AutoButtonColor = false; t.Parent = f; addCornerAndStroke(t, S(6)); createScalableElement(t, UDim2.new(0, isMobile and 50 or 60, 0, isMobile and 27 or 32), UDim2.new(1, -(isMobile and 60 or 70), 0.5, -(isMobile and 13.5 or 16)), isMobile and 9 or 11, 6)
@@ -1514,25 +1747,13 @@ end
 
 createToggle("Fast Farm", function(e)
     State.fastFarm = e; if e and State.slowFarm then State.slowFarm = false end; if State.coroutines.fastFarm then task.cancel(State.coroutines.fastFarm); State.coroutines.fastFarm = nil end
-    if e then Stats.basePower = Stats.power; Stats.powerGainedThisSession = 0; powerHistory = {{time = tick(), power = Stats.power}}; notification("Fast farm activated (Speed: " .. Config.speed .. ")", 2, "success");
-        State.coroutines.fastFarm = task.spawn(function()
-            while State.fastFarm do
-                fastFarmAction(Config.speed)
-                Services.Run.Heartbeat:Wait() -- Farm every frame for max speed
-            end
-        end)
+    if e then Stats.basePower = Stats.power; Stats.powerGainedThisSession = 0; powerHistory = {{time = tick(), power = Stats.power}}; notification("Fast farm activated (Speed: " .. Config.speed .. ")", 2, "success"); State.coroutines.fastFarm = task.spawn(function() while State.fastFarm do farm(Config.speed); task.wait(0.1) end end)
     else Stats.powerGainedThisSession = 0; notification("Fast farm deactivated", 2, "info") end
 end, true)
 
 createToggle("Slow Farm", function(e)
     State.slowFarm = e; if e and State.fastFarm then State.fastFarm = false end; if State.coroutines.slowFarm then task.cancel(State.coroutines.slowFarm); State.coroutines.slowFarm = nil end
-    if e then Stats.basePower = Stats.power; Stats.powerGainedThisSession = 0; powerHistory = {{time = tick(), power = Stats.power}}; notification("Slow farm activated", 2, "success"); 
-        State.coroutines.slowFarm = task.spawn(function() 
-            while State.slowFarm do 
-                slowFarmAction() 
-                task.wait(0.5) 
-            end 
-        end)
+    if e then Stats.basePower = Stats.power; Stats.powerGainedThisSession = 0; powerHistory = {{time = tick(), power = Stats.power}}; notification("Slow farm activated (Speed: 3)", 2, "success"); State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do farm(3); task.wait(0.1) end end)
     else Stats.powerGainedThisSession = 0; notification("Slow farm deactivated", 2, "info") end
 end)
 
