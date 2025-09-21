@@ -1,4 +1,4 @@
--- Make sure to define these at the top of your script
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -7,114 +7,199 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Get swords function (you'll need to implement this based on your setup)
-local function getSwords()
-    -- Replace this with your actual sword getting logic
-    -- Example: return game.ReplicatedStorage.Swords:GetChildren()
-    return {}  -- placeholder
-end
-
-local swords = getSwords()
-local spinSpeed = 2  -- Increased for more noticeable spinning
-local radius = 8     -- Distance from player center
-local height = 0     -- Height offset (0 = at torso level)
-local rotating = true
+-- Configuration
+local spinSpeed = 3
+local radius = 8
+local height = 2
+local rotating = false -- Start as false, will enable after delay
 local rotationAngle = 0
+local connection = nil
 
--- Create attachment point for swords on the character
-local attachment = Instance.new("Attachment")
-attachment.Name = "SwordSpinAttachment"
-attachment.Parent = humanoidRootPart
+print("=== TOOL DROPPER & SPINNER ===")
+print("Step 1: Dropping all tools...")
 
--- Set up each sword
-for i, sword in ipairs(swords) do
-    if sword and sword:FindFirstChild("Handle") then
-        sword.Parent = character
-        
-        -- Make handle massless and non-colliding for smooth movement
-        sword.Handle.Massless = true
-        sword.Handle.CanCollide = false  -- Changed to false to prevent interference
-        
-        -- Create a BodyPosition for smooth positioning
-        local bodyPosition = Instance.new("BodyPosition")
-        bodyPosition.MaxForce = Vector3.new(4000, 4000, 4000)
-        bodyPosition.P = 3000
-        bodyPosition.D = 500
-        bodyPosition.Parent = sword.Handle
-        
-        -- Create a BodyAngularVelocity for rotation
-        local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
-        bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
-        bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
-        bodyAngularVelocity.Parent = sword.Handle
-        
-        -- Store reference to body movers
-        sword.Handle:SetAttribute("BodyPosition", bodyPosition)
-        sword.Handle:SetAttribute("BodyAngularVelocity", bodyAngularVelocity)
-        sword.Handle:SetAttribute("SwordIndex", i)
+-- Function to drop all tools from inventory
+local function dropAllTools()
+    local droppedTools = {}
+    
+    -- Drop tools from backpack
+    local backpackTools = {}
+    for _, tool in ipairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(backpackTools, tool)
+        end
     end
+    
+    -- Drop tools currently equipped
+    local equippedTools = {}
+    for _, tool in ipairs(character:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(equippedTools, tool)
+        end
+    end
+    
+    -- Combine all tools
+    local allTools = {}
+    for _, tool in ipairs(backpackTools) do table.insert(allTools, tool) end
+    for _, tool in ipairs(equippedTools) do table.insert(allTools, tool) end
+    
+    print("Found", #allTools, "tools to drop")
+    
+    -- Drop each tool
+    for _, tool in ipairs(allTools) do
+        if tool:FindFirstChild("Handle") then
+            -- Move tool to workspace (drops it)
+            tool.Parent = workspace
+            
+            -- Position it near the player
+            local randomOffset = Vector3.new(
+                math.random(-3, 3),
+                2,
+                math.random(-3, 3)
+            )
+            tool.Handle.CFrame = humanoidRootPart.CFrame + randomOffset
+            
+            -- Give it a slight random velocity
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+            bodyVelocity.Velocity = Vector3.new(
+                math.random(-5, 5),
+                math.random(5, 10),
+                math.random(-5, 5)
+            )
+            bodyVelocity.Parent = tool.Handle
+            
+            -- Remove the velocity after a short time so tools settle
+            game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
+            
+            table.insert(droppedTools, tool)
+            print("Dropped:", tool.Name)
+        end
+    end
+    
+    return droppedTools
 end
 
--- Main spinning loop
-local connection = RunService.Heartbeat:Connect(function(dt)
-    if not rotating or not character or not humanoidRootPart then
-        return
-    end
+-- Function to collect nearby tools from the ground
+local function collectNearbyTools()
+    local nearbyTools = {}
     
-    -- Update rotation angle
-    rotationAngle = rotationAngle + (spinSpeed * dt)
-    
-    -- Position each sword in a circle
-    for i, sword in ipairs(swords) do
-        if sword and sword.Handle and sword.Handle.Parent then
-            local bodyPosition = sword.Handle:GetAttribute("BodyPosition")
-            if bodyPosition then
-                -- Calculate position in circle
-                local angleForThisSword = rotationAngle + ((i - 1) / #swords) * (2 * math.pi)
-                
-                -- Calculate world position
-                local xOffset = radius * math.cos(angleForThisSword)
-                local zOffset = radius * math.sin(angleForThisSword)
-                
-                local worldPosition = humanoidRootPart.Position + Vector3.new(xOffset, height, zOffset)
-                bodyPosition.Position = worldPosition
-                
-                -- Make sword point outward from center
-                local lookDirection = (worldPosition - humanoidRootPart.Position).Unit
-                sword.Handle.CFrame = CFrame.lookAt(worldPosition, worldPosition + lookDirection)
+    -- Look for tools in workspace near the player
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+            local distance = (obj.Handle.Position - humanoidRootPart.Position).Magnitude
+            if distance <= 15 then -- Within 15 studs
+                table.insert(nearbyTools, obj)
             end
         end
     end
-end)
+    
+    print("Found", #nearbyTools, "tools nearby to spin")
+    return nearbyTools
+end
 
--- Input handling for stopping/starting rotation
+-- Function to prepare tools for spinning
+local function prepareToolsForSpinning(tools)
+    for i, tool in ipairs(tools) do
+        if tool:FindFirstChild("Handle") then
+            local handle = tool.Handle
+            handle.Massless = true
+            handle.CanCollide = false
+            
+            -- Remove any existing body movers
+            for _, child in ipairs(handle:GetChildren()) do
+                if child:IsA("BodyPosition") or child:IsA("BodyAngularVelocity") or child:IsA("BodyVelocity") then
+                    child:Destroy()
+                end
+            end
+            
+            -- Create BodyPosition for smooth movement
+            local bodyPosition = Instance.new("BodyPosition")
+            bodyPosition.MaxForce = Vector3.new(4000, 4000, 4000)
+            bodyPosition.P = 10000
+            bodyPosition.D = 1000
+            bodyPosition.Parent = handle
+            
+            -- Create BodyAngularVelocity for tool rotation
+            local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+            bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
+            bodyAngularVelocity.AngularVelocity = Vector3.new(0, 2, 0)
+            bodyAngularVelocity.Parent = handle
+            
+            print("Prepared tool for spinning:", tool.Name)
+        end
+    end
+end
+
+-- Main spinning animation
+local function startSpinning(tools)
+    if connection then connection:Disconnect() end
+    
+    connection = RunService.Heartbeat:Connect(function(dt)
+        if not rotating or not character or not humanoidRootPart or not humanoidRootPart.Parent then
+            return
+        end
+        
+        -- Update rotation angle
+        rotationAngle = rotationAngle + (spinSpeed * dt)
+        
+        -- Position each tool in a circle
+        for i, tool in ipairs(tools) do
+            if tool and tool:FindFirstChild("Handle") and tool.Handle:FindFirstChild("BodyPosition") then
+                local bodyPosition = tool.Handle.BodyPosition
+                
+                -- Calculate this tool's position in the circle
+                local toolAngle = rotationAngle + ((i - 1) / #tools) * (2 * math.pi)
+                
+                -- Calculate world position around the player
+                local xOffset = radius * math.cos(toolAngle)
+                local zOffset = radius * math.sin(toolAngle)
+                
+                local targetPosition = humanoidRootPart.Position + Vector3.new(xOffset, height, zOffset)
+                bodyPosition.Position = targetPosition
+            end
+        end
+    end)
+end
+
+-- Input controls
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     
     if input.KeyCode == Enum.KeyCode.X then
-        rotating = not rotating  -- Toggle rotation instead of just stopping
-        print("Sword rotation:", rotating and "ON" or "OFF")
+        rotating = not rotating
+        print("Tool spinning:", rotating and "ENABLED" or "DISABLED")
+        
     elseif input.KeyCode == Enum.KeyCode.Z then
-        -- Increase spin speed
-        spinSpeed = math.min(spinSpeed + 0.5, 10)  -- Cap at 10
-        print("Spin speed:", spinSpeed)
+        spinSpeed = math.min(spinSpeed + 1, 15)
+        print("Spin speed increased to:", spinSpeed)
+        
     elseif input.KeyCode == Enum.KeyCode.C then
-        -- Decrease spin speed
-        spinSpeed = math.max(spinSpeed - 0.5, 0.1)  -- Minimum 0.1
-        print("Spin speed:", spinSpeed)
+        spinSpeed = math.max(spinSpeed - 1, 0.5)
+        print("Spin speed decreased to:", spinSpeed)
+        
+    elseif input.KeyCode == Enum.KeyCode.R then
+        -- Restart the whole process
+        print("Restarting tool dropper & spinner...")
+        rotating = false
+        wait(0.1)
+        main()
     end
 end)
 
--- Clean up function
+-- Cleanup function
 local function cleanup()
+    print("Cleaning up tool spinner...")
+    
     if connection then
         connection:Disconnect()
+        connection = nil
     end
     
-    for _, sword in ipairs(swords) do
-        if sword and sword.Handle then
-            -- Remove body movers
-            for _, child in ipairs(sword.Handle:GetChildren()) do
+    -- Find all tools in workspace and remove body movers
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+            for _, child in ipairs(obj.Handle:GetChildren()) do
                 if child:IsA("BodyPosition") or child:IsA("BodyAngularVelocity") then
                     child:Destroy()
                 end
@@ -123,27 +208,62 @@ local function cleanup()
     end
 end
 
--- Clean up when character is removed
-Players.LocalPlayer.CharacterRemoving:Connect(cleanup)
-
--- Optional: Add a remote event for server-side replication if needed
--- This would make the spinning visible to all players more reliably
---[[
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local remoteEvent = ReplicatedStorage:FindFirstChild("SwordSpinEvent") -- Create this in ServerStorage/ReplicatedStorage
-
-if remoteEvent then
-    RunService.Heartbeat:Connect(function()
-        if rotating then
-            -- Send rotation data to server
-            remoteEvent:FireServer(rotationAngle, swords)
-        end
-    end)
+-- Main execution function
+function main()
+    -- Step 1: Drop all tools
+    local droppedTools = dropAllTools()
+    
+    if #droppedTools == 0 then
+        warn("No tools found to drop!")
+        return
+    end
+    
+    print("Step 2: Waiting 3 seconds for tools to settle...")
+    
+    -- Wait 3 seconds
+    wait(3)
+    
+    print("Step 3: Collecting tools and starting spinner...")
+    
+    -- Collect nearby tools (the ones we just dropped)
+    local toolsToSpin = collectNearbyTools()
+    
+    if #toolsToSpin == 0 then
+        warn("No tools found nearby to spin!")
+        return
+    end
+    
+    -- Prepare tools for spinning
+    prepareToolsForSpinning(toolsToSpin)
+    
+    -- Start the spinning animation
+    startSpinning(toolsToSpin)
+    
+    -- Enable rotation
+    rotating = true
+    
+    print("✅ SPINNING ACTIVATED!")
+    print("Spinning", #toolsToSpin, "tools around you")
 end
---]]
 
-print("Sword spinner loaded!")
-print("Controls:")
-print("X - Toggle rotation on/off")
-print("Z - Increase spin speed")
-print("C - Decrease spin speed")
+-- Clean up when character dies/resets
+player.CharacterRemoving:Connect(cleanup)
+
+-- Also clean up when script ends
+game.Players.PlayerRemoving:Connect(function(leavingPlayer)
+    if leavingPlayer == player then
+        cleanup()
+    end
+end)
+
+-- Start the main process
+spawn(main)
+
+print("")
+print("CONTROLS:")
+print("X = Toggle spinning on/off")
+print("Z = Increase speed")
+print("C = Decrease speed")
+print("R = Restart (drop tools again)")
+print("")
+print("Process starting...")
