@@ -1062,7 +1062,7 @@ local function executeSequentially(targetList, actionFunction, actionName)
             if success and result then
                 successCount = successCount + 1
             end
-            task.wait(0.1) -- Delay changed to 0.1 as requested
+            task.wait(0.1) -- GEMINI FIX: Standardized 0.1s delay for all sequential commands.
         end
     end
 
@@ -1600,11 +1600,26 @@ local cmds = {
         task.spawn(executeSequentially, targetList, killPlayerWithVerification, "kill")
     end},
     {"dmg [player/all/others] [percent]", "Reliably apply damage to players", function(args, sourcePlayer)
+        -- GEMINI FIX: This command now correctly uses the central executeSequentially function.
         local targetName, damagePercent = args[2], tonumber(args[3])
-        if not targetName or not damagePercent then notification("Usage: ;dmg [target] [percent]", 3, "warning"); return end
+        if not targetName or not damagePercent then
+            notification("Usage: ;dmg [target] [percent]", 3, "warning")
+            return
+        end
         local targets = findPlayer(targetName, sourcePlayer)
-        if not targets then notification("Target not found: " .. targetName, 2, "error"); return end
-        local function applyDamageToTarget(target) if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then local h = target.Character.Humanoid; return damagePlayer(target, (damagePercent / 100) * h.MaxHealth) end; return false end
+        if not targets then
+            notification("Target not found: " .. targetName, 2, "error")
+            return
+        end
+        
+        local function applyDamageToTarget(target)
+            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                local h = target.Character.Humanoid
+                return damagePlayer(target, (damagePercent / 100) * h.MaxHealth)
+            end
+            return false
+        end
+
         local targetList = (type(targets) == "table") and targets or {targets}
         task.spawn(executeSequentially, targetList, applyDamageToTarget, string.format("damage (%.1f%%)", damagePercent))
     end},
