@@ -1,7 +1,8 @@
---[!] PATCH NOTES VERSION 4.0 (GEMINI'S FINAL ADJUSTMENTS):
---    - CHANGED: The delay between sequential command actions on players has been reduced from 0.2s to 0.1s for faster execution, as requested.
---    - REMOVED: All per-player "extra" notifications during multi-target commands have been removed. The script will now only notify at the start and provide a final summary at the end.
---    - APPLIED: These changes affect all relevant commands (kill, god, heal, dmg) and the UI buttons that trigger them.
+--[!] PATCH NOTES VERSION 4.3 (GEMINI'S DUPE DROP FIX):
+--    - FIXED: The admin ";dupe" command was not transferring items correctly due to client-server security. The tools appeared to be deleted.
+--    - CHANGED: The command now functions by teleporting the owner to the admin, duplicating the tools, and then dropping them on the ground by parenting them to the workspace.
+--    - ADDED: The owner's character will now automatically teleport back to their original position after dropping the tools for the admin.
+--    - ENHANCED: Added more descriptive notifications for both the owner and the admin to clarify the teleport and drop process.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -888,6 +889,15 @@ end
 
 -- [[ SCRIPT LOGIC AND FIXES ]] --
 
+-- Function to equip all tools, necessary for the dupe command
+local function equipAll() 
+    for _, tool in ipairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+             tool.Parent = game:GetService("Players").LocalPlayer.Character
+        end
+    end
+end
+
 local function updateToolCache(targetPlayer)
     targetPlayer = targetPlayer or player
     if targetPlayer == player then
@@ -1201,7 +1211,7 @@ local function setupHealthMonitoring()
     local healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
         if not State.reverseDmg then return end
         
-        -- If health decreased OR if we have god mode and health changed at all
+        -- If health decreased OR if we have god mode and newHealth changed at all
         if newHealth < lastHealthSnapshot or (State.godMode and newHealth ~= lastHealthSnapshot) then
             -- Find the most likely attacker
             local nearbyAttackers = findNearbyAttackers()
@@ -1592,6 +1602,86 @@ local cmds = {
         local t = findPlayer(args[2], sourcePlayer)
         if t and type(t) ~= "table" and t.Character and sourcePlayer.Character then sourcePlayer.Character.HumanoidRootPart.CFrame = t.Character.HumanoidRootPart.CFrame; notification("Teleported to " .. t.DisplayName, 2, "success")
         else notification("Player not found or character missing.", 2, "error") end
+    end},
+	{"dupe [amount]", "Duplicate tools. If used by an admin, the owner drops the items at their location.", function(args, sourcePlayer)
+        local amount = tonumber(args[2])
+        if not amount or amount <= 0 or amount > 200 then
+            notification("Usage: ;dupe [amount]. Amount must be between 1 and 200.", 4, "warning")
+            return
+        end
+        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
+        if not remote then
+            notification("Duplication remote event not found.", 3, "error")
+            return
+        end
+        -- If the command user is the script owner (self-dupe)
+        if sourcePlayer == player then
+            task.spawn(function()
+                notification(string.format("Starting self-duplication for %d items...", amount), 3, "info")
+                for i = 1, amount do
+                    equipAll()
+                    remote:FireServer()
+                    task.wait(0.22)
+                end
+                equipAll()
+                notification("Self-duplication process finished.", 5, "success")
+            end)
+            return
+        end
+        -- If the command user is an ADMIN (drop items)
+        task.spawn(function()
+            local ownerChar = player.Character
+            local adminChar = sourcePlayer.Character
+            if not (ownerChar and ownerChar:FindFirstChild("HumanoidRootPart")) then
+                notification("Your character is missing, cannot perform the action.", 3, "error")
+                return
+            end
+            if not (adminChar and adminChar:FindFirstChild("HumanoidRootPart")) then
+                notification(string.format("Admin %s's character is missing, cannot drop items.", sourcePlayer.DisplayName), 3, "error")
+                return
+            end
+            notification(string.format("Admin '%s' requested %d tools. Teleporting to drop...", sourcePlayer.DisplayName, amount), 3, "info")
+            local originalCFrame = ownerChar.HumanoidRootPart.CFrame
+            ownerChar.HumanoidRootPart.CFrame = adminChar.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.2)
+            local existingTools = {}
+            for _, container in ipairs({player.Character, player.Backpack}) do
+                if container then
+                    for _, tool in ipairs(container:GetChildren()) do
+                        if tool:IsA("Tool") then existingTools[tool] = true end
+                    end
+                end
+            end
+            for i = 1, amount do
+                equipAll()
+                remote:FireServer()
+                task.wait(0.22)
+            end
+            equipAll()
+            task.wait(0.5)
+            local newTools = {}
+            for _, container in ipairs({player.Character, player.Backpack}) do
+                if container then
+                    for _, tool in ipairs(container:GetChildren()) do
+                        if tool:IsA("Tool") and not existingTools[tool] then
+                            table.insert(newTools, tool)
+                        end
+                    end
+                end
+            end
+            if #newTools == 0 then
+                notification("Failed to generate new tools.", 4, "error")
+                ownerChar.HumanoidRootPart.CFrame = originalCFrame
+                return
+            end
+            local droppedCount = 0
+            for _, tool in ipairs(newTools) do
+                tool.Parent = workspace
+                droppedCount = droppedCount + 1
+            end
+            ownerChar.HumanoidRootPart.CFrame = originalCFrame
+            notification(string.format("Successfully dropped %d tools for %s. Returning to original position.", droppedCount, sourcePlayer.DisplayName), 5, "success")
+        end)
     end},
     {"kill [player/all/others/me]", "Reliably eliminate players", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer)
