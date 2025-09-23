@@ -100,7 +100,7 @@ end
 -- Optimized UI Scaling System
 local UIScale = {
     userScale = 1.0,
-    minScale = 0.6,
+    minScale = 0.8,
     maxScale = 1.4,
     baseReferenceSize = 1080,
     cached = {scale = nil, mobile = nil}
@@ -924,7 +924,7 @@ local function updateToolCache(targetPlayer)
     -- Debounce to prevent excessive updates
     local currentTime = time() -- IMPROVEMENT: Replaced deprecated tick() with time()
     if targetPlayer == player then
-        if currentTime - Data.lastUpdateTime < 0.05 then
+        if currentTime - Data.lastUpdateTime < 0.1 then
             return #Data.toolCache
         end
         Data.lastUpdateTime = currentTime
@@ -991,7 +991,7 @@ local function getTools()
                 
                 if success then
                     -- Fast delay of 0.1 seconds as requested
-                    task.wait(0.1)
+                    task.wait(0)
                     updateToolCache(player)
                 end
             end
@@ -1095,7 +1095,7 @@ local function killPlayerWithVerification(target)
     if not target or not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") or target.Character.Humanoid.Health <= 0 then
         return true
     end
-    local maxRetries = 3
+    local maxRetries = 4
     local retryDelay = 0.1
     for i = 1, maxRetries do
         killPlayer(target)
@@ -1671,8 +1671,8 @@ local cmds = {
     end},
 	{"dupe [amount]", "Duplicate tools. If used by an admin, the owner drops the items at their location.", function(args, sourcePlayer)
         local amount = tonumber(args[2])
-        if not amount or amount <= 0 or amount > 200 then
-            notification("Usage: ;dupe [amount]. Amount must be between 1 and 200.", 4, "warning")
+        if not amount or amount <= 0 or amount > 750 then
+            notification("Usage: ;dupe [amount]. Amount must be between 1 and 750.", 4, "warning")
             return
         end
         local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
@@ -1687,7 +1687,7 @@ local cmds = {
                 for i = 1, amount do
                     equipAll()
                     remote:FireServer()
-                    task.wait(0.22)
+                    task.wait(0.20)
                 end
                 equipAll()
                 notification("Self-duplication process finished.", 5, "success")
@@ -1721,10 +1721,10 @@ local cmds = {
             for i = 1, amount do
                 equipAll()
                 remote:FireServer()
-                task.wait(0.22)
+                task.wait(0.20)
             end
             equipAll()
-            task.wait(0.5)
+            task.wait(0.)
             local newTools = {}
             for _, container in ipairs({player.Character, player.Backpack}) do
                 if container then
