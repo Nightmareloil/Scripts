@@ -35,11 +35,11 @@ local Performance = {
 ]]
 local FARM_CONFIG = {
     -- The fixed speed for "Slow Farm".
-    SLOW_FARM_RATE = 4,
+    SLOW_FARM_RATE = 3,
 
     -- This number is multiplied by the speed in the UI (1-10) for "Fast Farm".
     -- For example, a multiplier of 2 with a UI speed of 10 results in an effective speed of 20.
-    FAST_FARM_MULTIPLIER = 2
+    FAST_FARM_MULTIPLIER = 1
 }
 --[[
     ==========================================================================
