@@ -31,7 +31,7 @@ local Performance = {
 -- CONFIGURATION FOR FARMING RATES --
 local FARM_CONFIG = {
     SLOW_FARM_MULTIPLIER = 0.3, -- FIXED: Changed from a static rate to a multiplier
-    FAST_FARM_MULTIPLIER = 0.7
+    FAST_FARM_MULTIPLIER = 0.6
 }
 
 local Sounds = {}
