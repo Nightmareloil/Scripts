@@ -1,4 +1,5 @@
---[!] PATCH NOTES VERSION 5.9 (GEMINI'S GOD MODE REVERSION UPDATE):
+--[!] PATCH NOTES VERSION 5.9.1 (GEMINI'S SLOW FARM FIX):
+--    - FIXED: The slow farm now correctly uses a multiplier (SLOW_FARM_MULTIPLIER) based on the user-defined speed, similar to the fast farm.
 --    - REVERTED: The 'setLocalGodMode' function has been restored to its original state. Disabling god mode will no longer automatically reset the player's character.
 --    - REMOVED: The ';ungod' command has been completely removed from the command list.
 --    - RETAINED: All previous fixes and improvements from version 5.8, including the enhanced protect command and removal of the kill farm, are maintained.
@@ -27,9 +28,10 @@ local Performance = {
     ping = 0
 }
 
+-- CONFIGURATION FOR FARMING RATES --
 local FARM_CONFIG = {
-    SLOW_FARM_RATE = 0.5, 
-    FAST_FARM_MULTIPLIER = 1
+    SLOW_FARM_MULTIPLIER = 0.3, -- FIXED: Changed from a static rate to a multiplier
+    FAST_FARM_MULTIPLIER = 0.8
 }
 
 local Sounds = {}
@@ -489,7 +491,7 @@ local function updateStats(deltaTime)
     if not isWatching and initialPowerRecorded then Stats.powerGainedThisSession = Stats.power - Stats.initialPower end
     if State.fastFarm or State.slowFarm then table.insert(powerHistory, {time = currentTime, power = Stats.power}); if #powerHistory > 10 then table.remove(powerHistory, 1) end; if #powerHistory >= 2 then local td = powerHistory[#powerHistory].time - powerHistory[1].time; local pd = powerHistory[#powerHistory].power - powerHistory[1].power; if td > 0 then Stats.powerPerSecond, Stats.powerPerHour = pd / td, (pd / td) * 3600 end end; Stats.farmingTime = Stats.farmingTime + deltaTime end
     statLabels.pph.Text = "Power/hr: " .. formatNumber(Stats.powerPerHour); statLabels.session.Text = "Session: +" .. formatNumber(Stats.powerGainedThisSession); statLabels.fps.Text = "FPS: " .. Performance.fps; statLabels.ping.Text = "Ping: " .. (Performance.ping > 0 and Performance.ping .. "ms" or "N/A"); statLabels.deaths.Text = "Deaths: " .. (isWatching and "N/A" or Stats.deaths); statLabels.farmingTime.Text = "Farm Time: " .. formatTime(Stats.farmingTime); statLabels.time.Text = "Session: " .. formatTime(sessionTime); statLabels.commands.Text = "Commands: " .. Stats.totalCommands
-    local eff, ec = "Calculating...", Theme.accent; if State.fastFarm or State.slowFarm then local farmSpeed = State.fastFarm and Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER or FARM_CONFIG.SLOW_FARM_RATE; if Stats.powerPerHour >= 1e6 then eff, ec = "Exceptional", Theme.glowSecondary elseif Stats.powerPerHour >= 5e5 then eff, ec = "Strong", Theme.success elseif Stats.powerPerHour >= 1e5 then eff, ec = "Good", Theme.success else eff, ec = "Active", Theme.warning end; eff = eff .. " (Rate: " .. farmSpeed .. " | " .. formatNumber(Stats.powerPerHour) .. "/hr)" else eff, ec = "Farming disabled", Theme.danger end; statLabels.eff.Text, statLabels.eff.TextColor3 = "Efficiency: " .. eff, ec
+    local eff, ec = "Calculating...", Theme.accent; if State.fastFarm or State.slowFarm then local farmSpeed = State.fastFarm and Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER or Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; if Stats.powerPerHour >= 1e6 then eff, ec = "Exceptional", Theme.glowSecondary elseif Stats.powerPerHour >= 5e5 then eff, ec = "Strong", Theme.success elseif Stats.powerPerHour >= 1e5 then eff, ec = "Good", Theme.success else eff, ec = "Active", Theme.warning end; eff = eff .. " (Rate: " .. string.format("%.2f", farmSpeed) .. " | " .. formatNumber(Stats.powerPerHour) .. "/hr)" else eff, ec = "Farming disabled", Theme.danger end; statLabels.eff.Text, statLabels.eff.TextColor3 = "Efficiency: " .. eff, ec
 end
 
 -- REVERTED: Original God Mode function
@@ -641,7 +643,7 @@ end, true); farmToggles.fast = fastFarmToggleBtn
 local _, slowFarmToggleBtn = createToggle("Slow Farm", function(enabled, toggleBtn)
     State.slowFarm = enabled; if enabled and State.fastFarm then State.fastFarm = false; if farmToggles.fast then farmToggles.fast.Text = "OFF"; pcall(function() Services.Tween:Create(farmToggles.fast, TweenInfo.new(0.25), {BackgroundColor3 = Theme.danger, Rotation = 0}):Play() end) end end
     if State.coroutines.slowFarm then task.cancel(State.coroutines.slowFarm); State.coroutines.slowFarm = nil end
-    if enabled then powerHistory = {{time = time(), power = Stats.power}}; notification("Slow farm ON", 2, "success"); State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do farm(FARM_CONFIG.SLOW_FARM_RATE); task.wait() end end) else notification("Slow farm OFF", 2, "info") end
+    if enabled then powerHistory = {{time = time(), power = Stats.power}}; notification("Slow farm ON", 2, "success"); State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end) else notification("Slow farm OFF", 2, "info") end
 end); farmToggles.slow = slowFarmToggleBtn
 local godFrame, godToggleBtn = createToggle("God Mode", function(enabled) setLocalGodMode(enabled) end); Data.uiElements.godModeToggle = godToggleBtn
 createToggle("Kill Aura", function(e) State.killAura = e; if State.coroutines.killAura then task.cancel(State.coroutines.killAura); State.coroutines.killAura = nil end; notification("Kill aura " .. (e and "ON" or "OFF"), 2, e and "success" or "info"); if e then State.coroutines.killAura = task.spawn(function() while State.killAura do if player.Character then local rp = player.Character:FindFirstChild("HumanoidRootPart"); if rp then for _, p in pairs(Players:GetPlayers()) do if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then if (rp.Position - p.Character.HumanoidRootPart.Position).Magnitude <= Config.range then task.spawn(killPlayerWithVerification, p) end end end end end; task.wait(0.5) end end) end end)
