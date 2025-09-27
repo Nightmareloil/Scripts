@@ -25,7 +25,7 @@ local Performance = {
 -- CONFIGURATION FOR FARMING RATES --
 local FARM_CONFIG = {
     SLOW_FARM_MULTIPLIER = 0.2,
-    FAST_FARM_MULTIPLIER = 0.6
+    FAST_FARM_MULTIPLIER = 0.5
 }
 
 local Sounds = {}
