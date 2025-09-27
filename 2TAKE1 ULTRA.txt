@@ -1,8 +1,3 @@
---[!] PATCH NOTES VERSION 5.9.4 (GEMINI'S 'ALL' TARGETING FIX):
---    - REVERTED: The 'all' keyword in commands now targets every player in the server, INCLUDING the user, as originally intended.
---    - CLARIFIED: The 'others' keyword remains unchanged and will target all players EXCEPT the user.
---    - RETAINED: All previous fixes, including the reliability patch for multi-target commands, are maintained.
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Services = {
@@ -29,8 +24,8 @@ local Performance = {
 
 -- CONFIGURATION FOR FARMING RATES --
 local FARM_CONFIG = {
-    SLOW_FARM_MULTIPLIER = 0.3,
-    FAST_FARM_MULTIPLIER = 0.5
+    SLOW_FARM_MULTIPLIER = 0.2,
+    FAST_FARM_MULTIPLIER = 0.6
 }
 
 local Sounds = {}
@@ -98,7 +93,7 @@ end
 
 -- Optimized UI Scaling System
 local UIScale = {
-    userScale = 1.0, minScale = 0.9, maxScale = 1.7,
+    userScale = 1.0, minScale = 0.7, maxScale = 1.7,
     baseReferenceSize = 1440, cached = {scale = nil, mobile = nil}
 }
 
@@ -124,6 +119,7 @@ local function updateUIScale() UIScale.cached = {scale = nil, mobile = nil}; sca
 -- Configuration
 local Config = {
     speed = 4, range = S(15), walkSpeed = 16, jumpPower = 50, flySpeed = S(40),
+    killAuraRange = 30,
     commandPrefix = ";", antiLagEnabled = false, performanceMode = false,
     whitelistedIds = {1212018424, 514967933}
 }
@@ -139,15 +135,16 @@ local State = {
 
 -- Enhanced Statistics
 local Stats = {
-    power = 0, kills = 0, health = 100, powerGainedThisSession = 0,
+    power = 0, kills = 0, health = 100,
     sessionStartTime = time(), powerPerSecond = 0, powerPerHour = 0,
-    initialPower = 0, deaths = 0, farmingTime = 0, totalCommands = 0
+    initialPower = 0, deaths = 0, farmingTime = 0, totalCommands = 0,
+    powerGainedFarming = 0, farmStartPower = 0
 }
 local initialPowerRecorded = false
 
 -- Data Storage
 local Data = {
-    adminPlayers = {}, connections = { reverseDmg = nil }, flyObjects = {},
+    adminPlayers = {}, connections = { }, flyObjects = {},
     noclipConnection = nil, flyConnection = nil, charDiedFlyConnection = nil,
     watchConnection = nil, speedConnections = {},
     uiElements = { godModeToggle = nil }, protectionConnection = nil, protectedPlayerConnection = nil,
@@ -314,7 +311,6 @@ local function getTools()
     if #Data.toolCache == 0 then local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent"); if remote then local s = pcall(function() remote:FireServer() end); if s then task.wait(0); updateToolCache(player) end end end
     return Data.toolCache
 end
--- FIXED: 'all' now correctly includes the user, while 'others' excludes them.
 local function findPlayer(name, sourcePlayer)
     sourcePlayer = sourcePlayer or player
     if not name or name == "" then return nil end
@@ -388,6 +384,22 @@ local function healPlayerWithVerification(target)
     for i = 1, 6 do healPlayer(target); task.wait(0.1); if not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") or h.Health >= h.MaxHealth then return true end end
     return false
 end
+local function godPlayerWithVerification(target)
+    if not target or not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") then return true end
+    for i = 1, 6 do godPlayer(target); task.wait(0.1) end
+    return true
+end
+local function damagePlayerWithVerification(target, damageAmount)
+    if not target or not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") then return false end
+    local h = target.Character.Humanoid; local initialHealth = h.Health
+    if initialHealth <= 0 then return true end
+    for i = 1, 6 do
+        damagePlayer(target, damageAmount)
+        task.wait(0.1)
+        if not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") or h.Health < initialHealth then return true end
+    end
+    return h.Health < initialHealth
+end
 local function executeSequentially(targetList, actionFunction, actionName)
     if #targetList == 0 then
         notification("No valid targets found.", 2, "warning")
@@ -408,57 +420,150 @@ local function executeSequentially(targetList, actionFunction, actionName)
     notification(string.format("'%s' finished: %d/%d successful.", actionName, successCount, #targetList), 3, "success")
 end
 
--- [[ REVERSE DAMAGE & PROTECT SYSTEM ]] --
-local REVERSE_CONFIG = {ATTACK_COOLDOWN = 0.1, CLEANUP_INTERVAL = 5.0, PROXIMITY_RANGE = 4}
+local REVERSE_CONFIG = {
+    ATTACK_COOLDOWN = 0.1,
+    CLEANUP_INTERVAL = 4.0,
+    PROXIMITY_RANGE = 4
+}
 local attackerHistory = {}
 local lastHealthSnapshot = 0
+
 local function cleanupAttackerHistory()
-    local currentTime = time(); for attacker, data in pairs(attackerHistory) do if currentTime - data.timestamp > 8 then attackerHistory[attacker] = nil end end
+    local currentTime = time()
+    for attacker, data in pairs(attackerHistory) do
+        if currentTime - data.timestamp > 8 then
+            attackerHistory[attacker] = nil
+        end
+    end
 end
+
 local function executeRetaliation(attacker, method, extraInfo)
     if not attacker or not attacker.Character then return false end
-    local currentTime = time(); local lastAttackTime = attackerHistory[attacker] and attackerHistory[attacker].timestamp or 0
+    local currentTime = time()
+    local lastAttackTime = attackerHistory[attacker] and attackerHistory[attacker].timestamp or 0
     if currentTime - lastAttackTime < REVERSE_CONFIG.ATTACK_COOLDOWN then return false end
+    
     attackerHistory[attacker] = {timestamp = currentTime, method = method, info = extraInfo}
-    local success = pcall(function() playSound("combat"); killPlayerWithVerification(attacker); notification(string.format("⚡ Retaliation! Eliminated %s (%s)", attacker.DisplayName, method), 3, "combat") end)
-    if not success then notification("⚠️ Retaliation failed.", 2, "warning") end
+    
+    local success = pcall(function()
+        playSound("combat")
+        killPlayerWithVerification(attacker)
+        notification(string.format("⚡ Retaliation! Eliminated %s (%s)", attacker.DisplayName, method), 3, "combat")
+    end)
+    
+    if not success then
+        notification("⚠️ Retaliation failed - target may be protected", 2, "warning")
+    end
     return success
 end
+
 local function findNearbyAttackers(targetPlayer)
     if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return {} end
-    local playerPos = targetPlayer.Character.HumanoidRootPart.Position; local nearbyAttackers = {}
+    local playerPos = targetPlayer.Character.HumanoidRootPart.Position
+    local nearbyAttackers = {}
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= targetPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             local pHumanoid = p.Character:FindFirstChildOfClass("Humanoid")
             if pHumanoid and pHumanoid.Health > 0 then
                 local distance = (p.Character.HumanoidRootPart.Position - playerPos).Magnitude
-                if distance <= REVERSE_CONFIG.PROXIMITY_RANGE and (p.Character:FindFirstChildOfClass("Tool") or p.Backpack:FindFirstChildOfClass("Tool")) then
-                    table.insert(nearbyAttackers, {player = p, distance = distance, tool = (p.Character:FindFirstChildOfClass("Tool") and p.Character:FindFirstChildOfClass("Tool").Name or "Unknown")})
+                if distance <= REVERSE_CONFIG.PROXIMITY_RANGE then
+                    local equippedTool = p.Character:FindFirstChildOfClass("Tool")
+                    local hasBackpackTool = p.Backpack:FindFirstChildOfClass("Tool")
+                    if equippedTool or hasBackpackTool then
+                        table.insert(nearbyAttackers, {player = p, distance = distance, tool = equippedTool and equippedTool.Name or "Unknown"})
+                    end
                 end
             end
         end
     end
     return nearbyAttackers
 end
-local function setupReverseDamage()
-    if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect(); Data.connections.reverseDmg = nil; end
-    if State.coroutines.reverseDmgCleanup then task.cancel(State.coroutines.reverseDmgCleanup) end
-    if not State.reverseDmg or not player.Character then attackerHistory = {}; return end
-    State.coroutines.reverseDmgCleanup = task.spawn(function() while State.reverseDmg do task.wait(REVERSE_CONFIG.CLEANUP_INTERVAL); cleanupAttackerHistory() end end)
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid"); if not humanoid then return end; lastHealthSnapshot = humanoid.Health
-    Data.connections.reverseDmg = humanoid.HealthChanged:Connect(function(newHealth)
+
+local function setupCreatorTagMonitoring()
+    if not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") then return nil end
+    local humanoid = player.Character.Humanoid
+    local tagConnection = humanoid.ChildAdded:Connect(function(child)
+        if not State.reverseDmg then return end
+        if child.Name == "creator" and child:IsA("ObjectValue") and child.Value and child.Value:IsA("Player") then
+            local attacker = child.Value
+            if attacker ~= player then
+                task.spawn(executeRetaliation, attacker, "Creator Tag", "Direct hit detected")
+            end
+            task.spawn(function() task.wait(0.05) if child and child.Parent then child:Destroy() end end)
+        end
+    end)
+    return tagConnection
+end
+
+local function setupHealthMonitoring()
+    if not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") then return nil end
+    local humanoid = player.Character.Humanoid
+    lastHealthSnapshot = humanoid.Health
+    local healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
         if not State.reverseDmg then return end
         if newHealth < lastHealthSnapshot or (State.godMode and newHealth ~= lastHealthSnapshot) then
-            local creator = humanoid:FindFirstChild("creator")
-            if creator and creator.Value and creator.Value:IsA("Player") and creator.Value ~= player then
-                task.spawn(executeRetaliation, creator.Value, "Creator Tag", "Direct Hit")
-            else
-                local nearbyAttackers = findNearbyAttackers(player)
-                if #nearbyAttackers > 0 then table.sort(nearbyAttackers, function(a, b) return a.distance < b.distance end); local closest = nearbyAttackers[1]; task.spawn(executeRetaliation, closest.player, "Health Change", string.format("Dist: %.1f", closest.distance)) end
+            local nearby = findNearbyAttackers(player)
+            if #nearby > 0 then
+                table.sort(nearby, function(a, b) return a.distance < b.distance end)
+                local closest = nearby[1]
+                task.spawn(executeRetaliation, closest.player, "Health Change", string.format("Distance: %.1f, Weapon: %s", closest.distance, closest.tool))
             end
         end
         lastHealthSnapshot = newHealth
     end)
+    return healthConnection
+end
+
+local function setupHeartbeatMonitoring()
+    local lastCheck = 0
+    local heartbeatConnection = Services.Run.Heartbeat:Connect(function()
+        if not State.reverseDmg or not player.Character then return end
+        local currentTime = time()
+        if currentTime - lastCheck < 0.05 then return end
+        lastCheck = currentTime
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+        local nearby = findNearbyAttackers(player)
+        for _, data in ipairs(nearby) do
+            if data.player.Character:FindFirstChildOfClass("Tool") and data.distance <= 10 then
+                task.spawn(executeRetaliation, data.player, "Armed Proximity", string.format("Sword equipped at %.1f studs", data.distance))
+                break
+            end
+        end
+        local currentHealth = humanoid.Health
+        if not State.godMode and currentHealth ~= lastHealthSnapshot then
+            for _, data in ipairs(nearby) do
+                if data.distance <= 8 then
+                    task.spawn(executeRetaliation, data.player, "You have been hit.", string.format("Distance: %.1f studs", data.distance))
+                    break
+                end
+            end
+        end
+        lastHealthSnapshot = currentHealth
+    end)
+    return heartbeatConnection
+end
+
+local function setupReverseDamage()
+    if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect() end
+    if Data.connections.reverseDmgCreator then Data.connections.reverseDmgCreator:Disconnect() end
+    if Data.connections.reverseDmgHeartbeat then Data.connections.reverseDmgHeartbeat:Disconnect() end
+    if Data.connections.reverseDmgCleanup then if type(Data.connections.reverseDmgCleanup) == "table" then task.cancel(Data.connections.reverseDmgCleanup) end end
+    
+    if not State.reverseDmg or not player.Character then 
+        attackerHistory = {}; return 
+    end
+    
+    Data.connections.reverseDmgCleanup = task.spawn(function()
+        while State.reverseDmg do
+            task.wait(REVERSE_CONFIG.CLEANUP_INTERVAL); cleanupAttackerHistory()
+        end
+    end)
+    
+    Data.connections.reverseDmgCreator = setupCreatorTagMonitoring()
+    Data.connections.reverseDmg = setupHealthMonitoring()
+    Data.connections.reverseDmgHeartbeat = setupHeartbeatMonitoring()
+    
     notification("Reverse Damage: ON", 2, "success")
 end
 
@@ -481,34 +586,70 @@ local function watchPlayer(targetName)
 end
 
 local function protectPlayer(targetName)
-    local target = findPlayer(targetName); if not target or type(target) == "table" then notification("Player not found.", 2, "error"); return end
-    if Data.protectionConnection then Data.protectionConnection:Disconnect() end; if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
-    State.protectedPlayer = target; State.protectionActive = true; notification("Protection enabled for " .. target.DisplayName, 3, "success"); playSound("shield")
+    local target = findPlayer(targetName)
+    if not target or type(target) == "table" then
+        notification("Player not found: " .. tostring(targetName), 2, "error")
+        return
+    end
+
+    if Data.protectionConnection then Data.protectionConnection:Disconnect() end
+    if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
+
+    State.protectedPlayer = target
+    State.protectionActive = true
+    notification("Protection enabled for " .. target.DisplayName, 3, "success")
+    playSound("shield")
+
     local function setupProtection(character)
-        if not character then return end; local humanoid = character:FindFirstChildOfClass("Humanoid"); if not humanoid then return end
-        local lastHealth = humanoid.Health; local lastAttackTime = 0
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+
+        local lastHealth = humanoid.Health
+        local lastAttackTime = 0
+
         Data.protectionConnection = humanoid.HealthChanged:Connect(function(newHealth)
             if not State.protectionActive or State.protectedPlayer ~= target then lastHealth = newHealth; return end
             if newHealth < lastHealth then
-                local currentTime = time(); if currentTime - lastAttackTime < REVERSE_CONFIG.ATTACK_COOLDOWN then lastHealth = newHealth; return end; lastAttackTime = currentTime
+                local currentTime = time()
+                if currentTime - lastAttackTime < 0.5 then lastHealth = newHealth; return end
+                lastAttackTime = currentTime
+
                 task.spawn(function()
-                    local creator = humanoid:FindFirstChild("creator")
+                    local creatorTag = humanoid:FindFirstChild("creator")
                     local attacker = nil
-                    if creator and creator.Value and creator.Value:IsA("Player") and creator.Value ~= target then
-                        attacker = creator.Value
+                    if creatorTag and creatorTag.Value and creatorTag.Value:IsA("Player") then
+                        attacker = creatorTag.Value
                     else
-                        local nearbyAttackers = findNearbyAttackers(target)
-                        if #nearbyAttackers > 0 then table.sort(nearbyAttackers, function(a, b) return a.distance < b.distance end); attacker = nearbyAttackers[1].player end
+                        local closestDistance = 40
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            for _, p in pairs(Players:GetPlayers()) do
+                                if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                                    if p.Character:FindFirstChildOfClass("Tool") then
+                                        local distance = (p.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                                        if distance < closestDistance then closestDistance = distance; attacker = p end
+                                    end
+                                end
+                            end
+                        end
                     end
-                    if attacker then playSound("combat"); killPlayerWithVerification(attacker); notification("Protected " .. target.DisplayName .. "! Eliminated " .. attacker.DisplayName, 3, "combat") end
+                    if attacker then
+                        playSound("combat")
+                        killPlayerWithVerification(attacker)
+                        notification("Protected " .. target.DisplayName .. "! Eliminated " .. attacker.DisplayName, 3, "combat")
+                    end
                 end)
             end
             lastHealth = newHealth
         end)
     end
+
     if target.Character then setupProtection(target.Character) end
-    Data.protectedPlayerConnection = target.CharacterAdded:Connect(function(character) task.wait(1); setupProtection(character) end)
+    Data.protectedPlayerConnection = target.CharacterAdded:Connect(function(character)
+        task.wait(1); setupProtection(character)
+    end)
 end
+
 local function stopProtection()
     if Data.protectionConnection then Data.protectionConnection:Disconnect() end; if Data.protectedPlayerConnection then Data.protectedPlayerConnection:Disconnect() end
     State.protectedPlayer, State.protectionActive = nil, false; notification("Protection deactivated", 2, "info")
@@ -527,10 +668,12 @@ local function updateStats(deltaTime)
     tool_count = updateToolCache(targetPlayer); statLabels.power.Text = "Power: " .. formatNumber(target_power or (isWatching and 0 or Stats.power)); statLabels.kills.Text = "Kill: " .. formatNumber(target_kills or (isWatching and 0 or Stats.kills)); statLabels.tools.Text = "Tools: " .. tool_count; statLabels.tools.TextColor3 = tool_count > 0 and Theme.success or Theme.danger
     if target_health then if not isWatching and State.godMode then statLabels.health.Text, statLabels.health.TextColor3 = "Health: ∞", Theme.glow else local hp = math.floor((target_health / target_maxHealth) * 100); statLabels.health.Text = string.format("Health: %s/%s", formatNumber(target_health), formatNumber(target_maxHealth)); statLabels.health.TextColor3 = hp <= 25 and Theme.danger or hp <= 50 and Theme.warning or hp <= 75 and Theme.text or Theme.success end else statLabels.health.Text, statLabels.health.TextColor3 = "Health: N/A", Theme.textMuted end
     local currentTime, sessionTime = time(), time() - Stats.sessionStartTime
-    if not isWatching then if not initialPowerRecorded and target_power then Stats.initialPower, initialPowerRecorded = target_power, true end; Stats.power, Stats.kills = target_power or Stats.power, target_kills or Stats.kills end
-    if not isWatching and initialPowerRecorded then Stats.powerGainedThisSession = Stats.power - Stats.initialPower end
-    if State.fastFarm or State.slowFarm then table.insert(powerHistory, {time = currentTime, power = Stats.power}); if #powerHistory > 10 then table.remove(powerHistory, 1) end; if #powerHistory >= 2 then local td = powerHistory[#powerHistory].time - powerHistory[1].time; local pd = powerHistory[#powerHistory].power - powerHistory[1].power; if td > 0 then Stats.powerPerSecond, Stats.powerPerHour = pd / td, (pd / td) * 3600 end end; Stats.farmingTime = Stats.farmingTime + deltaTime end
-    statLabels.pph.Text = "Power/hr: " .. formatNumber(Stats.powerPerHour); statLabels.session.Text = "Session: +" .. formatNumber(Stats.powerGainedThisSession); statLabels.fps.Text = "FPS: " .. Performance.fps; statLabels.ping.Text = "Ping: " .. (Performance.ping > 0 and Performance.ping .. "ms" or "N/A"); statLabels.deaths.Text = "Deaths: " .. (isWatching and "N/A" or Stats.deaths); statLabels.farmingTime.Text = "Farm Time: " .. formatTime(Stats.farmingTime); statLabels.time.Text = "Session: " .. formatTime(sessionTime); statLabels.commands.Text = "Commands: " .. Stats.totalCommands
+    if not isWatching then Stats.power, Stats.kills = target_power or Stats.power, target_kills or Stats.kills end
+    if State.fastFarm or State.slowFarm then
+        if not isWatching then Stats.powerGainedFarming = (Stats.power or 0) - (Stats.farmStartPower or 0) end
+        table.insert(powerHistory, {time = currentTime, power = Stats.power}); if #powerHistory > 10 then table.remove(powerHistory, 1) end; if #powerHistory >= 2 then local td = powerHistory[#powerHistory].time - powerHistory[1].time; local pd = powerHistory[#powerHistory].power - powerHistory[1].power; if td > 0 then Stats.powerPerSecond, Stats.powerPerHour = pd / td, (pd / td) * 3600 end end; Stats.farmingTime = Stats.farmingTime + deltaTime
+    end
+    statLabels.pph.Text = "Power/hr: " .. formatNumber(Stats.powerPerHour); statLabels.session.Text = "Session: +" .. formatNumber(Stats.powerGainedFarming); statLabels.fps.Text = "FPS: " .. Performance.fps; statLabels.ping.Text = "Ping: " .. (Performance.ping > 0 and Performance.ping .. "ms" or "N/A"); statLabels.deaths.Text = "Deaths: " .. (isWatching and "N/A" or Stats.deaths); statLabels.farmingTime.Text = "Farm Time: " .. formatTime(Stats.farmingTime); statLabels.time.Text = "Session: " .. formatTime(sessionTime); statLabels.commands.Text = "Commands: " .. Stats.totalCommands
     local eff, ec = "Calculating...", Theme.accent; if State.fastFarm or State.slowFarm then local farmSpeed = State.fastFarm and Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER or Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; if Stats.powerPerHour >= 1e6 then eff, ec = "Exceptional", Theme.glowSecondary elseif Stats.powerPerHour >= 5e5 then eff, ec = "Strong", Theme.success elseif Stats.powerPerHour >= 1e5 then eff, ec = "Good", Theme.success else eff, ec = "Active", Theme.warning end; eff = eff .. " (Rate: " .. string.format("%.2f", farmSpeed) .. " | " .. formatNumber(Stats.powerPerHour) .. "/hr)" else eff, ec = "Farming disabled", Theme.danger end; statLabels.eff.Text, statLabels.eff.TextColor3 = "Efficiency: " .. eff, ec
 end
 
@@ -593,12 +736,22 @@ local cmds = {
         local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, killPlayerWithVerification, "kill")
     end},
     {"rejoin/rj", "Rejoins the current server", function()
-        notification("Rejoining...", 2, "info"); local s, e = pcall(function() Services.Teleport:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end); if not s then notification("Rejoin failed.", 4, "error") end
+        notification("Rejoining server...", 2, "info")
+        local success, err = pcall(function()
+            Services.Teleport:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+        end)
+        if not success then
+            notification("Rejoin failed: " .. err, 4, "error")
+        end
     end},
     {"dmg [player/all/others] [percent]", "Reliably apply damage to players", function(args, sourcePlayer)
         local targetName, damagePercent = args[2], tonumber(args[3]); if not targetName or not damagePercent then notification("Usage: ;dmg [target] [percent]", 3, "warning"); return end
         local targets = findPlayer(targetName, sourcePlayer); if not targets then notification("Target not found.", 2, "error"); return end
-        local function applyDamage(t) if t and t.Character and t.Character:FindFirstChildOfClass("Humanoid") then local h = t.Character.Humanoid; return damagePlayer(t, (damagePercent / 100) * h.MaxHealth) end; return false end
+        local function applyDamage(t)
+            if not t or not t.Character or not t.Character:FindFirstChildOfClass("Humanoid") then return false end
+            local h = t.Character.Humanoid; local damageAmount = (damagePercent / 100) * h.MaxHealth
+            return damagePlayerWithVerification(t, damageAmount)
+        end
         local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, applyDamage, string.format("damage (%.0f%%)", damagePercent))
     end},
     {"loopkill [player/all/others/me]", "Continuously eliminate target(s)", function(args, sourcePlayer)
@@ -608,18 +761,26 @@ local cmds = {
     {"god [player/all/others/me]", "Reliably activate god mode", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer); if not targets then notification("Player not found.", 2, "error"); return end
         if targets == player then setLocalGodMode(true); return end
-        local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, godPlayer, "god")
+        local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, godPlayerWithVerification, "god")
     end},
     {"heal [player/all/others/me]", "Reliably restore health for players", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer); if not targets then notification("Player not found.", 2, "error"); return end
         local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, healPlayerWithVerification, "heal")
     end},
-    {"protect [player]", "Protect a player from attackers", function(args) if not args[2] then notification("Usage: ;protect [player]", 3, "warning"); return end; protectPlayer(args[2]) end},
+    {"protect [player]", "Protect a player from attackers", function(args) if not args[2] then notification("Usage: ;protect [player name]", 3, "warning"); return end; protectPlayer(args[2]) end},
     {"unprotect", "Deactivate protection", function() stopProtection() end},
     {"reversedmg", "Toggle instant retaliation on attackers", function()
         State.reverseDmg = not State.reverseDmg
-        if State.reverseDmg then setupReverseDamage()
-        else if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect(); Data.connections.reverseDmg = nil; end; if State.coroutines.reverseDmgCleanup then task.cancel(State.coroutines.reverseDmgCleanup) end; attackerHistory = {}; notification("Reverse Damage: OFF", 2, "info") end
+        if State.reverseDmg then 
+            setupReverseDamage()
+        else
+            if Data.connections.reverseDmg then Data.connections.reverseDmg:Disconnect(); Data.connections.reverseDmg = nil; end
+            if Data.connections.reverseDmgCreator then Data.connections.reverseDmgCreator:Disconnect(); Data.connections.reverseDmgCreator = nil; end
+            if Data.connections.reverseDmgHeartbeat then Data.connections.reverseDmgHeartbeat:Disconnect(); Data.connections.reverseDmgHeartbeat = nil; end
+            if Data.connections.reverseDmgCleanup then if type(Data.connections.reverseDmgCleanup) == "table" then task.cancel(Data.connections.reverseDmgCleanup) else pcall(function() Data.connections.reverseDmgCleanup:Disconnect() end) end; Data.connections.reverseDmgCleanup = nil end
+            attackerHistory = {}; 
+            notification("Reverse Damage: OFF", 2, "info")
+        end
     end},
     {"fly", "Toggle flight mode", function(args, sourcePlayer)
         if sourcePlayer ~= player then notification("Owner only.", 2, "error"); return end; State.flying = not State.flying; notification("Flight " .. (State.flying and "ON" or "OFF"), 2, "info"); if Data.flyConnection then Data.flyConnection:Disconnect(); Data.flyConnection = nil end; if Data.charDiedFlyConnection then Data.charDiedFlyConnection:Disconnect(); Data.charDiedFlyConnection = nil end; if Data.flyObjects then for _, v in pairs(Data.flyObjects) do if v and v.Parent then v:Destroy() end end; Data.flyObjects = {} end; if player.Character then local h = player.Character:FindFirstChildOfClass("Humanoid"); if h then h.PlatformStand = false end end; if not State.flying then return end
@@ -650,15 +811,34 @@ local function executeCmd(cmd, sourcePlayer)
     notification("Unknown command: " .. cmdName, 2, "error")
 end
 
-local function createToggle(text, callback, showSpeed)
+local function createToggle(text, callback, inputConfig)
+    local hasInput = inputConfig and inputConfig.key
     local f = Instance.new("Frame"); f.Size = UDim2.new(1, -S(6), 0, S(isMobile and 45 or 55)); f.BackgroundColor3 = Theme.tertiary; f.BackgroundTransparency = 0.6; f.Parent = content; addCornerAndStroke(f, S(8), Theme.glassBorder, S(1)); createScalableElement(f, UDim2.new(1, -6, 0, isMobile and 45 or 55), nil, nil, 8)
-    local l = Instance.new("TextLabel"); l.Size = UDim2.new(1, showSpeed and -S(isMobile and 110 or 130) or -S(isMobile and 70 or 80), 1, 0); l.Position = UDim2.new(0, S(16), 0, 0); l.BackgroundTransparency = 1; l.Text = text; l.TextColor3 = Theme.text; l.TextSize = S(isMobile and 11 or 13); l.Font = Enum.Font.Gotham; l.TextXAlignment = Enum.TextXAlignment.Left; l.Parent = f; createScalableElement(l, UDim2.new(1, showSpeed and -(isMobile and 110 or 130) or -(isMobile and 70 or 80), 1, 0), UDim2.new(0, 16, 0, 0), isMobile and 11 or 13)
-    local si; if showSpeed then si = Instance.new("TextBox"); si.Size = UDim2.new(0, S(isMobile and 35 or 45), 0, S(isMobile and 22 or 27)); si.Position = UDim2.new(1, -S(isMobile and 95 or 105), 0.5, -S(isMobile and 11 or 13.5)); si.BackgroundColor3 = Theme.secondary; si.BackgroundTransparency = 0.6; si.Text = tostring(Config.speed); si.TextColor3 = Theme.text; si.TextSize = S(isMobile and 9 or 11); si.Font = Enum.Font.Gotham; si.Parent = f; addCornerAndStroke(si, S(5)); createScalableElement(si, UDim2.new(0, isMobile and 35 or 45, 0, isMobile and 22 or 27), UDim2.new(1, -(isMobile and 95 or 105), 0.5, -(isMobile and 11 or 13.5)), isMobile and 9 or 11, 5); si.FocusLost:Connect(function(enter) local n = tonumber(si.Text); if n and n >= 1 and n <= 10 then Config.speed = n; notification("Farm speed set to " .. n, 2, "success") else si.Text = tostring(Config.speed); notification("Invalid speed (1-10).", 2, "warning") end end) end
+    local l = Instance.new("TextLabel"); l.Size = UDim2.new(1, hasInput and -S(isMobile and 110 or 130) or -S(isMobile and 70 or 80), 1, 0); l.Position = UDim2.new(0, S(16), 0, 0); l.BackgroundTransparency = 1; l.Text = text; l.TextColor3 = Theme.text; l.TextSize = S(isMobile and 11 or 13); l.Font = Enum.Font.Gotham; l.TextXAlignment = Enum.TextXAlignment.Left; l.Parent = f; createScalableElement(l, UDim2.new(1, hasInput and -(isMobile and 110 or 130) or -(isMobile and 70 or 80), 1, 0), UDim2.new(0, 16, 0, 0), isMobile and 11 or 13)
+    local si; if hasInput then
+        si = Instance.new("TextBox")
+        si.Size = UDim2.new(0, S(isMobile and 35 or 45), 0, S(isMobile and 22 or 27))
+        si.Position = UDim2.new(1, -S(isMobile and 110 or 125), 0.5, -S(isMobile and 11 or 13.5))
+        si.BackgroundColor3 = Theme.secondary; si.BackgroundTransparency = 0.6; si.Text = tostring(Config[inputConfig.key]); si.TextColor3 = Theme.text; si.TextSize = S(isMobile and 9 or 11); si.Font = Enum.Font.Gotham; si.Parent = f; addCornerAndStroke(si, S(5)); createScalableElement(si, UDim2.new(0, isMobile and 35 or 45, 0, isMobile and 22 or 27), UDim2.new(1, -(isMobile and 110 or 125), 0.5, -(isMobile and 11 or 13.5)), isMobile and 9 or 11, 5)
+        si.FocusLost:Connect(function(enter)
+            local n = tonumber(si.Text)
+            local min = inputConfig.min or 1
+            local max = inputConfig.max or 100
+            if n and n >= min and n <= max then
+                Config[inputConfig.key] = n
+                notification(text .. " set to " .. n, 2, "success")
+            else
+                si.Text = tostring(Config[inputConfig.key])
+                notification("Invalid value (" .. min .. "-" .. max .. ").", 2, "warning")
+            end
+        end)
+    end
     local t = Instance.new("TextButton"); t.Size = UDim2.new(0, S(isMobile and 50 or 60), 0, S(isMobile and 27 or 32)); t.Position = UDim2.new(1, -S(isMobile and 60 or 70), 0.5, -S(isMobile and 13.5 or 16)); t.BackgroundColor3 = Theme.danger; t.BackgroundTransparency = 0.3; t.Text = "OFF"; t.TextColor3 = Theme.text; t.TextSize = S(isMobile and 9 or 11); t.Font = Enum.Font.GothamBold; t.AutoButtonColor = false; t.Parent = f; addCornerAndStroke(t, S(6)); createScalableElement(t, UDim2.new(0, isMobile and 50 or 60, 0, isMobile and 27 or 32), UDim2.new(1, -(isMobile and 60 or 70), 0.5, -(isMobile and 13.5 or 16)), isMobile and 9 or 11, 6)
     local enabled = false; t.MouseEnter:Connect(function() if not canExecuteInput("toggleHover" .. text, "button") then return end; playSound("hover"); Services.Tween:Create(t, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play() end); t.MouseLeave:Connect(function() Services.Tween:Create(t, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play() end)
     t.MouseButton1Click:Connect(function() if not canExecuteInput("toggle" .. text, "button") then return end; enabled = not enabled; playSound("click"); t.Text = enabled and "ON" or "OFF"; Services.Tween:Create(t, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundColor3 = enabled and Theme.success or Theme.danger, Rotation = enabled and 180 or 0}):Play(); callback(enabled, t) end)
     return f, t, si
 end
+
 local function createButton(text, callback, color)
     local b = Instance.new("TextButton"); b.Size = UDim2.new(1, -S(6), 0, S(isMobile and 40 or 50)); b.BackgroundColor3 = color or Theme.tertiary; b.BackgroundTransparency = 0.6; b.Text = text; b.TextColor3 = Theme.text; b.TextSize = S(isMobile and 11 or 13); b.Font = Enum.Font.GothamBold; b.AutoButtonColor = false; b.Parent = content; addCornerAndStroke(b, S(8), Theme.glassBorder, S(1)); createScalableElement(b, UDim2.new(1, -6, 0, isMobile and 40 or 50), nil, isMobile and 11 or 13, 8)
     local btnGrad = Instance.new("UIGradient"); btnGrad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, color or Theme.tertiary), ColorSequenceKeypoint.new(1, (color or Theme.tertiary):Lerp(Color3.new(0,0,0), 0.15))}; btnGrad.Rotation = 90; btnGrad.Parent = b
@@ -666,6 +846,7 @@ local function createButton(text, callback, color)
     b.MouseButton1Click:Connect(function() if not canExecuteInput("btn" .. text, "button") then return end; playSound("click"); Services.Tween:Create(b, TweenInfo.new(0.1), {Size = UDim2.new(1, -S(10), 0, S(isMobile and 37 or 47))}):Play(); task.wait(0.1); Services.Tween:Create(b, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.new(1, -S(6), 0, S(isMobile and 40 or 50))}):Play(); callback() end)
     return b
 end
+
 showCommandsUI = function()
     if screenGui:FindFirstChild("CommandsFrame") or not canExecuteInput("showCommands", "command") then return end; playSound("open")
     local cf = Instance.new("Frame"); cf.Name = "CommandsFrame"; cf.Size = UDim2.new(0, S(isMobile and 360 or 460), 0, S(isMobile and 460 or 580)); cf.Position = UDim2.new(0.5, -S(isMobile and 180 or 230), 0.5, -S(isMobile and 230 or 290)); cf.BackgroundColor3 = Theme.background; cf.BackgroundTransparency = 0; cf.ClipsDescendants = true; cf.Parent = screenGui; addCornerAndStroke(cf, S(14), Theme.glassBorder, S(1)); cf.Size = UDim2.new(0, 0, 0, 0); cf.Position = UDim2.new(0.5, 0, 0.5, 0); Services.Tween:Create(cf, TweenInfo.new(0.35, Enum.EasingStyle.Back), {Size = UDim2.new(0, S(isMobile and 360 or 460), 0, S(isMobile and 460 or 580)), Position = UDim2.new(0.5, -S(isMobile and 180 or 230), 0.5, -S(isMobile and 230 or 290))}):Play()
@@ -674,23 +855,38 @@ showCommandsUI = function()
     local cs = Instance.new("ScrollingFrame"); cs.Size = UDim2.new(1, -S(12), 1, -S(isMobile and 50 or 60)); cs.Position = UDim2.new(0, S(6), 0, S(isMobile and 50 or 60)); cs.BackgroundColor3 = Theme.secondary; cs.BackgroundTransparency = 0.8; cs.BorderSizePixel = 0; cs.ScrollBarThickness = S(isMobile and 2 or 3); cs.ScrollBarImageColor3 = Theme.accent; cs.ScrollBarImageTransparency = 0.5; cs.AutomaticCanvasSize = Enum.AutomaticSize.Y; cs.Parent = cf; addCornerAndStroke(cs, S(10)); local listLayout = Instance.new("UIListLayout"); listLayout.Padding = UDim.new(0, S(6)); listLayout.SortOrder = Enum.SortOrder.LayoutOrder; listLayout.Parent = cs
     for i, c in ipairs(cmds) do task.spawn(function() task.wait(i * 0.02); local ci = Instance.new("Frame"); ci.Size = UDim2.new(1, 0, 0, S(isMobile and 50 or 60)); ci.BackgroundColor3 = Theme.tertiary; ci.BackgroundTransparency = 0.6; ci.LayoutOrder = i; ci.Parent = cs; addCornerAndStroke(ci, S(8), Theme.glassBorder, S(1)); ci.BackgroundTransparency = 1; Services.Tween:Create(ci, TweenInfo.new(0.25), {BackgroundTransparency = 0.6}):Play(); ci.MouseEnter:Connect(function() Services.Tween:Create(ci, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play() end); ci.MouseLeave:Connect(function() Services.Tween:Create(ci, TweenInfo.new(0.2), {BackgroundTransparency = 0.6}):Play() end); local cn = Instance.new("TextLabel"); cn.Size = UDim2.new(1, -S(20), 0, S(isMobile and 22 or 27)); cn.Position = UDim2.new(0, S(12), 0, S(5)); cn.BackgroundTransparency = 1; cn.Text = Config.commandPrefix .. c[1]; cn.TextColor3 = Theme.accent; cn.TextSize = S(isMobile and 12 or 14); cn.Font = Enum.Font.GothamBold; cn.TextXAlignment = Enum.TextXAlignment.Left; cn.Parent = ci; local cd = Instance.new("TextLabel"); cd.Size = UDim2.new(1, -S(20), 0, S(isMobile and 18 or 23)); cd.Position = UDim2.new(0, S(12), 0, S(isMobile and 25 or 32)); cd.BackgroundTransparency = 1; cd.Text = c[2]; cd.TextColor3 = Theme.textSecondary; cd.TextSize = S(isMobile and 10 or 12); cd.Font = Enum.Font.Gotham; cd.TextXAlignment = Enum.TextXAlignment.Left; cd.Parent = ci end) end
 end
-local farmToggles = {}; local _, fastFarmToggleBtn = createToggle("Fast Farm", function(enabled, toggleBtn)
+local farmToggles = {}; 
+createToggle("Fast Farm", function(enabled, toggleBtn)
     State.fastFarm = enabled; if enabled and State.slowFarm then State.slowFarm = false; if farmToggles.slow then farmToggles.slow.Text = "OFF"; pcall(function() Services.Tween:Create(farmToggles.slow, TweenInfo.new(0.25), {BackgroundColor3 = Theme.danger, Rotation = 0}):Play() end) end end
     if State.coroutines.fastFarm then task.cancel(State.coroutines.fastFarm); State.coroutines.fastFarm = nil end
-    if enabled then powerHistory = {{time = time(), power = Stats.power}}; notification("Fast farm ON", 2, "success"); State.coroutines.fastFarm = task.spawn(function() while State.fastFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end) else notification("Fast farm OFF", 2, "info") end
-end, true); farmToggles.fast = fastFarmToggleBtn
-local _, slowFarmToggleBtn = createToggle("Slow Farm", function(enabled, toggleBtn)
+    if enabled then
+        Stats.farmStartPower = Stats.power or 0; Stats.powerGainedFarming = 0
+        powerHistory = {{time = time(), power = Stats.power}}; notification("Fast farm ON", 2, "success"); 
+        State.coroutines.fastFarm = task.spawn(function() while State.fastFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end) 
+    else 
+        notification("Fast farm OFF", 2, "info") 
+    end
+end, {key = "speed", min = 1, max = 10});
+
+createToggle("Slow Farm", function(enabled, toggleBtn)
     State.slowFarm = enabled; if enabled and State.fastFarm then State.fastFarm = false; if farmToggles.fast then farmToggles.fast.Text = "OFF"; pcall(function() Services.Tween:Create(farmToggles.fast, TweenInfo.new(0.25), {BackgroundColor3 = Theme.danger, Rotation = 0}):Play() end) end end
     if State.coroutines.slowFarm then task.cancel(State.coroutines.slowFarm); State.coroutines.slowFarm = nil end
-    if enabled then powerHistory = {{time = time(), power = Stats.power}}; notification("Slow farm ON", 2, "success"); State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end) else notification("Slow farm OFF", 2, "info") end
-end); farmToggles.slow = slowFarmToggleBtn
+    if enabled then
+        Stats.farmStartPower = Stats.power or 0; Stats.powerGainedFarming = 0
+        powerHistory = {{time = time(), power = Stats.power}}; notification("Slow farm ON", 2, "success"); 
+        State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end) 
+    else 
+        notification("Slow farm OFF", 2, "info") 
+    end
+end)
+
 local godFrame, godToggleBtn = createToggle("God Mode", function(enabled) setLocalGodMode(enabled) end); Data.uiElements.godModeToggle = godToggleBtn
-createToggle("Kill Aura", function(e) State.killAura = e; if State.coroutines.killAura then task.cancel(State.coroutines.killAura); State.coroutines.killAura = nil end; notification("Kill aura " .. (e and "ON" or "OFF"), 2, e and "success" or "info"); if e then State.coroutines.killAura = task.spawn(function() while State.killAura do if player.Character then local rp = player.Character:FindFirstChild("HumanoidRootPart"); if rp then for _, p in pairs(Players:GetPlayers()) do if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then if (rp.Position - p.Character.HumanoidRootPart.Position).Magnitude <= Config.range then task.spawn(killPlayerWithVerification, p) end end end end end; task.wait(0.5) end end) end end)
+createToggle("Kill Aura", function(e) State.killAura = e; if State.coroutines.killAura then task.cancel(State.coroutines.killAura); State.coroutines.killAura = nil end; notification("Kill aura " .. (e and "ON" or "OFF"), 2, e and "success" or "info"); if e then State.coroutines.killAura = task.spawn(function() while State.killAura do if player.Character then local rp = player.Character:FindFirstChild("HumanoidRootPart"); if rp then for _, p in pairs(Players:GetPlayers()) do if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then if (rp.Position - p.Character.HumanoidRootPart.Position).Magnitude <= Config.killAuraRange then task.spawn(killPlayerWithVerification, p) end end end end end; task.wait(0.5) end end) end end, {key = "killAuraRange", min = 1, max = 100})
 createToggle("Reverse Damage", function(e) executeCmd(";reversedmg", player) end)
-createButton("Eliminate All Players", function() executeCmd(";kill all", player) end, Theme.danger)
+createButton("Kill All Players", function() executeCmd(";kill all", player) end, Theme.danger)
 createButton("God Mode Others", function() executeCmd(";god others", player) end, Theme.accent)
 createButton("Heal All Players", function() executeCmd(";heal all", player) end, Theme.heal)
-createButton("Reset Session Statistics", function() Stats.powerGainedThisSession, Stats.sessionStartTime, Stats.initialPower, Stats.kills, Stats.deaths, Stats.farmingTime, Stats.totalCommands, powerHistory = 0, time(), Stats.power, 0, 0, 0, 0, {}; notification("Session stats reset", 3, "success") end, Theme.info)
+createButton("Reset Session Statistics", function() Stats.powerGainedFarming, Stats.sessionStartTime, Stats.initialPower, Stats.kills, Stats.deaths, Stats.farmingTime, Stats.totalCommands, powerHistory = 0, time(), Stats.power, 0, 0, 0, 0, {}; notification("Session stats reset", 3, "success") end, Theme.info)
 createButton("View Commands", showCommandsUI, Theme.accent)
 local function showCmd() if State.commandBarVisible or not canExecuteInput("showCmd", "command") then return end; State.commandBarVisible = true; commandBar.Visible = true; playSound("open"); Services.Tween:Create(commandBar, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -S(isMobile and 180 or 250), 1, -S(isMobile and 70 or 85))}):Play(); Services.Tween:Create(accentLine, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Size = UDim2.new(1, 0, 0, S(1))}):Play(); task.spawn(function() task.wait(0.15); cmdInput:CaptureFocus() end) end
 local function hideCmd() if not State.commandBarVisible or not canExecuteInput("hideCmd", "button") then return end; State.commandBarVisible = false; cmdInput:ReleaseFocus(); playSound("close"); Services.Tween:Create(accentLine, TweenInfo.new(0.15), {Size = UDim2.new(0, 0, 0, S(1))}):Play(); Services.Tween:Create(commandBar, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, -S(isMobile and 180 or 250), 1, S(100))}):Play(); task.spawn(function() task.wait(0.25); if not State.commandBarVisible then commandBar.Visible = false end end) end
@@ -717,12 +913,26 @@ local function onChar(char)
             if State.reverseDmg then task.wait(0.1); local creator = h:FindFirstChild("creator"); if creator and creator.Value and creator.Value:IsA("Player") and creator.Value ~= player then notification("Avenging death...", 2, "combat"); executeRetaliation(creator.Value, "Died", 100) end end
         end)
         h.WalkSpeed, h.JumpPower = State.speedHack and (Config.flySpeed or 50) or Config.walkSpeed, Config.jumpPower
-        if State.reverseDmg then setupReverseDamage() end; if State.speedHack then toggleSpeedHack(true, Config.flySpeed or 50) end
+        if State.reverseDmg then setupReverseDamage() end
+        if State.speedHack then toggleSpeedHack(true, Config.flySpeed or 50) end
         if State.noclip and Data.noclipConnection then Data.noclipConnection:Disconnect(); Data.noclipConnection = Services.Run.Stepped:Connect(function() if player.Character then for _, p in pairs(player.Character:GetDescendants()) do if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end end end end) end
         if State.godMode then task.spawn(function() task.wait(1); setLocalGodMode(true) end) end
     end
 end
 if player.Character then onChar(player.Character) end; player.CharacterAdded:Connect(onChar); table.insert(Data.adminPlayers, player.Name); Stats.sessionStartTime = time(); commandBar.Visible = false
+local function checkAdminOnJoin(p)
+    for _, id in ipairs(Config.whitelistedIds) do
+        if p.UserId == id then
+            if not table.find(Data.adminPlayers, p.Name) then
+                table.insert(Data.adminPlayers, p.Name)
+            end
+            break
+        end
+    end
+end
+for _, p in ipairs(Players:GetPlayers()) do if p ~= player then checkAdminOnJoin(p) end end
+Players.PlayerAdded:Connect(checkAdminOnJoin)
+
 local function processMessage(msg) if msg.Text:sub(1, 1) == Config.commandPrefix then local source = Players:GetPlayerByUserId(msg.TextSource.UserId); if source and (source == player or table.find(Data.adminPlayers, source.Name)) then task.spawn(executeCmd, msg.Text, source); return true end end; return false end
 if Services.TextChat and Services.TextChat.ChatVersion == Enum.ChatVersion.TextChatService then pcall(function() Services.TextChat.OnIncomingMessage = function(message) if message.Status ~= Enum.TextChatMessageStatus.Success then return end; processMessage(message) end end) else player.Chatted:Connect(function(msg) task.spawn(executeCmd, msg, player) end) end
 local lastResizeTime = 0; local resizeDebounceTime = 0.5; workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function() local currentTime = time(); if currentTime - lastResizeTime < resizeDebounceTime then return end; lastResizeTime = currentTime; task.spawn(function() task.wait(0.2); if screenGui and screenGui.Parent then rescaleUI(); Data.originalUISize = mainFrame.Size end end) end)
