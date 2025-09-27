@@ -1,0 +1,70 @@
+local player = game.Players.LocalPlayer
+local character = player.Character
+local backpack = player.Backpack
+
+if not character or not backpack then
+    return
+end
+
+-- Move tools from character to backpack
+for _, tool in pairs(character:GetChildren()) do
+    if tool:IsA("Tool") then
+        tool.Parent = backpack
+    end
+end
+
+local tools = {}
+for _, tool in pairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        table.insert(tools, tool)
+    end
+end
+
+if #tools == 0 then
+    return
+end
+
+local toolCount = #tools
+local levelsCount = math.ceil(toolCount / 8) -- 8 swords per level
+local baseRadius = 8
+local levelHeight = 3
+local spinSpeed = 2 -- degrees per frame
+
+-- Equip all tools first
+for i, tool in ipairs(tools) do
+    tool.Parent = character
+end
+
+-- Spinning function
+local function spinTornado()
+    local currentTime = tick()
+    
+    for i, tool in ipairs(tools) do
+        local level = math.floor((i - 1) / 8)
+        local positionInLevel = ((i - 1) % 8)
+        local angleOffset = (positionInLevel / 8) * 360
+        
+        -- Calculate spinning angle
+        local spinAngle = (currentTime * spinSpeed * 50 + angleOffset) % 360
+        local radians = math.rad(spinAngle)
+        
+        -- Calculate radius (smaller at top, bigger at bottom for tornado shape)
+        local radius = baseRadius - (level * 1.5)
+        if radius < 2 then radius = 2 end
+        
+        -- Calculate position
+        local posX = math.sin(radians) * radius
+        local posZ = math.cos(radians) * radius  
+        local posY = level * levelHeight
+        
+        -- Set tool position and rotation
+        tool.GripPos = Vector3.new(posX, posY, posZ)
+        tool.GripUp = Vector3.new(0, 1, 0)
+        
+        -- Make swords face outward from center
+        tool.GripRight = Vector3.new(-math.cos(radians), 0, math.sin(radians))
+    end
+end
+
+-- Start the spinning loop
+game:GetService("RunService").Heartbeat:Connect(spinTornado)
