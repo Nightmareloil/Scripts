@@ -1,0 +1,106 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character
+local backpack = player.Backpack
+
+if not character or not backpack then
+    warn("Character or backpack not found!")
+    return
+end
+
+-- Collect swords from backpack and character
+local swords = {}
+local function look(dir)
+    for _, v in pairs(dir:GetChildren()) do
+        if v:IsA("Tool") then
+            table.insert(swords, v)
+        end
+    end
+end
+look(backpack)
+look(character)
+
+if #swords == 0 then
+    warn("No tools found!")
+    return
+end
+
+-- Configuration
+local toolsPerRow = math.min(10, math.max(4, math.ceil(math.sqrt(#swords))))
+local radius = (toolsPerRow * 4.0) / (2 * math.pi)
+local rowHeight = 2.5
+local spinSpeed = 1.5 -- Radians per second, adjustable
+
+-- Equip and configure swords with initial positions
+for i, sword in ipairs(swords) do
+    sword.Parent = backpack
+    if sword:FindFirstChild("Handle") then
+        sword.Handle.Massless = true
+        sword.Handle.CanCollide = true
+        -- Initial position (may replicate to server)
+        local baseAngle = (i - 1) / #swords * 2 * math.pi
+        local posX = math.sin(baseAngle) * radius
+        local posZ = math.cos(baseAngle) * radius
+        local posY = math.floor((i - 1) / toolsPerRow) * rowHeight
+        sword.Grip = CFrame.new(posX, posY, posZ)
+    end
+    sword.Parent = character
+
+    -- Connect Touched event for damage
+    if sword:FindFirstChild("Handle") and sword.Handle:FindFirstChild("dmg") and sword.Handle.dmg:IsA("RemoteEvent") then
+        sword.Handle.Touched:Connect(function(hit)
+            if hit.Parent and hit.Parent:FindFirstChild("Humanoid") and hit.Parent.Name ~= player.Name then
+                sword.Handle.dmg:FireServer(hit.Parent.Humanoid, math.huge)
+            end
+        end)
+    end
+end
+
+-- Update sword positions for spinning
+local function updateSwordPositions()
+    if not character or not character.Parent then return end
+
+    local time = tick()
+    local currentRow = 0
+    local currentColumn = 0
+
+    for i, sword in ipairs(swords) do
+        if sword.Parent == character and sword:FindFirstChild("Handle") then
+            local baseAngle = (currentColumn / toolsPerRow) * 2 * math.pi
+            local angle = baseAngle + (time * spinSpeed) % (2 * math.pi)
+            local posX = math.sin(angle) * radius
+            local posZ = math.cos(angle) * radius
+            local posY = -currentRow * rowHeight
+
+            -- Apply rotation using CFrame.Angles as per your method
+            sword.Grip = CFrame.new(posX, posY, posZ) * CFrame.Angles(math.rad(90 + 1.5 * math.sin(time)), 0, angle)
+
+            currentColumn = currentColumn + 1
+            if currentColumn >= toolsPerRow then
+                currentColumn = 0
+                currentRow = currentRow + 1
+            end
+        end
+    end
+end
+
+-- Connect to RenderStepped for smooth animation
+RunService.RenderStepped:Connect(updateSwordPositions)
+
+-- Handle character respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    -- Re-equip swords with initial positions
+    for i, sword in ipairs(swords) do
+        if sword.Parent == backpack and sword:FindFirstChild("Handle") then
+            sword.Parent = character
+            local baseAngle = (i - 1) / #swords * 2 * math.pi
+            local posX = math.sin(baseAngle) * radius
+            local posZ = math.cos(baseAngle) * radius
+            local posY = math.floor((i - 1) / toolsPerRow) * rowHeight
+            sword.Grip = CFrame.new(posX, posY, posZ)
+        end
+    end
+end)
