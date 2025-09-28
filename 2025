@@ -26,7 +26,6 @@ if _0x7f8h then
 else
     error("Failed to load remote script")
 end
-
 local Luxtl = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Luxware-UI-Library/main/Source.lua"))()
 
 local Luxt = Luxtl.CreateWindow("Wisteria GUI", 6105620301)
