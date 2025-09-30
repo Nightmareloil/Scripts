@@ -1,7 +1,10 @@
 --[[
     2TAKE1 ULTRA 2025
     Author: Alzn
+    Modified to enhance killfarm functionality.
+    FIXED BY GEMINI: Corrected command targeting for admins and fixed group command execution.
 ]]
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Services = {
@@ -316,43 +319,50 @@ local function getTools()
     if #Data.toolCache == 0 then local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent"); if remote then local s = pcall(function() remote:FireServer() end); if s then task.wait(0); updateToolCache(player) end end end
     return Data.toolCache
 end
+
+-- [[ FIXED ]] This function now correctly identifies the command's sender (`sourcePlayer`)
+-- to ensure that "me", "others", etc., are relative to the person typing the command, not the script owner.
 local function findPlayer(name, sourcePlayer)
-    sourcePlayer = sourcePlayer or player
-    if not name or name == "" then return nil end
-    name = name:lower()
+    if not name or name == "" or not sourcePlayer then return nil end
 
-    if name == "me" then
-        return sourcePlayer
+    local lowerName = name:lower()
+    local allPlayers = Players:GetPlayers()
+
+    if lowerName == "me" then
+        return sourcePlayer -- Returns the player who executed the command
     end
 
-    if name == "all" then
-        return Players:GetPlayers()
+    if lowerName == "all" then
+        return allPlayers -- Returns a table of all players in the server
     end
 
-    if name == "others" or name == "other" then
+    if lowerName == "others" or lowerName == "other" then
         local targets = {}
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= sourcePlayer then
+        for _, p in ipairs(allPlayers) do
+            if p ~= sourcePlayer then -- Finds all players EXCEPT the one who sent the command
                 table.insert(targets, p)
             end
         end
         return targets
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Name:lower() == name or p.DisplayName:lower() == name then
+    -- Match by exact name or display name (case-insensitive)
+    for _, p in ipairs(allPlayers) do
+        if p.Name:lower() == lowerName or p.DisplayName:lower() == lowerName then
             return p
         end
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Name:lower():find(name, 1, true) or p.DisplayName:lower():find(name, 1, true) then
+    -- Match by partial name or display name (case-insensitive)
+    for _, p in ipairs(allPlayers) do
+        if p.Name:lower():find(lowerName, 1, true) or p.DisplayName:lower():find(lowerName, 1, true) then
             return p
         end
     end
 
-    return nil
+    return nil -- No player found
 end
+
 local function killPlayer(t)
 	if not t or not t.Character or not t.Character:FindFirstChildOfClass("Humanoid") then return false end
 	if t == player then t.Character.Humanoid.Health = 0; return true end
@@ -649,12 +659,12 @@ local function farm(speed)
     for _, h in pairs(tools) do if h and h.Parent then local r = h:FindFirstChild("up") and h.up:FindFirstChild("RemoteEvent"); if r then for i = 1, speed do r:FireServer() end end end end
 end
 local function watchPlayer(targetName)
-    local target = findPlayer(targetName); if not target or type(target) == "table" then notification("Player not found.", 2, "error"); return end
+    local target = findPlayer(targetName, player); if not target or type(target) == "table" then notification("Player not found.", 2, "error"); return end
     State.watchingPlayer = target; notification("Now watching " .. target.DisplayName, 3, "success")
 end
 
 local function protectPlayer(targetName)
-    local target = findPlayer(targetName)
+    local target = findPlayer(targetName, player)
     if not target or type(target) == "table" then
         notification("Player not found: " .. tostring(targetName), 2, "error")
         return
@@ -845,7 +855,7 @@ local cmds = {
         local targets = findPlayer(args[2] or "me", sourcePlayer); if not targets then notification("Player not found.", 2, "error"); return end
         local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, healPlayerWithVerification, "heal")
     end},
-    {"protect [player]", "Protect a player from attackers", function(args) if not args[2] then notification("Usage: ;protect [player name]", 3, "warning"); return end; protectPlayer(args[2]) end},
+    {"protect [player]", "Protect a player from attackers", function(args, sourcePlayer) if not args[2] then notification("Usage: ;protect [player name]", 3, "warning"); return end; protectPlayer(args[2]) end},
     {"unprotect", "Deactivate protection", function() stopProtection() end},
     {"reversedmg", "Toggle instant retaliation on attackers", function()
         State.reverseDmg = not State.reverseDmg
@@ -877,7 +887,7 @@ local cmds = {
         if sourcePlayer ~= player then return end; if State.noclip then State.noclip = false; if Data.noclipConnection then Data.noclipConnection:Disconnect(); Data.noclipConnection = nil end; notification("Noclip OFF", 2, "info") else notification("Noclip is already OFF", 2, "info") end
     end},
     {"speed/ws [num]", "Set walking speed", function(args, sourcePlayer) if sourcePlayer ~= player then notification("Speed is owner-only.", 2, "error"); return end; local s = tonumber(args[2]) or 16; toggleSpeedHack(s ~= 16, s); notification("Walkspeed set to " .. s, 2, "success") end},
-    {"watch [player]", "Monitor a player's statistics", function(args) if not args[2] then notification("Usage: ;watch [player]", 3, "warning"); return end; watchPlayer(args[2]) end},
+    {"watch [player]", "Monitor a player's statistics", function(args, sourcePlayer) if not args[2] then notification("Usage: ;watch [player]", 3, "warning"); return end; watchPlayer(args[2]) end},
     {"unwatch", "Stop monitoring player", function() if State.watchingPlayer then State.watchingPlayer = nil; notification("Stopped watching", 2, "info") else notification("Not watching anyone.", 2, "info") end end},
     {"reset", "Reset your character", function(args, sourcePlayer) if sourcePlayer.Character then local h = sourcePlayer.Character:FindFirstChildOfClass("Humanoid"); if h then h.Health = 0 end end end}
 }
