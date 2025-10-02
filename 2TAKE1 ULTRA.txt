@@ -966,7 +966,7 @@ local ffFrame, ffToggle = createToggle("Fast Farm", function(enabled, toggleBtn)
     if enabled then
         Stats.farmStartPower = Stats.power or 0; Stats.powerGainedFarming = 0
         powerHistory = {{time = time(), power = Stats.power}}; notification("Fast farm ON", 2, "success");
-        State.coroutines.fastFarm = task.spawn(function() while State.fastFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end)
+        State.coroutines.fastFarm = task.spawn(function() while State.fastFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_FARM_MULTIPLIER; farm(math.ceil(effectiveSpeed)); task.wait() end end)
     else
         notification("Fast farm OFF", 2, "info")
     end
@@ -986,7 +986,9 @@ local sfFrame, sfToggle = createToggle("Slow Farm", function(enabled, toggleBtn)
     if enabled then
         Stats.farmStartPower = Stats.power or 0; Stats.powerGainedFarming = 0
         powerHistory = {{time = time(), power = Stats.power}}; notification("Slow farm ON", 2, "success");
-        State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; farm(effectiveSpeed); task.wait() end end)
+        -- [[ GEMINI's FIX: The original 'effectiveSpeed' was less than 1, causing the loop in the farm() function to never run.
+        -- Using math.ceil() ensures the remote is fired at least once per frame, fixing the issue while maintaining a slower rate than fast farm. ]]
+        State.coroutines.slowFarm = task.spawn(function() while State.slowFarm do local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_FARM_MULTIPLIER; farm(math.ceil(effectiveSpeed)); task.wait() end end)
     else
         notification("Slow farm OFF", 2, "info")
     end
