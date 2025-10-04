@@ -41,7 +41,7 @@ local CONFIG = {
     orbitSpeed = 1.2,
     verticalOffset = 2,
     verticalVariation = 1.5,
-    spinSpeed = 8, -- Improved spin speed
+    spinSpeed = 8,
     transitionTime = 0.8,
     updateInterval = 1/60,
     bodyPosition = {
@@ -49,13 +49,13 @@ local CONFIG = {
         p = 8000,
         d = 800
     },
-    teleportDistanceThreshold = 100, -- Increased to work at longer distances
+    teleportDistanceThreshold = 100,
     teleportTweenTime = 0.5
 }
 
--- 10 Unique Rotation Modes
+-- 10 Unique, Working Rotation Modes
 local rotationModes = {
-    -- Mode 1: Classic Circle
+    -- Mode 1: Classic Horizontal Circle
     function(data, t, torsoPos)
         local angle = data.angle + t
         local x = math.sin(angle) * data.radius
@@ -64,7 +64,7 @@ local rotationModes = {
         return torsoPos + Vector3.new(x, y, z)
     end,
     
-    -- Mode 2: Wave Circle (vertical sine wave)
+    -- Mode 2: Vertical Wave Circle
     function(data, t, torsoPos)
         local angle = data.angle + t
         local x = math.sin(angle) * data.radius
@@ -73,127 +73,156 @@ local rotationModes = {
         return torsoPos + Vector3.new(x, y, z)
     end,
     
-    -- Mode 3: Double Helix
-    function(data, t, torsoPos)
-        local angle = data.angle + t * 1.5
-        local radius = data.radius + math.sin(t + data.angle * 2) * 3
-        local x = math.sin(angle) * radius
-        local z = math.cos(angle) * radius
-        local y = data.height + math.sin(t * 2) * 4
-        return torsoPos + Vector3.new(x, y, z)
-    end,
-    
-    -- Mode 4: Tilted Orbit (45 degree angle)
+    -- Mode 3: Expanding/Contracting Pulse
     function(data, t, torsoPos)
         local angle = data.angle + t
-        local x = math.sin(angle) * data.radius
-        local y = data.height + math.cos(angle) * data.radius * 0.7
-        local z = math.cos(angle) * data.radius * 0.7
-        return torsoPos + Vector3.new(x, y, z)
-    end,
-    
-    -- Mode 5: Pulsing Orbit
-    function(data, t, torsoPos)
-        local angle = data.angle + t
-        local pulse = 1 + math.sin(t * 2) * 0.4
+        local pulse = 1 + math.sin(t * 2) * 0.5
         local x = math.sin(angle) * data.radius * pulse
         local z = math.cos(angle) * data.radius * pulse
         local y = data.height
         return torsoPos + Vector3.new(x, y, z)
     end,
     
-    -- Mode 6: Lemniscate (Infinity Symbol)
-    function(data, t, torsoPos)
-        local angle = data.angle + t
-        local scale = data.radius * 0.8
-        local x = scale * math.cos(angle) / (1 + math.sin(angle)^2)
-        local z = scale * math.cos(angle) * math.sin(angle) / (1 + math.sin(angle)^2)
-        local y = data.height + math.sin(t * 0.5) * 2
-        return torsoPos + Vector3.new(x, y, z)
-    end,
-    
-    -- Mode 7: Tornado Spiral
-    function(data, t, torsoPos)
-        local angle = data.angle + t * 2
-        local heightCycle = (t * 0.5) % (2 * math.pi)
-        local radius = data.radius * (1 - heightCycle / (2 * math.pi) * 0.6)
-        local x = math.sin(angle) * radius
-        local z = math.cos(angle) * radius
-        local y = data.height + heightCycle * 3
-        return torsoPos + Vector3.new(x, y, z)
-    end,
-    
-    -- Mode 8: Square Orbit
-    function(data, t, torsoPos)
-        local angle = (data.angle + t) % (2 * math.pi)
-        local side = math.floor(angle / (math.pi / 2))
-        local progress = (angle % (math.pi / 2)) / (math.pi / 2)
-        local r = data.radius
-        local x, z = 0, 0
-        
-        if side == 0 then
-            x = -r + progress * 2 * r
-            z = r
-        elseif side == 1 then
-            x = r
-            z = r - progress * 2 * r
-        elseif side == 2 then
-            x = r - progress * 2 * r
-            z = -r
-        else
-            x = -r
-            z = -r + progress * 2 * r
-        end
-        
-        local y = data.height + math.sin(t * 2) * 1.5
-        return torsoPos + Vector3.new(x, y, z)
-    end,
-    
-    -- Mode 9: Butterfly Wings
-    function(data, t, torsoPos)
-        local angle = data.angle + t
-        local r = data.radius
-        local x = r * math.sin(angle) * (math.exp(math.cos(angle)) - 2 * math.cos(4 * angle) - math.sin(angle / 12)^5) * 0.1
-        local z = r * math.cos(angle) * (math.exp(math.cos(angle)) - 2 * math.cos(4 * angle) - math.sin(angle / 12)^5) * 0.1
-        local y = data.height + math.sin(t + data.angle) * 2
-        return torsoPos + Vector3.new(x, y, z)
-    end,
-    
-    -- Mode 10: Zigzag Orbit
+    -- Mode 4: Vertical Circle (Ferris Wheel)
     function(data, t, torsoPos)
         local angle = data.angle + t
         local x = math.sin(angle) * data.radius
+        local y = data.height + math.cos(angle) * data.radius
+        local z = 0
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- Mode 5: Tilted Diagonal Orbit
+    function(data, t, torsoPos)
+        local angle = data.angle + t
+        local x = math.sin(angle) * data.radius
+        local y = data.height + math.sin(angle) * data.radius * 0.5
         local z = math.cos(angle) * data.radius
-        local zigzag = math.floor(t * 2) % 2 == 0 and 1 or -1
-        local y = data.height + zigzag * 3
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- Mode 6: Figure Eight (Lemniscate)
+    function(data, t, torsoPos)
+        local angle = data.angle + t
+        local scale = data.radius * 0.7
+        local denom = 1 + math.sin(angle) * math.sin(angle)
+        local x = scale * math.cos(angle) / denom
+        local z = scale * math.sin(angle) * math.cos(angle) / denom
+        local y = data.height
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- Mode 7: Rising Spiral
+    function(data, t, torsoPos)
+        local angle = data.angle + t * 2
+        local heightCycle = math.sin(t * 0.5) * 5
+        local x = math.sin(angle) * data.radius
+        local z = math.cos(angle) * data.radius
+        local y = data.height + heightCycle
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- Mode 8: Star Pattern (5 Points)
+    function(data, t, torsoPos)
+        local angle = (data.angle + t) % (2 * math.pi)
+        local points = 5
+        local pointAngle = math.floor(angle / (2 * math.pi / points)) * (2 * math.pi / points)
+        local nextPointAngle = pointAngle + (2 * math.pi / points)
+        local progress = (angle - pointAngle) / (2 * math.pi / points)
+        
+        local r1 = data.radius
+        local r2 = data.radius * 0.4
+        
+        local x1 = math.sin(pointAngle) * r1
+        local z1 = math.cos(pointAngle) * r1
+        local x2 = math.sin(pointAngle + math.pi / points) * r2
+        local z2 = math.cos(pointAngle + math.pi / points) * r2
+        
+        local x, z
+        if progress < 0.5 then
+            local p = progress * 2
+            x = x1 + (x2 - x1) * p
+            z = z1 + (z2 - z1) * p
+        else
+            local p = (progress - 0.5) * 2
+            local x3 = math.sin(nextPointAngle) * r1
+            local z3 = math.cos(nextPointAngle) * r1
+            x = x2 + (x3 - x2) * p
+            z = z2 + (z3 - z2) * p
+        end
+        
+        local y = data.height
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- Mode 9: Elliptical Orbit
+    function(data, t, torsoPos)
+        local angle = data.angle + t
+        local x = math.sin(angle) * data.radius * 1.5
+        local z = math.cos(angle) * data.radius * 0.6
+        local y = data.height + math.sin(t * 2) * 1
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- Mode 10: Chaotic Wobble
+    function(data, t, torsoPos)
+        local angle = data.angle + t
+        local wobbleX = math.sin(t * 4 + data.angle) * 2
+        local wobbleZ = math.cos(t * 3.5 + data.angle) * 2
+        local x = math.sin(angle) * data.radius + wobbleX
+        local z = math.cos(angle) * data.radius + wobbleZ
+        local y = data.height + math.sin(t * 5 + data.angle) * 2.5
         return torsoPos + Vector3.new(x, y, z)
     end
 }
 
 local modeNames = {
-    "Classic Circle",
-    "Wave Circle",
-    "Double Helix",
-    "Tilted Orbit",
-    "Pulsing Orbit",
-    "Lemniscate (Infinity)",
-    "Tornado Spiral",
-    "Square Orbit",
-    "Butterfly Wings",
-    "Zigzag Orbit"
+    "Classic Horizontal Circle",
+    "Vertical Wave Circle",
+    "Expanding/Contracting Pulse",
+    "Vertical Circle (Ferris Wheel)",
+    "Tilted Diagonal Orbit",
+    "Figure Eight (Lemniscate)",
+    "Rising Spiral",
+    "Star Pattern (5 Points)",
+    "Elliptical Orbit",
+    "Chaotic Wobble"
 }
 
 local currentRotationMode = 1
 
--- Disable pickup
+-- Disable pickup completely
 local function disableToolPickup(tool)
     if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
         local handle = tool.Handle
         handle.CanCollide = false
         handle.Anchored = false
         handle.CanTouch = false
+        
+        -- Prevent picking up the tool
+        tool.CanBeDropped = false
+        pcall(function()
+            tool.RequiresHandle = false
+        end)
+        
         pcall(function()
             handle:SetNetworkOwner(player)
+        end)
+        
+        -- Continuously prevent tool from being equipped
+        tool.Equipped:Connect(function()
+            task.wait()
+            if tool.Parent == character then
+                tool.Parent = Workspace
+            end
+        end)
+        
+        -- Keep tool in workspace
+        tool.Changed:Connect(function(prop)
+            if prop == "Parent" and tool.Parent == character then
+                task.wait()
+                tool.Parent = Workspace
+            end
         end)
     end
 end
@@ -215,7 +244,7 @@ local function initializeTools()
             bp.P = CONFIG.bodyPosition.p
             bp.D = CONFIG.bodyPosition.d
             
-            -- Create improved BodyAngularVelocity for spinning
+            -- Create BodyAngularVelocity for spinning
             local bav = Instance.new("BodyAngularVelocity", handle)
             bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
             bav.AngularVelocity = Vector3.new(0, CONFIG.spinSpeed, 0)
@@ -228,7 +257,6 @@ local function initializeTools()
                 angle = baseAngle,
                 radius = radius,
                 height = height,
-                verticalVariation = CONFIG.verticalVariation,
                 bodyPosition = bp,
                 bodyAngularVelocity = bav,
                 teleporting = false
@@ -243,6 +271,16 @@ local function initializeTools()
 end
 initializeTools()
 
+-- Continuous protection against pickup
+RunService.Heartbeat:Connect(function()
+    for tool, data in pairs(toolData) do
+        if tool.Parent == character then
+            -- If tool somehow gets equipped, immediately drop it back to workspace
+            tool.Parent = Workspace
+        end
+    end
+end)
+
 -- Update loop
 local lastUpdate = 0
 RunService.Heartbeat:Connect(function(deltaTime)
@@ -252,21 +290,27 @@ RunService.Heartbeat:Connect(function(deltaTime)
     
     for tool, data in pairs(toolData) do
         if tool.Parent and tool:FindFirstChild("Handle") and data.bodyPosition and not data.teleporting then
-            local t = now * CONFIG.orbitSpeed
-            local targetPos = rotationModes[currentRotationMode](data, t, torso.Position)
-            data.bodyPosition.Position = targetPos
+            local success, err = pcall(function()
+                local t = now * CONFIG.orbitSpeed
+                local targetPos = rotationModes[currentRotationMode](data, t, torso.Position)
+                data.bodyPosition.Position = targetPos
+                
+                -- Update spinning
+                if spinEnabled then
+                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, CONFIG.spinSpeed, 0)
+                else
+                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+                end
+            end)
             
-            -- Update spinning
-            if spinEnabled then
-                data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, CONFIG.spinSpeed, 0)
-            else
-                data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+            if not success then
+                warn("Error in rotation mode " .. currentRotationMode .. ": " .. tostring(err))
             end
         else
             -- Cleanup if tool is gone
             if not tool.Parent or not tool:FindFirstChild("Handle") then
-                if data.bodyPosition then data.bodyPosition:Destroy() end
-                if data.bodyAngularVelocity then data.bodyAngularVelocity:Destroy() end
+                if data.bodyPosition then pcall(function() data.bodyPosition:Destroy() end) end
+                if data.bodyAngularVelocity then pcall(function() data.bodyAngularVelocity:Destroy() end) end
                 toolData[tool] = nil
             end
         end
@@ -282,43 +326,70 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         print("Tool spinning: " .. (spinEnabled and "ON" or "OFF"))
         
     elseif input.KeyCode == Enum.KeyCode.X then
-        -- Teleport tools that are far away
+        -- Teleport ALL tools to orbit, regardless of distance
         local teleportCount = 0
         for tool, data in pairs(toolData) do
             if tool:FindFirstChild("Handle") and data.bodyPosition then
                 local handle = tool.Handle
+                teleportCount = teleportCount + 1
+                
+                data.teleporting = true
+                
+                -- Calculate target position
                 local t = os.clock() * CONFIG.orbitSpeed
                 local targetPos = rotationModes[currentRotationMode](data, t, torso.Position)
-                local currentDist = (handle.Position - torso.Position).Magnitude
                 
-                -- Check if tool is beyond threshold distance from player
-                if currentDist > CONFIG.teleportDistanceThreshold then
-                    data.teleporting = true
-                    teleportCount = teleportCount + 1
-                    
-                    -- Disable BodyPosition during teleport
-                    data.bodyPosition.MaxForce = Vector3.new(0, 0, 0)
-                    
-                    -- Instant teleport to target position
-                    handle.CFrame = CFrame.new(targetPos)
-                    
-                    -- Re-enable BodyPosition after brief delay
-                    task.wait(0.1)
-                    data.bodyPosition.Position = targetPos
-                    data.bodyPosition.MaxForce = CONFIG.bodyPosition.maxForce
-                    data.teleporting = false
+                -- Method 1: Destroy and recreate BodyPosition for instant effect
+                if data.bodyPosition then
+                    data.bodyPosition:Destroy()
                 end
+                if data.bodyAngularVelocity then
+                    data.bodyAngularVelocity:Destroy()
+                end
+                
+                -- Reset handle physics
+                handle.Anchored = true
+                handle.CFrame = CFrame.new(targetPos)
+                handle.Velocity = Vector3.new(0, 0, 0)
+                handle.RotVelocity = Vector3.new(0, 0, 0)
+                handle.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                handle.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                
+                task.wait(0.05)
+                handle.Anchored = false
+                
+                -- Recreate BodyPosition
+                local bp = Instance.new("BodyPosition", handle)
+                bp.MaxForce = CONFIG.bodyPosition.maxForce
+                bp.P = CONFIG.bodyPosition.p
+                bp.D = CONFIG.bodyPosition.d
+                bp.Position = targetPos
+                
+                -- Recreate BodyAngularVelocity
+                local bav = Instance.new("BodyAngularVelocity", handle)
+                bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bav.AngularVelocity = spinEnabled and Vector3.new(0, CONFIG.spinSpeed, 0) or Vector3.new(0, 0, 0)
+                
+                -- Update data references
+                data.bodyPosition = bp
+                data.bodyAngularVelocity = bav
+                data.teleporting = false
+                
+                -- Set network ownership
+                pcall(function()
+                    handle:SetNetworkOwner(player)
+                end)
             end
         end
         
-        if teleportCount > 0 then
-            print("Teleported " .. teleportCount .. " tools to orbit")
-        else
-            print("No tools need teleporting")
-        end
+        print("Teleported " .. teleportCount .. " tools to orbit positions")
         
     elseif input.KeyCode == Enum.KeyCode.V then
-        currentRotationMode = math.random(1, #rotationModes)
+        local oldMode = currentRotationMode
+        repeat
+            currentRotationMode = math.random(1, #rotationModes)
+        until currentRotationMode ~= oldMode or #rotationModes == 1
+        
         print("Switched to: " .. modeNames[currentRotationMode])
     end
 end)
@@ -331,4 +402,7 @@ player.CharacterAdded:Connect(function(newCharacter)
     collectTools()
     initializeTools()
 end)
+
+print("Tool Orbit Script Loaded!")
 print("Controls: Z = Toggle Spin | X = Teleport Tools | V = Change Rotation Mode")
+print("Current Mode: " .. modeNames[currentRotationMode])
