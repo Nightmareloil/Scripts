@@ -1,10 +1,3 @@
---[[
-    2TAKE1 ULTRA 2025
-    Author: Alzn
-    Modified to enhance killfarm functionality.
-    FIXED BY GEMINI: Corrected command targeting for admins, fixed group command execution, and improved attacker detection for the 'protect' command.
-]]
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local Services = {
@@ -32,7 +25,7 @@ local Performance = {
 -- CONFIGURATION FOR FARMING RATES --
 local FARM_CONFIG = {
     SLOW_FARM_MULTIPLIER = 0.2,
-    FAST_FARM_MULTIPLIER = 0.7
+    FAST_FARM_MULTIPLIER = 0.6
 }
 
 local Sounds = {}
@@ -125,7 +118,7 @@ local function updateUIScale() UIScale.cached = {scale = nil, mobile = nil}; sca
 
 -- Configuration
 local Config = {
-    speed = 4, range = S(15), walkSpeed = 16, jumpPower = 50, flySpeed = S(40),
+    speed = 4, range = S(15), walkSpeed = 40, jumpPower = 50, flySpeed = S(40),
     killAuraRange = 30,
     commandPrefix = ";", antiLagEnabled = false, performanceMode = false,
     whitelistedIds = {1212018424, 514967933}
