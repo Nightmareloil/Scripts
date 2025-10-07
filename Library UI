@@ -261,22 +261,29 @@ local library = (function ()
             BackgroundTransparency = 1,
             BackgroundColor3 = Colors.Gray.Top,
         })
-        CreateInstance("UIGridLayout", scrollingFrameTabs, {
+        local gridLayout = CreateInstance("UIGridLayout", scrollingFrameTabs, {
             FillDirection = Enum.FillDirection.Vertical,
             CellSize = UDim2.new(0, 150, 0, 25),
             SortOrder = Enum.SortOrder.LayoutOrder,
-            CellPadding = UDim2.new(0, 5, 0, 10),
+            CellPadding = UDim2.new(0, 5, 0, 5),
         })
        
-        CreateInstance("UIPadding", scrollingFrameTabs, {
+        local padding = CreateInstance("UIPadding", scrollingFrameTabs, {
             PaddingTop = UDim.new(0, 10),
             PaddingLeft = UDim.new(0, 5),
+            PaddingRight = UDim.new(0, 5),
+            PaddingBottom = UDim.new(0, 10),
         })
-        -- Add custom mouse wheel scrolling to enable it without visible scrollbar
+        -- Manual canvas update workaround for AutomaticCanvasSize issues
+        local function updateCanvas()
+            scrollingFrameTabs.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset)
+        end
+        gridLayout.Changed:Connect(updateCanvas)
+        -- Add custom mouse wheel scrolling
         local function addMouseWheelScroll(frame)
             frame.InputChanged:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseWheel then
-                    local delta = input.Position.Z * -60  -- Adjust speed as needed; negative for natural direction
+                    local delta = input.Position.Z * -60  -- Adjust speed if needed
                     frame.CanvasPosition = frame.CanvasPosition + Vector2.new(0, delta)
                 end
             end)
@@ -306,33 +313,45 @@ local library = (function ()
                 end
             end
             for i, v in pairs(scrollingFrameTabs:GetChildren()) do
-                if name ~= v.Name and v:IsA("TextButton") then
-                    v.TextColor3 = Color3.fromRGB(173, 173, 173)
+                if v:IsA("Frame") and v:FindFirstChild("TabLabel") then
+                    v.TabLabel.TextColor3 = Color3.fromRGB(173, 173, 173)
                 end
             end
             windowBody[name].Visible = true
-            scrollingFrameTabs[name].TextColor3 = Colors.White
+            local selectedButton = scrollingFrameTabs:FindFirstChild(name)
+            if selectedButton then
+                selectedButton.TabLabel.TextColor3 = Colors.White
+            end
         end
         local function createTabButton(id, text)
-            local tabButton = CreateInstance("TextButton", scrollingFrameTabs, {
-                TextColor3 = _if(id == 1, Colors.White, Color3.fromRGB(173, 173, 173)),
+            local tabButton = CreateInstance("Frame", scrollingFrameTabs, {
                 BorderColor3 = Colors.Gray.Stroke,
-                Text = text,
-                Font = Font,
                 Name = "Tab" .. id,
-                Position = UDim2.new(-1.12306619, 0, 2.00234604, 0),
-                AutoButtonColor = false,
-                Size = UDim2.new(0, 200, 0, 50),
-                TextSize = 12,
+                Size = UDim2.new(0, 150, 0, 25),
                 BackgroundColor3 = Colors.Gray.Top
             })
             CreateInstance("UICorner", tabButton, {
                 CornerRadius = UDim.new(0, 2)
             })
+            local tabLabel = CreateInstance("TextLabel", tabButton, {
+                Name = "TabLabel",
+                TextColor3 = _if(id == 1, Colors.White, Color3.fromRGB(173, 173, 173)),
+                Text = text,
+                Font = Font,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                TextSize = 12,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextWrapped = true
+            })
             autobutcolor(tabButton, Colors.Gray.Top)
-            tabButton.MouseButton1Click:Connect(function ()
-                changeTab(id)
+            tabButton.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    changeTab(id)
+                end
             end)
+            updateCanvas()  -- Update after adding
+            return tabButton
         end
         function window:GetCurrentState()
             return state
@@ -819,6 +838,7 @@ local library = (function ()
                     CanvasSize = UDim2.new(0, 0, 0, 0),
                     AutomaticCanvasSize = Enum.AutomaticSize.Y,
                 })
+                addMouseWheelScroll(dropdownValuesContainer)  -- Add scrolling to dropdown if needed
                 CreateInstance("UICorner", dropdownValuesContainer, {
                     CornerRadius = UDim.new(0, 2)
                 })
