@@ -1,4 +1,4 @@
-\--[[
+--[[
 
                                                                                                                                                                       
   ,ad8888ba,                                   88                                      88           88  88                                                            
@@ -471,6 +471,5 @@ local library = (function ()
     end
     
     return library
-end)()
-
+end)
 return library
