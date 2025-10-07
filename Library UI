@@ -1,920 +1,270 @@
--- Modern UI Library with Loading Screen & Enhanced Features
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
--- Loading Screen
-local function CreateLoadingScreen()
-    local loader = Instance.new("ScreenGui")
-    loader.Name = "ModernLoader"
-    loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    loader.Parent = game.CoreGui
-    
-    local bg = Instance.new("Frame", loader)
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    bg.BorderSizePixel = 0
-    
-    local blur = Instance.new("BlurEffect", game.Lighting)
-    blur.Size = 20
-    
-    local logo = Instance.new("Frame", bg)
-    logo.Size = UDim2.new(0, 80, 0, 80)
-    logo.Position = UDim2.new(0.5, -40, 0.5, -60)
-    logo.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-    logo.BorderSizePixel = 0
-    Instance.new("UICorner", logo).CornerRadius = UDim.new(0, 16)
-    
-    local gradient = Instance.new("UIGradient", logo)
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 180, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
-    }
-    gradient.Rotation = 45
-    
-    local title = Instance.new("TextLabel", bg)
-    title.Size = UDim2.new(0, 300, 0, 40)
-    title.Position = UDim2.new(0.5, -150, 0.5, 40)
-    title.BackgroundTransparency = 1
-    title.Text = "Loading..."
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 24
-    
-    local progressBar = Instance.new("Frame", bg)
-    progressBar.Size = UDim2.new(0, 300, 0, 4)
-    progressBar.Position = UDim2.new(0.5, -150, 0.5, 90)
-    progressBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    progressBar.BorderSizePixel = 0
-    Instance.new("UICorner", progressBar).CornerRadius = UDim.new(1, 0)
-    
-    local progress = Instance.new("Frame", progressBar)
-    progress.Size = UDim2.new(0, 0, 1, 0)
-    progress.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-    progress.BorderSizePixel = 0
-    Instance.new("UICorner", progress).CornerRadius = UDim.new(1, 0)
-    
-    local progressGrad = Instance.new("UIGradient", progress)
-    progressGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 180, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 220, 255))
-    }
-    
-    -- Animate logo
-    local rotate = RunService.Heartbeat:Connect(function()
-        gradient.Rotation = (gradient.Rotation + 2) % 360
-    end)
-    
-    -- Progress animation
-    TweenService:Create(progress, TweenInfo.new(1.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = UDim2.new(1, 0, 1, 0)
-    }):Play()
-    
-    task.wait(1.8)
-    
-    TweenService:Create(bg, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-        BackgroundTransparency = 1
-    }):Play()
-    
-    for _, v in ipairs(bg:GetDescendants()) do
-        if v:IsA("GuiObject") then
-            TweenService:Create(v, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-                BackgroundTransparency = 1,
-                TextTransparency = 1
-            }):Play()
-        end
-    end
-    
-    task.wait(0.5)
-    rotate:Disconnect()
-    blur:Destroy()
-    loader:Destroy()
-    
-    -- Success sound
-    pcall(function()
-        local snd = Instance.new("Sound", workspace)
-        snd.SoundId = "rbxassetid://6895079853"
-        snd.Volume = 0.5
-        snd:Play()
-        game:GetService("Debris"):AddItem(snd, 2)
-    end)
-end
-
-CreateLoadingScreen()
-
--- Modern Library
-local library = {}
-library.WindowState = {Opened = 1, Minimized = 0, Destroyed = -1}
-
-local Theme = {
-    Background = Color3.fromRGB(18, 18, 24),
-    Surface = Color3.fromRGB(25, 25, 32),
-    Primary = Color3.fromRGB(88, 166, 255),
-    Secondary = Color3.fromRGB(70, 130, 200),
-    Accent = Color3.fromRGB(120, 200, 255),
-    Text = Color3.fromRGB(240, 240, 245),
-    TextDim = Color3.fromRGB(160, 160, 170),
-    Border = Color3.fromRGB(40, 40, 50),
-    Hover = Color3.fromRGB(35, 35, 45),
-    Active = Color3.fromRGB(45, 45, 58)
-}
-
-local function CreateInstance(class, props)
-    local inst = Instance.new(class)
-    for k, v in pairs(props or {}) do
-        if k ~= "Children" then
-            inst[k] = v
-        end
-    end
-    if props.Children then
-        for _, child in ipairs(props.Children) do
-            child.Parent = inst
-        end
-    end
-    return inst
-end
-
-local function Tween(obj, props, duration, style)
-    return TweenService:Create(obj, TweenInfo.new(duration or 0.3, style or Enum.EasingStyle.Quart), props):Play()
-end
-
-local function PlaySound(id, volume)
-    pcall(function()
-        local snd = Instance.new("Sound", workspace)
-        snd.SoundId = "rbxassetid://" .. id
-        snd.Volume = volume or 0.3
-        snd:Play()
-        game:GetService("Debris"):AddItem(snd, 3)
-    end)
-end
-
-local function AddHoverEffect(button, normalColor)
-    button.MouseEnter:Connect(function()
-        Tween(button, {BackgroundColor3 = Theme.Hover}, 0.2)
-        PlaySound(8053704437, 0.1)
-    end)
-    button.MouseLeave:Connect(function()
-        Tween(button, {BackgroundColor3 = normalColor or Theme.Surface}, 0.2)
-    end)
-end
-
-local function MakeDraggable(frame, dragHandle)
-    local dragging, dragInput, startPos, startInput
-    
-    local function update(input)
-        local delta = input.Position - startInput
-        local viewport = workspace.CurrentCamera.ViewportSize
-        local newX = math.clamp(startPos.X.Offset + delta.X, 0, viewport.X - frame.AbsoluteSize.X)
-        local newY = math.clamp(startPos.Y.Offset + delta.Y, 0, viewport.Y - frame.AbsoluteSize.Y)
-        
-        Tween(frame, {Position = UDim2.new(0, newX, 0, newY)}, 0.1, Enum.EasingStyle.Linear)
-    end
-    
-    dragHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            startInput = input.Position
-            startPos = frame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    dragHandle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input == dragInput then
-            update(input)
-        end
-    end)
-end
-
-function library:CreateWindow(title)
-    local window = {}
-    local state = library.WindowState.Opened
-    
-    local gui = CreateInstance("ScreenGui", {
-        Name = "ModernUI_" .. math.random(1000, 9999),
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        Parent = game.CoreGui
-    })
-    
-    local viewport = workspace.CurrentCamera.ViewportSize
-    local main = CreateInstance("Frame", {
-        Name = "Main",
-        Size = UDim2.new(0, 650, 0, 450),
-        Position = UDim2.new(0.5, -325, 0.5, -225),
-        BackgroundColor3 = Theme.Background,
-        BorderSizePixel = 0,
-        ClipsDescendants = true,
-        Parent = gui,
-        Children = {
-            CreateInstance("UICorner", {CornerRadius = UDim.new(0, 12)}),
-            CreateInstance("UIStroke", {
-                Color = Theme.Border,
-                Thickness = 1.5,
-                Transparency = 0.5
-            })
-        }
-    })
-    
-    -- Shadow effect
-    local shadow = CreateInstance("ImageLabel", {
-        Name = "Shadow",
-        Size = UDim2.new(1, 40, 1, 40),
-        Position = UDim2.new(0, -20, 0, -20),
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://5554236805",
-        ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageTransparency = 0.7,
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(23, 23, 277, 277),
-        ZIndex = -1,
-        Parent = main
-    })
-    
-    local topBar = CreateInstance("Frame", {
-        Name = "TopBar",
-        Size = UDim2.new(1, 0, 0, 50),
-        BackgroundColor3 = Theme.Surface,
-        BorderSizePixel = 0,
-        Parent = main,
-        Children = {
-            CreateInstance("UICorner", {CornerRadius = UDim.new(0, 12)})
-        }
-    })
-    
-    local titleLabel = CreateInstance("TextLabel", {
-        Text = title or "Modern UI",
-        Font = Enum.Font.GothamBold,
-        TextSize = 16,
-        TextColor3 = Theme.Text,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -120, 1, 0),
-        Position = UDim2.new(0, 20, 0, 0),
-        Parent = topBar
-    })
-    
-    MakeDraggable(main, topBar)
-    
-    local closeBtn = CreateInstance("TextButton", {
-        Text = "✕",
-        Font = Enum.Font.GothamBold,
-        TextSize = 18,
-        TextColor3 = Theme.Text,
-        BackgroundColor3 = Theme.Surface,
-        BorderSizePixel = 0,
-        Size = UDim2.new(0, 35, 0, 35),
-        Position = UDim2.new(1, -45, 0.5, -17.5),
-        Parent = topBar,
-        Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)})}
-    })
-    
-    AddHoverEffect(closeBtn, Theme.Surface)
-    closeBtn.MouseButton1Click:Connect(function()
-        PlaySound(6895079853, 0.4)
-        Tween(main, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.4)
-        task.wait(0.4)
-        gui:Destroy()
-        state = library.WindowState.Destroyed
-    end)
-    
-    local minimizeBtn = CreateInstance("TextButton", {
-        Text = "−",
-        Font = Enum.Font.GothamBold,
-        TextSize = 20,
-        TextColor3 = Theme.Text,
-        BackgroundColor3 = Theme.Surface,
-        BorderSizePixel = 0,
-        Size = UDim2.new(0, 35, 0, 35),
-        Position = UDim2.new(1, -85, 0.5, -17.5),
-        Parent = topBar,
-        Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)})}
-    })
-    
-    AddHoverEffect(minimizeBtn, Theme.Surface)
-    minimizeBtn.MouseButton1Click:Connect(function()
-        PlaySound(6895079853, 0.3)
-        if state == library.WindowState.Opened then
-            Tween(main, {Size = UDim2.new(0, 650, 0, 50)}, 0.3)
-            state = library.WindowState.Minimized
-        else
-            Tween(main, {Size = UDim2.new(0, 650, 0, 450)}, 0.3)
-            state = library.WindowState.Opened
-        end
-    end)
-    
-    -- Toggle with LeftAlt
-    local visible = true
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.LeftAlt then
-            visible = not visible
-            main.Visible = visible
-            PlaySound(6895079853, 0.2)
-        end
-    end)
-    
-    local sidebar = CreateInstance("ScrollingFrame", {
-        Name = "Sidebar",
-        Size = UDim2.new(0, 180, 1, -60),
-        Position = UDim2.new(0, 10, 0, 60),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 4,
-        ScrollBarImageColor3 = Theme.Primary,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        Parent = main,
-        Children = {
-            CreateInstance("UIListLayout", {
-                Padding = UDim.new(0, 8),
-                SortOrder = Enum.SortOrder.LayoutOrder
-            }),
-            CreateInstance("UIPadding", {
-                PaddingTop = UDim.new(0, 5),
-                PaddingBottom = UDim.new(0, 5)
-            })
-        }
-    })
-    
-    local content = CreateInstance("ScrollingFrame", {
-        Name = "Content",
-        Size = UDim2.new(1, -210, 1, -70),
-        Position = UDim2.new(0, 200, 0, 60),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 6,
-        ScrollBarImageColor3 = Theme.Primary,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        Parent = main,
-        Children = {
-            CreateInstance("UIListLayout", {
-                Padding = UDim.new(0, 10),
-                SortOrder = Enum.SortOrder.LayoutOrder
-            }),
-            CreateInstance("UIPadding", {
-                PaddingTop = UDim.new(0, 10),
-                PaddingRight = UDim.new(0, 10),
-                PaddingBottom = UDim.new(0, 10)
-            })
-        }
-    })
-    
-    local tabs = {}
-    local currentTab = nil
-    
-    function window:CreateTab(name)
-        local tab = {}
-        local tabIndex = #tabs + 1
-        
-        local tabBtn = CreateInstance("TextButton", {
-            Text = " " .. name,
-            Font = Enum.Font.GothamSemibold,
-            TextSize = 14,
-            TextColor3 = Theme.TextDim,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            BackgroundColor3 = Theme.Surface,
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 0, 38),
-            Parent = sidebar,
-            Children = {
-                CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                CreateInstance("UIPadding", {PaddingLeft = UDim.new(0, 12)})
-            }
-        })
-        
-        local indicator = CreateInstance("Frame", {
-            Size = UDim2.new(0, 3, 0, 0),
-            Position = UDim2.new(0, 0, 0.5, 0),
-            AnchorPoint = Vector2.new(0, 0.5),
-            BackgroundColor3 = Theme.Primary,
-            BorderSizePixel = 0,
-            Parent = tabBtn,
-            Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(1, 0)})}
-        })
-        
-        local tabContent = CreateInstance("Frame", {
-            Name = "Tab_" .. tabIndex,
-            Size = UDim2.new(1, 0, 0, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
-            BackgroundTransparency = 1,
-            Visible = false,
-            Parent = content,
-            Children = {
-                CreateInstance("UIListLayout", {
-                    Padding = UDim.new(0, 10),
-                    SortOrder = Enum.SortOrder.LayoutOrder
-                })
-            }
-        })
-        
-        AddHoverEffect(tabBtn, Theme.Surface)
-        
-        tabBtn.MouseButton1Click:Connect(function()
-            PlaySound(6895079853, 0.3)
-            
-            for _, t in ipairs(tabs) do
-                t.button.TextColor3 = Theme.TextDim
-                t.button.BackgroundColor3 = Theme.Surface
-                t.content.Visible = false
-                Tween(t.indicator, {Size = UDim2.new(0, 3, 0, 0)}, 0.2)
-            end
-            
-            tabBtn.TextColor3 = Theme.Text
-            tabBtn.BackgroundColor3 = Theme.Active
-            tabContent.Visible = true
-            Tween(indicator, {Size = UDim2.new(0, 3, 1, -10)}, 0.3, Enum.EasingStyle.Back)
-            currentTab = tab
-        end)
-        
-        table.insert(tabs, {
-            button = tabBtn,
-            content = tabContent,
-            indicator = indicator,
-            tab = tab
-        })
-        
-        if tabIndex == 1 then
-            tabBtn.TextColor3 = Theme.Text
-            tabBtn.BackgroundColor3 = Theme.Active
-            tabContent.Visible = true
-            Tween(indicator, {Size = UDim2.new(0, 3, 1, -10)}, 0.3)
-            currentTab = tab
-        end
-        
-        function tab:CreateButton(name, callback)
-            local btn = CreateInstance("TextButton", {
-                Text = name,
-                Font = Enum.Font.GothamSemibold,
-                TextSize = 13,
-                TextColor3 = Theme.Text,
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 40),
-                Parent = tabContent,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                    CreateInstance("UIStroke", {
-                        Color = Theme.Border,
-                        Thickness = 1,
-                        Transparency = 0.8
-                    })
-                }
-            })
-            
-            AddHoverEffect(btn, Theme.Surface)
-            btn.MouseButton1Click:Connect(function()
-                PlaySound(6895079853, 0.4)
-                Tween(btn, {BackgroundColor3 = Theme.Primary}, 0.1)
-                task.wait(0.1)
-                Tween(btn, {BackgroundColor3 = Theme.Surface}, 0.2)
-                callback()
-            end)
-            
-            return btn
-        end
-        
-        function tab:CreateToggle(name, default, callback)
-            local toggled = default or false
-            
-            local frame = CreateInstance("Frame", {
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 40),
-                Parent = tabContent,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                    CreateInstance("UIStroke", {
-                        Color = Theme.Border,
-                        Thickness = 1,
-                        Transparency = 0.8
-                    })
-                }
-            })
-            
-            local label = CreateInstance("TextLabel", {
-                Text = name,
-                Font = Enum.Font.GothamSemibold,
-                TextSize = 13,
-                TextColor3 = Theme.Text,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1, -60, 1, 0),
-                Position = UDim2.new(0, 15, 0, 0),
-                Parent = frame
-            })
-            
-            local toggleBtn = CreateInstance("TextButton", {
-                Text = "",
-                BackgroundColor3 = toggled and Theme.Primary or Theme.Hover,
-                BorderSizePixel = 0,
-                Size = UDim2.new(0, 45, 0, 24),
-                Position = UDim2.new(1, -55, 0.5, -12),
-                Parent = frame,
-                Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(1, 0)})}
-            })
-            
-            local knob = CreateInstance("Frame", {
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                BorderSizePixel = 0,
-                Size = UDim2.new(0, 18, 0, 18),
-                Position = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9),
-                Parent = toggleBtn,
-                Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(1, 0)})}
-            })
-            
-            AddHoverEffect(frame, Theme.Surface)
-            
-            toggleBtn.MouseButton1Click:Connect(function()
-                toggled = not toggled
-                PlaySound(toggled and 6895079853 or 6652808977, 0.3)
-                
-                Tween(toggleBtn, {BackgroundColor3 = toggled and Theme.Primary or Theme.Hover}, 0.2)
-                Tween(knob, {Position = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)}, 0.2, Enum.EasingStyle.Back)
-                
-                callback(toggled)
-            end)
-            
-            return {
-                SetValue = function(_, value)
-                    toggled = value
-                    Tween(toggleBtn, {BackgroundColor3 = toggled and Theme.Primary or Theme.Hover}, 0.2)
-                    Tween(knob, {Position = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)}, 0.2)
-                end
-            }
-        end
-        
-        function tab:CreateSlider(name, min, max, default, callback)
-            local value = default or min
-            
-            local frame = CreateInstance("Frame", {
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 50),
-                Parent = tabContent,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                    CreateInstance("UIStroke", {
-                        Color = Theme.Border,
-                        Thickness = 1,
-                        Transparency = 0.8
-                    })
-                }
-            })
-            
-            local label = CreateInstance("TextLabel", {
-                Text = name,
-                Font = Enum.Font.GothamSemibold,
-                TextSize = 13,
-                TextColor3 = Theme.Text,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1, -60, 0, 20),
-                Position = UDim2.new(0, 15, 0, 8),
-                Parent = frame
-            })
-            
-            local valueLabel = CreateInstance("TextLabel", {
-                Text = tostring(value),
-                Font = Enum.Font.GothamBold,
-                TextSize = 12,
-                TextColor3 = Theme.Primary,
-                TextXAlignment = Enum.TextXAlignment.Right,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 50, 0, 20),
-                Position = UDim2.new(1, -65, 0, 8),
-                Parent = frame
-            })
-            
-            local sliderBar = CreateInstance("Frame", {
-                BackgroundColor3 = Theme.Hover,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -30, 0, 6),
-                Position = UDim2.new(0, 15, 1, -16),
-                Parent = frame,
-                Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(1, 0)})}
-            })
-            
-            local fill = CreateInstance("Frame", {
-                BackgroundColor3 = Theme.Primary,
-                BorderSizePixel = 0,
-                Size = UDim2.new((value - min) / (max - min), 0, 1, 0),
-                Parent = sliderBar,
-                Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(1, 0)})}
-            })
-            
-            local dragging = false
-            
-            local function update(input)
-                local pos = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
-                value = math.floor(min + (max - min) * pos)
-                valueLabel.Text = tostring(value)
-                Tween(fill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.1, Enum.EasingStyle.Linear)
-                callback(value)
-            end
-            
-            sliderBar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                    update(input)
-                    PlaySound(6895079853, 0.2)
-                end
-            end)
-            
-            sliderBar.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
-            end)
-            
-            UserInputService.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    update(input)
-                end
-            end)
-            
-            AddHoverEffect(frame, Theme.Surface)
-            
-            return {
-                SetValue = function(_, val)
-                    value = math.clamp(val, min, max)
-                    valueLabel.Text = tostring(value)
-                    Tween(fill, {Size = UDim2.new((value - min) / (max - min), 0, 1, 0)}, 0.2)
-                end
-            }
-        end
-        
-        function tab:CreateTextbox(name, placeholder, callback)
-            local frame = CreateInstance("Frame", {
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 40),
-                Parent = tabContent,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                    CreateInstance("UIStroke", {
-                        Color = Theme.Border,
-                        Thickness = 1,
-                        Transparency = 0.8
-                    })
-                }
-            })
-            
-            local label = CreateInstance("TextLabel", {
-                Text = name,
-                Font = Enum.Font.GothamSemibold,
-                TextSize = 13,
-                TextColor3 = Theme.Text,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 150, 1, 0),
-                Position = UDim2.new(0, 15, 0, 0),
-                Parent = frame
-            })
-            
-            local textbox = CreateInstance("TextBox", {
-                PlaceholderText = placeholder or "Enter text...",
-                Text = "",
-                Font = Enum.Font.Gotham,
-                TextSize = 12,
-                TextColor3 = Theme.Text,
-                PlaceholderColor3 = Theme.TextDim,
-                BackgroundColor3 = Theme.Hover,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -180, 0, 28),
-                Position = UDim2.new(0, 165, 0.5, -14),
-                ClearTextOnFocus = false,
-                Parent = frame,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                    CreateInstance("UIPadding", {
-                        PaddingLeft = UDim.new(0, 10),
-                        PaddingRight = UDim.new(0, 10)
-                    })
-                }
-            })
-            
-            textbox.FocusLost:Connect(function(enter)
-                if enter then
-                    PlaySound(6895079853, 0.3)
-                    callback(textbox.Text)
-                end
-            end)
-            
-            AddHoverEffect(frame, Theme.Surface)
-            
-            return {
-                SetValue = function(_, text)
-                    textbox.Text = text
-                end,
-                GetValue = function()
-                    return textbox.Text
-                end
-            }
-        end
-        
-        function tab:CreateLabel(text)
-            local label = CreateInstance("TextLabel", {
-                Text = text,
-                Font = Enum.Font.Gotham,
-                TextSize = 13,
-                TextColor3 = Theme.TextDim,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextWrapped = true,
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 35),
-                Parent = tabContent,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                    CreateInstance("UIPadding", {
-                        PaddingLeft = UDim.new(0, 15),
-                        PaddingRight = UDim.new(0, 15),
-                        PaddingTop = UDim.new(0, 10),
-                        PaddingBottom = UDim.new(0, 10)
-                    })
-                }
-            })
-            
-            return {
-                SetText = function(_, newText)
-                    label.Text = newText
-                end
-            }
-        end
-        
-        function tab:CreateDropdown(name, options, callback)
-            local selected = options[1] or ""
-            local opened = false
-            
-            local frame = CreateInstance("Frame", {
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, 0, 0, 40),
-                ClipsDescendants = false,
-                Parent = tabContent,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 8)}),
-                    CreateInstance("UIStroke", {
-                        Color = Theme.Border,
-                        Thickness = 1,
-                        Transparency = 0.8
-                    })
-                }
-            })
-            
-            local label = CreateInstance("TextLabel", {
-                Text = name,
-                Font = Enum.Font.GothamSemibold,
-                TextSize = 13,
-                TextColor3 = Theme.Text,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 150, 1, 0),
-                Position = UDim2.new(0, 15, 0, 0),
-                Parent = frame
-            })
-            
-            local dropBtn = CreateInstance("TextButton", {
-                Text = selected,
-                Font = Enum.Font.Gotham,
-                TextSize = 12,
-                TextColor3 = Theme.Text,
-                BackgroundColor3 = Theme.Hover,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -180, 0, 28),
-                Position = UDim2.new(0, 165, 0.5, -14),
-                Parent = frame,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                    CreateInstance("UIPadding", {PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 25)})
-                }
-            })
-            
-            local arrow = CreateInstance("TextLabel", {
-                Text = "▼",
-                Font = Enum.Font.GothamBold,
-                TextSize = 10,
-                TextColor3 = Theme.TextDim,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 20, 1, 0),
-                Position = UDim2.new(1, -22, 0, 0),
-                Parent = dropBtn
-            })
-            
-            local dropdown = CreateInstance("ScrollingFrame", {
-                BackgroundColor3 = Theme.Surface,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -180, 0, 0),
-                Position = UDim2.new(0, 165, 1, 5),
-                Visible = false,
-                ScrollBarThickness = 4,
-                ScrollBarImageColor3 = Theme.Primary,
-                CanvasSize = UDim2.new(0, 0, 0, 0),
-                AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                Parent = frame,
-                Children = {
-                    CreateInstance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                    CreateInstance("UIListLayout", {Padding = UDim.new(0, 2)}),
-                    CreateInstance("UIPadding", {
-                        PaddingTop = UDim.new(0, 5),
-                        PaddingBottom = UDim.new(0, 5),
-                        PaddingLeft = UDim.new(0, 5),
-                        PaddingRight = UDim.new(0, 5)
-                    }),
-                    CreateInstance("UIStroke", {
-                        Color = Theme.Border,
-                        Thickness = 1,
-                        Transparency = 0.8
-                    })
-                }
-            })
-            
-            for _, option in ipairs(options) do
-                local optBtn = CreateInstance("TextButton", {
-                    Text = option,
-                    Font = Enum.Font.Gotham,
+= UDim2.new(0, 180, 1, 0),
+                    ZIndex = 3,
                     TextSize = 12,
-                    TextColor3 = Theme.Text,
-                    BackgroundColor3 = Theme.Hover,
-                    BorderSizePixel = 0,
-                    Size = UDim2.new(1, -10, 0, 28),
-                    Parent = dropdown,
-                    Children = {CreateInstance("UICorner", {CornerRadius = UDim.new(0, 4)})}
+                    TextXAlignment = Enum.TextXAlignment.Right,
+                    BackgroundColor3 = Color3.fromRGB(0.176471, 0.176471, 0.176471)
                 })
                 
-                AddHoverEffect(optBtn, Theme.Hover)
+                CreateInstance("UIPadding", dropdownSelectedLabel, {
+                    PaddingRight = UDim.new(0, 30)
+                })
                 
-                optBtn.MouseButton1Click:Connect(function()
-                    selected = option
-                    dropBtn.Text = selected
-                    PlaySound(6895079853, 0.3)
+                local dropdownSearchBox = CreateInstance("TextBox", dropdownContainer, {
+                    Visible = false,
+                    TextColor3 = Colors.White,
+                    Text = "",
+                    PlaceholderText = "Search...",
+                    PlaceholderColor3 = Color3.fromRGB(120, 120, 130),
+                    Font = Enum.Font.Gotham,
+                    Name = "SearchBar",
+                    Position = UDim2.new(0, 0, 0, 45),
+                    Size = UDim2.new(0, 438, 0, 30),
+                    ZIndex = 4,
+                    TextSize = 12,
+                    BackgroundColor3 = Colors.Gray.TogBox,
+                    TextWrapped = true,
+                })
+                
+                CreateInstance("UICorner", dropdownSearchBox, {
+                    CornerRadius = UDim.new(0, 6)
+                })
+                
+                CreateInstance("UIPadding", dropdownSearchBox, {
+                    PaddingLeft = UDim.new(0, 10),
+                    PaddingRight = UDim.new(0, 10)
+                })
+                
+                local dropdownValuesContainer = CreateInstance("ScrollingFrame", dropdownContainer, {
+                    ScrollBarImageColor3 = Colors.Cyan,
+                    Active = true,
+                    ScrollBarThickness = 4,
+                    BackgroundTransparency = 0,
+                    BackgroundColor3 = Colors.Gray.DarkButton,
+                    Position = UDim2.new(0, 0, 0, 80),
+                    ScrollBarImageTransparency = 0.3,
+                    Visible = false,
+                    Size = UDim2.new(0, 438, 0, 120),
+                    CanvasSize = UDim2.new(0, 0, 0, 0),
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    ZIndex = 4
+                })
+                
+                CreateInstance("UICorner", dropdownValuesContainer, {
+                    CornerRadius = UDim.new(0, 6)
+                })
+                
+                CreateInstance("UIStroke", dropdownValuesContainer, {
+                    Color = Colors.Gray.Stroke,
+                    Thickness = 1,
+                    Transparency = 0.7
+                })
+                
+                CreateInstance("UIPadding", dropdownValuesContainer, {
+                    PaddingTop = UDim.new(0, 5),
+                    PaddingBottom = UDim.new(0, 5),
+                    PaddingLeft = UDim.new(0, 5),
+                    PaddingRight = UDim.new(0, 5)
+                })
+                
+                CreateInstance("UIListLayout", dropdownValuesContainer, {
+                    Padding = UDim.new(0, 4)
+                })
+                
+                addMouseWheelScroll(dropdownValuesContainer)
+                
+                local isOpen = false
+                
+                local function addDropButton(value)
+                    local btn = CreateInstance("TextButton", dropdownValuesContainer, {
+                        TextSize = 13,
+                        Font = Enum.Font.Gotham,
+                        TextColor3 = Colors.White,
+                        Position = UDim2.new(0.0425531901, 0, 0.0840541124, 0),
+                        Size = UDim2.new(1, -10, 0, 28),
+                        AutoButtonColor = false,
+                        Text = value,
+                        BorderSizePixel = 0,
+                        BackgroundColor3 = Colors.Gray.TogBox,
+                    })
                     
-                    Tween(dropdown, {Size = UDim2.new(1, -180, 0, 0)}, 0.2)
-                    task.wait(0.2)
-                    dropdown.Visible = false
-                    opened = false
-                    Tween(arrow, {Rotation = 0}, 0.2)
+                    CreateInstance("UICorner", btn, {
+                        CornerRadius = UDim.new(0, 5)
+                    })
                     
-                    callback(selected)
+                    autobutcolor(btn, Colors.Gray.TogBox)
+                    
+                    btn.MouseButton1Click:Connect(function()
+                        pcall(function()
+                            local clickSound = Instance.new("Sound", workspace)
+                            clickSound.SoundId = "rbxassetid://6895079853"
+                            clickSound.Volume = 0.2
+                            clickSound:Play()
+                            game:GetService("Debris"):AddItem(clickSound, 2)
+                        end)
+                        
+                        TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                            Size = UDim2.new(0, 438, 0, 38)
+                        }):Play()
+                        
+                        TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+                            Rotation = 0
+                        }):Play()
+                        
+                        dropdownValuesContainer.Visible = false
+                        dropdownSearchBox.Visible = false
+                        dropdownSelectedLabel.Visible = true
+                        dropdownSelectedLabel.Text = value
+                        isOpen = false
+                        
+                        callback(value, dropdown)
+                    end)
+                    
+                    return btn
+                end
+                
+                for _, v in pairs(values) do
+                    addDropButton(v)
+                end
+                
+                function dropdown:AddValue(value)
+                    addDropButton(value)
+                end
+                
+                function dropdown:RemoveValue(value)
+                    for _, v in pairs(dropdownValuesContainer:GetChildren()) do
+                        if v:IsA("TextButton") and v.Text == value then
+                            v:Destroy()
+                        end
+                    end
+                end
+                
+                function dropdown:ClearValues()
+                    for _, v in pairs(dropdownValuesContainer:GetChildren()) do
+                        if v:IsA("TextButton") then
+                            v:Destroy()
+                        end
+                    end
+                end
+                
+                local searchHook = nil
+                
+                function dropdown:SetSearchHook(func)
+                    searchHook = func
+                end
+                
+                function dropdown:ResetSearchHook()
+                    searchHook = nil
+                end
+                
+                local function UpdateSearch(prop)
+                    if prop ~= "Text" then
+                        return
+                    end
+                    
+                    if searchHook then
+                        dropdown:ClearValues()
+                        local results = searchHook(dropdownSearchBox.Text)
+                        for _, v in pairs(results) do
+                            dropdown:AddValue(v)
+                        end
+                    else
+                        for i, button in pairs(dropdownValuesContainer:GetChildren()) do
+                            if button:IsA("TextButton") then
+                                local searchText = string.lower(dropdownSearchBox.Text)
+                                if searchText ~= "" then
+                                    local buttonText = string.lower(button.Text)
+                                    if string.find(buttonText, searchText) then
+                                        button.Visible = true
+                                    else
+                                        button.Visible = false
+                                    end
+                                else
+                                    button.Visible = true
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                dropdownSearchBox.Changed:Connect(UpdateSearch)
+                
+                dropdownLabel.MouseButton1Click:Connect(function()
+                    pcall(function()
+                        local clickSound = Instance.new("Sound", workspace)
+                        clickSound.SoundId = "rbxassetid://6895079853"
+                        clickSound.Volume = 0.2
+                        clickSound:Play()
+                        game:GetService("Debris"):AddItem(clickSound, 2)
+                    end)
+                    
+                    if not isOpen then
+                        TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                            Size = UDim2.new(0, 438, 0, 210)
+                        }):Play()
+                        
+                        TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+                            Rotation = 180
+                        }):Play()
+                        
+                        dropdownValuesContainer.Visible = true
+                        dropdownSearchBox.Visible = true
+                        dropdownSelectedLabel.Visible = false
+                        isOpen = true
+                    else
+                        TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                            Size = UDim2.new(0, 438, 0, 38)
+                        }):Play()
+                        
+                        TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+                            Rotation = 0
+                        }):Play()
+                        
+                        dropdownValuesContainer.Visible = false
+                        dropdownSearchBox.Visible = false
+                        dropdownSelectedLabel.Visible = true
+                        isOpen = false
+                    end
                 end)
-            end
-            
-            dropBtn.MouseButton1Click:Connect(function()
-                opened = not opened
-                PlaySound(6895079853, 0.2)
                 
-                if opened then
-                    dropdown.Visible = true
-                    local maxHeight = math.min(#options * 30 + 10, 150)
-                    Tween(dropdown, {Size = UDim2.new(1, -180, 0, maxHeight)}, 0.3)
-                    Tween(arrow, {Rotation = 180}, 0.2)
-                else
-                    Tween(dropdown, {Size = UDim2.new(1, -180, 0, 0)}, 0.2)
-                    Tween(arrow, {Rotation = 0}, 0.2)
-                    task.wait(0.2)
-                    dropdown.Visible = false
+                function dropdown:GetValue()
+                    return dropdownSelectedLabel.Text
                 end
-            end)
-            
-            AddHoverEffect(frame, Theme.Surface)
-            
-            return {
-                SetValue = function(_, value)
-                    selected = value
-                    dropBtn.Text = value
+                
+                function dropdown:SetValue(value)
+                    dropdownSelectedLabel.Text = value
                 end
-            }
+                
+                function dropdown:Destroy()
+                    dropdownContainer:Destroy()
+                end
+           
+                return dropdown
+            end
+       
+            return tab
         end
         
-        return tab
+        -- Entrance animation
+        top.Size = UDim2.new(0, 0, 0, 0)
+        top.Position = UDim2.new(0.5, 0, 0.5, 0)
+        
+        task.wait(0.1)
+        
+        TweenService:Create(top, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 612, 0, 42),
+            Position = UDim2.new(0.5, -306, 0.5, -225)
+        }):Play()
+        
+        task.wait(0.2)
+        
+        TweenService:Create(windowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(0, 612, 0, 370)
+        }):Play()
+        
+        return window
     end
-    
-    function window:Destroy()
-        Tween(main, {Size = UDim2.new(0, 0, 0, 0)}, 0.4)
-        task.wait(0.4)
-        gui:Destroy()
-    end
-    
-    -- Entrance animation
-    main.Size = UDim2.new(0, 0, 0, 0)
-    main.Position = UDim2.new(0.5, 0, 0.5, 0)
-    Tween(main, {
-        Size = UDim2.new(0, 650, 0, 450),
-        Position = UDim2.new(0.5, -325, 0.5, -225)
-    }, 0.5, Enum.EasingStyle.Back)
-    
-    return window
-end
+   
+    return library
+end)()
 
 return library
