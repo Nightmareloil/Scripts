@@ -272,6 +272,17 @@ local library = (function ()
             PaddingTop = UDim.new(0, 10),
             PaddingLeft = UDim.new(0, 5),
         })
+        -- Add custom mouse wheel scrolling to enable it without visible scrollbar
+        local function addMouseWheelScroll(frame)
+            frame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseWheel then
+                    local delta = input.Position.Z * -60  -- Adjust speed as needed; negative for natural direction
+                    frame.CanvasPosition = frame.CanvasPosition + Vector2.new(0, delta)
+                end
+            end)
+        end
+        addMouseWheelScroll(scrollingFrameTabs)
+        addMouseWheelScroll(windowBody)
         local function PlayTween(first, bool)
             local speed = 0.3
             windowContainer:TweenSize(first, "Out", "Quint", speed)
