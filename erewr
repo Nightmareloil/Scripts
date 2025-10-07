@@ -1,4 +1,4 @@
--- Enhanced Osmium UI Library with Fixes and Stability
+-- Enhanced Osmium UI Library with Modern Design
 pcall(function()
     local snd = Instance.new("Sound", workspace)
     snd.SoundId = "rbxassetid://6026984224"
@@ -16,12 +16,12 @@ local function ShowLoadingScreen()
     loader.Name = "OsmiumLoader"
     loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     loader.Parent = game.CoreGui
-   
+    
     local bg = Instance.new("Frame", loader)
     bg.Size = UDim2.new(1, 0, 1, 0)
     bg.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
     bg.BorderSizePixel = 0
-   
+    
     local title = Instance.new("TextLabel", bg)
     title.Size = UDim2.new(0, 400, 0, 60)
     title.Position = UDim2.new(0.5, -200, 0.5, -80)
@@ -31,7 +31,7 @@ local function ShowLoadingScreen()
     title.Font = Enum.Font.GothamBold
     title.TextSize = 42
     title.TextTransparency = 1
-   
+    
     local subtitle = Instance.new("TextLabel", bg)
     subtitle.Size = UDim2.new(0, 400, 0, 30)
     subtitle.Position = UDim2.new(0.5, -200, 0.5, -10)
@@ -41,35 +41,35 @@ local function ShowLoadingScreen()
     subtitle.Font = Enum.Font.Gotham
     subtitle.TextSize = 16
     subtitle.TextTransparency = 1
-   
+    
     local progressBarBg = Instance.new("Frame", bg)
     progressBarBg.Size = UDim2.new(0, 300, 0, 4)
     progressBarBg.Position = UDim2.new(0.5, -150, 0.5, 40)
     progressBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     progressBarBg.BorderSizePixel = 0
     Instance.new("UICorner", progressBarBg).CornerRadius = UDim.new(1, 0)
-   
+    
     local progressBar = Instance.new("Frame", progressBarBg)
     progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
     progressBar.BorderSizePixel = 0
     Instance.new("UICorner", progressBar).CornerRadius = UDim.new(1, 0)
-   
+    
     local TweenService = game:GetService("TweenService")
-   
+    
     TweenService:Create(title, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {TextTransparency = 0}):Play()
     TweenService:Create(subtitle, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false, 0.2), {TextTransparency = 0}):Play()
     TweenService:Create(progressBar, TweenInfo.new(1.2, Enum.EasingStyle.Quart), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-   
+    
     task.wait(1.3)
-   
+    
     TweenService:Create(bg, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {BackgroundTransparency = 1}):Play()
     TweenService:Create(title, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {TextTransparency = 1}):Play()
     TweenService:Create(subtitle, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {TextTransparency = 1}):Play()
-   
+    
     task.wait(0.5)
     loader:Destroy()
-   
+    
     pcall(function()
         local successSound = Instance.new("Sound", workspace)
         successSound.SoundId = "rbxassetid://6895079853"
@@ -78,6 +78,7 @@ local function ShowLoadingScreen()
         game:GetService("Debris"):AddItem(successSound, 2)
     end)
 end
+
 spawn(ShowLoadingScreen)
 
 local library = (function()
@@ -90,9 +91,9 @@ local library = (function()
             Destroyed = -1
         }
     }
-  
-    local Font = Enum.Font.GothamBold
    
+    local Font = Enum.Font.GothamBold
+    
     -- Modern Color Scheme
     local Colors = {
         White = Color3.fromRGB(245, 245, 250),
@@ -114,7 +115,7 @@ local library = (function()
             }),
         }
     }
-   
+    
     -- Enhanced button hover with sound
     function autobutcolor(value, color)
         value.MouseEnter:Connect(function()
@@ -123,7 +124,7 @@ local library = (function()
                 TweenInfo.new(0.2, Enum.EasingStyle.Quart),
                 {BackgroundColor3 = Color3.fromRGB(50, 50, 65)}
             ):Play()
-           
+            
             pcall(function()
                 local hoverSound = Instance.new("Sound", workspace)
                 hoverSound.SoundId = "rbxassetid://8053704437"
@@ -132,7 +133,7 @@ local library = (function()
                 game:GetService("Debris"):AddItem(hoverSound, 1)
             end)
         end)
-      
+       
         value.MouseLeave:Connect(function()
             TweenService:Create(
                 value,
@@ -141,11 +142,11 @@ local library = (function()
             ):Play()
         end)
     end
-   
+    
     function _if(bool, func1, func2)
         if bool then return func1 else return func2 end
     end
-   
+    
     local function CreateInstance(name, parent, props, childs)
         local childs = childs or {}
         local instance = Instance.new(name, parent)
@@ -153,25 +154,25 @@ local library = (function()
         for _, v in pairs(childs) do v.Parent = instance end
         return instance
     end
-   
+    
     function library:CreateWindow(title)
-        local title = title or "Demon Hub 2025"
+        local title = title or "Osmium UI"
         local parent = game.CoreGui
         local state = library.WindowState.Opened
         local window_id = math.random(1, 400)
         local window = {}
-       
+        
         local screen = CreateInstance("ScreenGui", parent, {
             Name = "Osmium_" .. window_id,
             ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         })
-       
+        
         local destructionHooks = {}
-       
+        
         function window:OnDestroy(func)
             table.insert(destructionHooks, func)
         end
-       
+        
         function window:Destroy()
             screen:Destroy()
             state = library.WindowState.Destroyed
@@ -179,13 +180,13 @@ local library = (function()
                 pcall(v)
             end
         end
-       
+        
         function window:GetTitle()
             return title
         end
-       
+        
         local viewport = workspace.CurrentCamera.ViewportSize
-       
+        
         local top = CreateInstance("Frame", screen, {
             Name = "Top",
             Position = UDim2.new(0.5, -306, 0.5, -225),
@@ -193,17 +194,17 @@ local library = (function()
             Size = UDim2.new(0, 612, 0, 42),
             BackgroundColor3 = Colors.Gray.Top
         })
-       
+        
         CreateInstance("UICorner", top, {
             CornerRadius = UDim.new(0, 8)
         })
-       
+        
         CreateInstance("UIStroke", top, {
             Color = Colors.Gray.Stroke,
             Thickness = 1,
             Transparency = 0.7
         })
-       
+        
         -- Shadow effect
         local shadow = CreateInstance("ImageLabel", top, {
             Name = "Shadow",
@@ -217,20 +218,20 @@ local library = (function()
             SliceCenter = Rect.new(23, 23, 277, 277),
             ZIndex = 0
         })
-       
+        
         local titleLabel = CreateInstance("TextLabel", top, {
             TextColor3 = Colors.White,
             BorderColor3 = Colors.Gray.Stroke,
             Text = title,
             Font = Font,
             BackgroundTransparency = 1,
-            Size = UDim2.new(0, 400, 1, 0),
-            Position = UDim2.new(0.5, -200, 0.5, -12),
-            TextSize = 18,
-            TextXAlignment = Enum.TextXAlignment.Center,
-            ClipsDescendants = true
+            Size = UDim2.new(1, -100, 1, 0),
+            Position = UDim2.new(0, 15, 0, 0),
+            TextSize = 15,
+            TextWrapped = true,
+            TextXAlignment = Enum.TextXAlignment.Left
         })
-       
+        
         local closeButton = CreateInstance("TextButton", top, {
             Text = "×",
             Font = Enum.Font.GothamBold,
@@ -241,13 +242,13 @@ local library = (function()
             BackgroundColor3 = Colors.Gray.Button,
             Size = UDim2.new(0, 25, 0, 25)
         })
-       
+        
         CreateInstance("UICorner", closeButton, {
             CornerRadius = UDim.new(0, 6)
         })
-       
+        
         autobutcolor(closeButton, Colors.Gray.Button)
-       
+        
         closeButton.MouseButton1Click:Connect(function()
             pcall(function()
                 local clickSound = Instance.new("Sound", workspace)
@@ -258,7 +259,7 @@ local library = (function()
             end)
             window:Destroy()
         end)
-       
+        
         local minimizeButton = CreateInstance("TextButton", top, {
             Text = "−",
             Font = Enum.Font.GothamBold,
@@ -269,13 +270,13 @@ local library = (function()
             BackgroundColor3 = Colors.Gray.Button,
             Size = UDim2.new(0, 25, 0, 25)
         })
-       
+        
         CreateInstance("UICorner", minimizeButton, {
             CornerRadius = UDim.new(0, 6)
         })
-       
+        
         autobutcolor(minimizeButton, Colors.Gray.Button)
-       
+        
         local hideButton = CreateInstance("TextButton", top, {
             BackgroundTransparency = 1,
             Font = Enum.Font.SourceSans,
@@ -286,7 +287,7 @@ local library = (function()
             TextSize = 30,
             Size = UDim2.new(0, 22, 0, 22)
         })
-       
+        
         hideButton.MouseButton1Click:Connect(function()
             window:Hide()
             game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -295,13 +296,13 @@ local library = (function()
                 Duration = 2
             })
         end)
-       
+        
         -- FIXED DRAGGING SYSTEM
         local dragging = false
         local dragInput
         local dragStart
         local startPos
-       
+        
         local function update(input)
             local delta = input.Position - dragStart
             local newPos = UDim2.new(
@@ -310,16 +311,17 @@ local library = (function()
                 startPos.Y.Scale,
                 startPos.Y.Offset + delta.Y
             )
-           
+            
+            -- Smooth dragging with tween
             TweenService:Create(top, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {Position = newPos}):Play()
         end
-       
+        
         titleLabel.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 dragStart = input.Position
                 startPos = top.Position
-               
+                
                 input.Changed:Connect(function()
                     if input.UserInputState == Enum.UserInputState.End then
                         dragging = false
@@ -327,19 +329,19 @@ local library = (function()
                 end)
             end
         end)
-       
+        
         titleLabel.InputChanged:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                 dragInput = input
             end
         end)
-       
+        
         UserInputService.InputChanged:Connect(function(input)
             if input == dragInput and dragging then
                 update(input)
             end
         end)
-       
+        
         local windowContainer = CreateInstance("Frame", top, {
             Position = UDim2.new(0, 0, 0, 42),
             BorderColor3 = Colors.White,
@@ -347,23 +349,23 @@ local library = (function()
             Size = UDim2.new(0, 612, 0, 370),
             BackgroundColor3 = Colors.Gray.FramesBack
         })
-       
+        
         CreateInstance("UICorner", windowContainer, {
             CornerRadius = UDim.new(0, 8)
         })
-       
+        
         local opened = true
-       
+        
         function window:Hide()
             opened = false
             top.Visible = false
         end
-       
+        
         function window:Show()
             opened = true
             top.Visible = true
         end
-       
+        
         local handler = UserInputService.InputBegan:Connect(function(input)
             if input.KeyCode == Enum.KeyCode.LeftAlt then
                 if opened then
@@ -373,11 +375,11 @@ local library = (function()
                 end
             end
         end)
-       
+        
         window:OnDestroy(function()
             handler:Disconnect()
         end)
-       
+        
         local windowBody = CreateInstance("ScrollingFrame", windowContainer, {
             ScrollBarImageColor3 = Colors.Cyan,
             Active = true,
@@ -391,27 +393,15 @@ local library = (function()
             BorderSizePixel = 0,
             BackgroundColor3 = Colors.Gray.FramesBack
         })
-       
+        
         CreateInstance("UICorner", windowBody, {
             CornerRadius = UDim.new(0, 6)
         })
-       
-        CreateInstance("UIPadding", windowBody, {
-            PaddingTop = UDim.new(0, 8),
-            PaddingLeft = UDim.new(0, 8),
-            PaddingRight = UDim.new(0, 8),
-            PaddingBottom = UDim.new(0, 8)
-        })
-       
-        CreateInstance("UIListLayout", windowBody, {
-            Padding = UDim.new(0, 8),
-            SortOrder = Enum.SortOrder.LayoutOrder
-        })
-       
+        
         local tabs = {}
         local tabsNames = {}
         local currentTab = 1
-       
+        
         local scrollingFrameTabs = CreateInstance("ScrollingFrame", windowContainer, {
             ScrollBarImageColor3 = Colors.Cyan,
             Active = true,
@@ -427,31 +417,27 @@ local library = (function()
             BackgroundTransparency = 1,
             BackgroundColor3 = Colors.Gray.Top,
         })
-       
+        
         local gridLayout = CreateInstance("UIGridLayout", scrollingFrameTabs, {
             FillDirection = Enum.FillDirection.Vertical,
             CellSize = UDim2.new(0, 150, 0, 28),
             SortOrder = Enum.SortOrder.LayoutOrder,
             CellPadding = UDim2.new(0, 6, 0, 6),
         })
-      
+       
         local padding = CreateInstance("UIPadding", scrollingFrameTabs, {
             PaddingTop = UDim.new(0, 10),
             PaddingLeft = UDim.new(0, 5),
             PaddingRight = UDim.new(0, 5),
             PaddingBottom = UDim.new(0, 10),
         })
-       
+        
         local function updateCanvas()
-            local tabsHeight = gridLayout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset
-            scrollingFrameTabs.CanvasSize = UDim2.new(0, 0, 0, tabsHeight)
-            local bodyHeight = windowBody.UIListLayout.AbsoluteContentSize.Y + windowBody.UIPadding.PaddingTop.Offset + windowBody.UIPadding.PaddingBottom.Offset
-            windowBody.CanvasSize = UDim2.new(0, 0, 0, math.max(bodyHeight, 350))
+            scrollingFrameTabs.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset)
         end
-       
+        
         gridLayout.Changed:Connect(updateCanvas)
-        windowBody.UIListLayout.Changed:Connect(updateCanvas)
-       
+        
         local function addMouseWheelScroll(frame)
             frame.InputChanged:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseWheel then
@@ -463,10 +449,10 @@ local library = (function()
                 end
             end)
         end
-       
+        
         addMouseWheelScroll(scrollingFrameTabs)
         addMouseWheelScroll(windowBody)
-       
+        
         local function PlayTween(first, bool)
             local speed = 0.3
             TweenService:Create(windowContainer, TweenInfo.new(speed, Enum.EasingStyle.Quart), {Size = first}):Play()
@@ -474,7 +460,7 @@ local library = (function()
             windowBody.Visible = bool
             scrollingFrameTabs.Visible = bool
         end
-       
+        
         minimizeButton.MouseButton1Click:Connect(function()
             pcall(function()
                 local clickSound = Instance.new("Sound", workspace)
@@ -483,7 +469,7 @@ local library = (function()
                 clickSound:Play()
                 game:GetService("Debris"):AddItem(clickSound, 2)
             end)
-           
+            
             if windowBody.Visible == true then
                 PlayTween(UDim2.new(0, 612, 0, 10), false)
                 state = library.WindowState.Minimized
@@ -492,7 +478,7 @@ local library = (function()
                 state = library.WindowState.Opened
             end
         end)
-       
+        
         local function changeTab(id)
             local name = "Tab" .. id
             for _, v in pairs(windowBody:GetChildren()) do
@@ -500,14 +486,14 @@ local library = (function()
                     v.Visible = false
                 end
             end
-           
+            
             for i, v in pairs(scrollingFrameTabs:GetChildren()) do
                 if v:IsA("Frame") and v:FindFirstChild("TabLabel") then
                     v.TabLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
                     v.BackgroundColor3 = Colors.Gray.Button
                 end
             end
-           
+            
             windowBody[name].Visible = true
             local selectedButton = scrollingFrameTabs:FindFirstChild(name)
             if selectedButton then
@@ -517,7 +503,7 @@ local library = (function()
                 }):Play()
             end
         end
-       
+        
         local function createTabButton(id, text)
             local tabButton = CreateInstance("Frame", scrollingFrameTabs, {
                 BorderColor3 = Colors.Gray.Stroke,
@@ -525,21 +511,21 @@ local library = (function()
                 Size = UDim2.new(0, 150, 0, 28),
                 BackgroundColor3 = _if(id == 1, Colors.Gray.DarkButton, Colors.Gray.Button)
             })
-           
+            
             CreateInstance("UICorner", tabButton, {
                 CornerRadius = UDim.new(0, 6)
             })
-           
+            
             CreateInstance("UIStroke", tabButton, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
                 Transparency = 0.7
             })
-           
+            
             local tabLabel = CreateInstance("TextLabel", tabButton, {
                 Name = "TabLabel",
                 TextColor3 = _if(id == 1, Colors.White, Color3.fromRGB(160, 160, 170)),
-                Text = " " .. text,
+                Text = "  " .. text,
                 Font = Enum.Font.GothamSemibold,
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 1, 0),
@@ -547,9 +533,9 @@ local library = (function()
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true
             })
-           
+            
             autobutcolor(tabButton, tabButton.BackgroundColor3)
-           
+            
             tabButton.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     pcall(function()
@@ -562,53 +548,52 @@ local library = (function()
                     changeTab(id)
                 end
             end)
-           
+            
             updateCanvas()
             return tabButton
         end
-       
+        
         function window:GetCurrentState()
             return state
         end
-       
+        
         function window:CreateTab(name)
             local tab = {}
             local tabId = #tabs + 1
-           
+            
             local tabContainer = CreateInstance("Frame", windowBody, {
                 Visible = false,
-                Size = UDim2.new(1, 0, 0, 0),
+                Size = UDim2.new(1, 0, 1, 0),
                 BackgroundTransparency = 1,
                 Position = UDim2.new(0, 0, 0, 0),
                 BorderColor3 = Colors.White,
                 ZIndex = 3,
                 Name = "Tab" .. tabId,
-                BackgroundColor3 = Colors.White,
-                AutomaticSize = Enum.AutomaticSize.Y
+                BackgroundColor3 = Colors.White
             })
-           
+            
             if currentTab == tabId then
                 tabContainer.Visible = true
             end
-           
+            
             table.insert(tabsNames, name)
             table.insert(tabs, tabContainer)
             createTabButton(tabId, name)
-           
+            
             CreateInstance("UIPadding", tabContainer, {
                 PaddingTop = UDim.new(0, 7)
             })
-           
+            
             CreateInstance("UIListLayout", tabContainer, {
                 Padding = UDim.new(0, 8),
                 SortOrder = Enum.SortOrder.LayoutOrder,
             })
-           
+            
             function tab:CreateTextbox(label, callback, placeholder)
                 local callback = callback or function(_) end
                 local placeholder = placeholder or "Write Here"
                 local textbox = {}
-               
+                
                 local textBoxLabel = CreateInstance("TextLabel", tabContainer, {
                     TextColor3 = Colors.White,
                     BorderColor3 = Colors.Gray.Stroke,
@@ -620,17 +605,17 @@ local library = (function()
                     TextSize = 14,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
-               
+                
                 CreateInstance("UICorner", textBoxLabel, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", textBoxLabel, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-              
+               
                 local textBoxInstance = CreateInstance("TextBox", textBoxLabel, {
                     TextWrapped = true,
                     TextColor3 = Colors.White,
@@ -646,55 +631,55 @@ local library = (function()
                     BackgroundColor3 = Colors.Gray.TogBox,
                     ClearTextOnFocus = false,
                 })
-               
+                
                 CreateInstance("UICorner", textBoxInstance, {
                     CornerRadius = UDim.new(0, 5)
                 })
-               
+                
                 CreateInstance("UIPadding", textBoxInstance, {
                     PaddingLeft = UDim.new(0, 8),
                     PaddingRight = UDim.new(0, 8)
                 })
-               
+                
                 textBoxInstance.Focused:Connect(function()
                     TweenService:Create(textBoxInstance, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
                         BackgroundColor3 = Color3.fromRGB(40, 40, 50)
                     }):Play()
                 end)
-               
+                
                 textBoxInstance.FocusLost:Connect(function(enter)
                     TweenService:Create(textBoxInstance, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
                         BackgroundColor3 = Colors.Gray.TogBox
                     }):Play()
-                   
+                    
                     if enter then
                         callback(textBoxInstance.Text, textbox)
                     end
                 end)
-               
+                
                 function textbox:GetLabel()
                     return string.sub(textBoxLabel.Text, 2)
                 end
-               
+                
                 function textbox:SetLabel(text)
                     textBoxLabel.Text = " " .. text
                 end
-               
+                
                 function textbox:GetValue()
                     return textBoxInstance.Text
                 end
-               
+                
                 function textbox:SetValue(value)
                     textBoxInstance.Text = value
                 end
-               
+                
                 function textbox:Destroy()
                     textBoxLabel:Destroy()
                 end
-               
+                
                 return textbox
             end
-           
+            
             function tab:CreateSlider(label, minvalue, maxvalue, callback, default, supportFloats)
                 minvalue = minvalue or 0
                 maxvalue = maxvalue or 100
@@ -709,16 +694,11 @@ local library = (function()
                 local mouse = game.Players.LocalPlayer:GetMouse()
                 local uis = game:GetService("UserInputService")
                 local Value;
-               
-                local sliderContainer = CreateInstance("Frame", tabContainer, {
-                    Size = UDim2.new(1, 0, 0, 50),
-                    BackgroundTransparency = 1
-                })
-               
-                local sliderLabel = CreateInstance("TextLabel", sliderContainer, {
+                
+                local sliderLabel = CreateInstance("TextLabel", tabContainer, {
                     TextColor3 = Colors.White,
                     Text = " " .. label,
-                    Size = UDim2.new(1, 0, 0, 20),
+                    Size = UDim2.new(1, 0, 0, 38),
                     Font = Font,
                     Name = "Slider",
                     TextXAlignment = Enum.TextXAlignment.Left,
@@ -726,27 +706,26 @@ local library = (function()
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
                 })
-               
+                
                 CreateInstance("UICorner", sliderLabel, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", sliderLabel, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-               
+                
                 CreateInstance("UIPadding", sliderLabel, {
-                    PaddingBottom = UDim.new(0, 5),
+                    PaddingBottom = UDim.new(0, 10),
                     PaddingTop = UDim.new(0, 5),
-                    PaddingLeft = UDim.new(0, 10)
                 })
-              
-                local SliderButton = CreateInstance("TextButton", sliderContainer, {
+               
+                local SliderButton = CreateInstance("TextButton", sliderLabel, {
                     Name = "SliderButton",
                     BackgroundColor3 = Colors.Gray.TogBox,
-                    Position = UDim2.new(0, 10, 1, -20),
+                    Position = UDim2.new(0, 10, 1, -14),
                     Size = UDim2.new(1, -20, 0, 6),
                     Font = Enum.Font.SourceSans,
                     TextColor3 = Colors.Black,
@@ -755,11 +734,11 @@ local library = (function()
                     TextTransparency = 1.000,
                     ClipsDescendants = true,
                 })
-               
+                
                 CreateInstance("UICorner", SliderButton, {
                     CornerRadius = UDim.new(1, 0)
                 })
-          
+           
                 local SliderInner = CreateInstance("Frame", SliderButton, {
                     Name = "SliderInner",
                     BackgroundColor3 = Colors.Cyan,
@@ -768,20 +747,20 @@ local library = (function()
                     Size = UDim2.new((default - minvalue) / (maxvalue - minvalue), 0, 1, 0),
                     BorderColor3 = Color3.fromRGB(50, 50, 50)
                 })
-               
+                
                 CreateInstance("UICorner", SliderInner, {
                     CornerRadius = UDim.new(1, 0)
                 })
-               
+                
                 CreateInstance("UIGradient", SliderInner, {
                     Color = Colors.Gradients.Cyan
                 })
-               
-                local SliderValue = CreateInstance("TextLabel", sliderContainer, {
+                
+                local SliderValue = CreateInstance("TextLabel", sliderLabel, {
                     Name = "SliderValue",
                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                     BackgroundTransparency = 1.000,
-                    Position = UDim2.new(1, -60, 0, 25),
+                    Position = UDim2.new(1, -60, 0, 5),
                     Size = UDim2.new(0, 50, 0, 20),
                     Font = Enum.Font.GothamBold,
                     Text = tostring(default),
@@ -789,13 +768,13 @@ local library = (function()
                     TextSize = 13.000,
                     TextXAlignment = Enum.TextXAlignment.Right,
                 })
-               
+                
                 local draggingSlider = false
-               
+                
                 SliderButton.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                         draggingSlider = true
-                       
+                        
                         local function Round(value)
                             if supportFloats > 0 then
                                 return math.floor(value * 10 ^ supportFloats + 0.5) / 10 ^ supportFloats
@@ -803,26 +782,26 @@ local library = (function()
                                 return math.floor(value + 0.5)
                             end
                         end
-                       
+                        
                         local function updateSlider()
                             local mousePos = uis:GetMouseLocation().X
                             local relativePos = math.clamp(mousePos - SliderButton.AbsolutePosition.X, 0, SliderButton.AbsoluteSize.X)
                             local percentage = relativePos / SliderButton.AbsoluteSize.X
-                           
+                            
                             Value = Round(minvalue + (maxvalue - minvalue) * percentage)
                             SliderValue.Text = tostring(Value)
-                           
+                            
                             TweenService:Create(SliderInner, TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
                                 Size = UDim2.new(percentage, 0, 1, 0)
                             }):Play()
-                           
+                            
                             pcall(function()
                                 callback(Value, slider)
                             end)
                         end
-                       
+                        
                         updateSlider()
-                       
+                        
                         local moveConnection
                         moveConnection = uis.InputChanged:Connect(function(input2)
                             if input2.UserInputType == Enum.UserInputType.MouseMovement or input2.UserInputType == Enum.UserInputType.Touch then
@@ -831,7 +810,7 @@ local library = (function()
                                 end
                             end
                         end)
-                       
+                        
                         local releaseConnection
                         releaseConnection = uis.InputEnded:Connect(function(input2)
                             if input2.UserInputType == Enum.UserInputType.MouseButton1 or input2.UserInputType == Enum.UserInputType.Touch then
@@ -842,7 +821,7 @@ local library = (function()
                         end)
                     end
                 end)
-               
+                
                 function slider:SetValue(value)
                     local value = math.clamp(value, minvalue, maxvalue)
                     Value = value
@@ -851,19 +830,19 @@ local library = (function()
                         Size = UDim2.new((value - minvalue) / (maxvalue - minvalue), 0, 1, 0)
                     }):Play()
                 end
-               
+                
                 function slider:Destroy()
-                    sliderContainer:Destroy()
+                    sliderLabel:Destroy()
                 end
-               
+                
                 return slider
             end
-           
+            
             function tab:CreateToggle(label, default, callback)
                 local default = default or false
                 local callback = callback or function(_) end
                 local toggle = {}
-               
+                
                 local mainToggleContainer = CreateInstance("TextButton", tabContainer, {
                     Font = Font,
                     TextXAlignment = Enum.TextXAlignment.Left,
@@ -874,21 +853,21 @@ local library = (function()
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
                 })
-              
+               
                 CreateInstance("UICorner", mainToggleContainer, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", mainToggleContainer, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-               
+                
                 CreateInstance("UIPadding", mainToggleContainer, {
                     PaddingLeft = UDim.new(0, 10)
                 })
-               
+                
                 local toggleContainer = CreateInstance("Frame", mainToggleContainer, {
                     Name = "Toggle",
                     Position = UDim2.new(1, -48, 0.5, -9),
@@ -896,37 +875,37 @@ local library = (function()
                     Size = UDim2.new(0, 38, 0, 18),
                     BackgroundColor3 = default and Colors.Cyan or Colors.Gray.TogBox
                 })
-               
+                
                 CreateInstance("UICorner", toggleContainer, {
                     CornerRadius = UDim.new(1, 0)
                 })
-               
+                
                 local boolValue = CreateInstance("BoolValue", toggleContainer, {
                     Name = "State",
                     Value = default
                 })
-               
+                
                 local toggleKnob = CreateInstance("Frame", toggleContainer, {
                     Name = "Knob",
                     Position = default and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7),
                     Size = UDim2.new(0, 14, 0, 14),
                     BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 })
-               
+                
                 CreateInstance("UICorner", toggleKnob, {
                     CornerRadius = UDim.new(1, 0)
                 })
-               
+                
                 autobutcolor(mainToggleContainer, Colors.Gray.DarkButton)
-               
+                
                 local function update(call)
                     local speed = 0.2
-                   
+                    
                     if boolValue.Value then
                         TweenService:Create(toggleContainer, TweenInfo.new(speed, Enum.EasingStyle.Quart), {
                             BackgroundColor3 = Colors.Cyan
                         }):Play()
-                       
+                        
                         TweenService:Create(toggleKnob, TweenInfo.new(speed, Enum.EasingStyle.Back), {
                             Position = UDim2.new(1, -16, 0.5, -7)
                         }):Play()
@@ -934,12 +913,12 @@ local library = (function()
                         TweenService:Create(toggleContainer, TweenInfo.new(speed, Enum.EasingStyle.Quart), {
                             BackgroundColor3 = Colors.Gray.TogBox
                         }):Play()
-                       
+                        
                         TweenService:Create(toggleKnob, TweenInfo.new(speed, Enum.EasingStyle.Back), {
                             Position = UDim2.new(0, 2, 0.5, -7)
                         }):Play()
                     end
-                   
+                    
                     if call then
                         pcall(function()
                             local toggleSound = Instance.new("Sound", workspace)
@@ -951,37 +930,37 @@ local library = (function()
                         callback(boolValue.Value, toggle)
                     end
                 end
-               
+                
                 update(false)
-               
+                
                 mainToggleContainer.MouseButton1Click:Connect(function()
                     boolValue.Value = not boolValue.Value
                     update(true)
                 end)
-               
+                
                 function toggle:GetLabel()
                     return string.sub(mainToggleContainer.Text, 2)
                 end
-               
+                
                 function toggle:SetLabel(text)
                     mainToggleContainer.Text = " " .. text
                 end
-              
+               
                 function toggle:GetValue()
                     return boolValue.Value
                 end
-               
+                
                 function toggle:SetValue(value)
                     boolValue.Value = value
                     update(false)
                 end
-               
+                
                 return toggle
             end
-           
+            
             function tab:CreateLabel(title, description)
                 local label = {}
-               
+                
                 local textLabel = CreateInstance("TextLabel", tabContainer, {
                     TextWrapped = true,
                     TextColor3 = Colors.White,
@@ -995,23 +974,23 @@ local library = (function()
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
                 })
-               
+                
                 CreateInstance("UICorner", textLabel, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", textLabel, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-               
+                
                 CreateInstance("UIPadding", textLabel, {
                     PaddingTop = UDim.new(0, 8),
                     PaddingLeft = UDim.new(0, 10),
                     PaddingRight = UDim.new(0, 10)
                 })
-               
+                
                 local textDescription = CreateInstance("TextLabel", textLabel, {
                     TextColor3 = Color3.fromRGB(160, 160, 170),
                     Text = " " .. (description or ""),
@@ -1024,31 +1003,31 @@ local library = (function()
                     BackgroundColor3 = Colors.White,
                     Visible = #(description or "") > 0
                 })
-               
+                
                 function label:GetTitle()
                     return string.sub(textLabel.Text, 2)
                 end
-               
+                
                 function label:SetTitle(title)
                     textLabel.Text = " " .. title
                 end
-               
+                
                 function label:GetDescription()
                     return string.sub(textDescription.Text, 2)
                 end
-               
+                
                 function label:SetDescription(description)
                     textDescription.Text = " " .. description
                     textDescription.Visible = #(description or "") > 0
                 end
-               
+                
                 return label
             end
-           
+            
             function tab:CreateButton(name, callback)
                 local callback = callback or function(_) end
                 local button = {}
-               
+                
                 local buttonContainer = CreateInstance("TextButton", tabContainer, {
                     TextColor3 = Colors.White,
                     Text = " " .. name,
@@ -1059,21 +1038,21 @@ local library = (function()
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
                 })
-               
+                
                 CreateInstance("UICorner", buttonContainer, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", buttonContainer, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-               
+                
                 CreateInstance("UIPadding", buttonContainer, {
                     PaddingLeft = UDim.new(0, 10)
                 })
-               
+                
                 local clickIndicator = CreateInstance("Frame", buttonContainer, {
                     Name = "Indicator",
                     Position = UDim2.new(1, -5, 0.5, -10),
@@ -1081,13 +1060,13 @@ local library = (function()
                     BackgroundColor3 = Colors.Cyan,
                     BorderSizePixel = 0
                 })
-               
+                
                 CreateInstance("UICorner", clickIndicator, {
                     CornerRadius = UDim.new(1, 0)
                 })
-               
+                
                 autobutcolor(buttonContainer, Colors.Gray.DarkButton)
-               
+                
                 buttonContainer.MouseButton1Click:Connect(function()
                     pcall(function()
                         local clickSound = Instance.new("Sound", workspace)
@@ -1096,47 +1075,47 @@ local library = (function()
                         clickSound:Play()
                         game:GetService("Debris"):AddItem(clickSound, 2)
                     end)
-                   
+                    
                     TweenService:Create(buttonContainer, TweenInfo.new(0.1, Enum.EasingStyle.Quart), {
                         BackgroundColor3 = Colors.Cyan
                     }):Play()
-                   
+                    
                     task.wait(0.1)
-                   
+                    
                     TweenService:Create(buttonContainer, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
                         BackgroundColor3 = Colors.Gray.DarkButton
                     }):Play()
-                   
+                    
                     callback(button)
                 end)
-               
+                
                 function button:GetLabel()
                     return string.sub(buttonContainer.Text, 2)
                 end
-               
+                
                 function button:SetLabel(label)
                     buttonContainer.Text = " " .. label
                 end
-               
+                
                 function button:Destroy()
                     buttonContainer:Destroy()
                 end
-               
+                
                 return button
             end
-           
+            
             function tab:CreateDropdown(text, values, callback)
                 local values = values or {}
                 local callback = callback or function(_) end
                 local dropdown = {}
-               
+                
                 local dropdownContainer = CreateInstance("Frame", tabContainer, {
                     Name = "Dropdown",
                     ClipsDescendants = false,
                     Size = UDim2.new(1, 0, 0, 38),
                     BackgroundTransparency = 1,
                 })
-               
+                
                 local dropdownLabel = CreateInstance("TextButton", dropdownContainer, {
                     TextColor3 = Colors.White,
                     Text = " " .. text,
@@ -1150,23 +1129,23 @@ local library = (function()
                     BackgroundColor3 = Colors.Gray.DarkButton,
                     BackgroundTransparency = 0
                 })
-               
+                
                 CreateInstance("UICorner", dropdownLabel, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", dropdownLabel, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-               
+                
                 CreateInstance("UIPadding", dropdownLabel, {
                     PaddingLeft = UDim.new(0, 10)
                 })
-               
+                
                 autobutcolor(dropdownLabel, Colors.Gray.DarkButton)
-               
+                
                 local dropdownArrow = CreateInstance("TextLabel", dropdownLabel, {
                     Text = "▼",
                     Font = Enum.Font.GothamBold,
@@ -1176,7 +1155,7 @@ local library = (function()
                     Position = UDim2.new(1, -25, 0.5, -10),
                     Size = UDim2.new(0, 20, 0, 20)
                 })
-               
+                
                 local dropdownSelectedLabel = CreateInstance("TextLabel", dropdownLabel, {
                     TextWrapped = true,
                     TextColor3 = Colors.Cyan,
@@ -1190,11 +1169,11 @@ local library = (function()
                     TextXAlignment = Enum.TextXAlignment.Right,
                     BackgroundColor3 = Color3.fromRGB(0.176471, 0.176471, 0.176471)
                 })
-               
+                
                 CreateInstance("UIPadding", dropdownSelectedLabel, {
                     PaddingRight = UDim.new(0, 30)
                 })
-               
+                
                 local dropdownSearchBox = CreateInstance("TextBox", dropdownContainer, {
                     Visible = false,
                     TextColor3 = Colors.White,
@@ -1210,16 +1189,16 @@ local library = (function()
                     BackgroundColor3 = Colors.Gray.TogBox,
                     TextWrapped = true,
                 })
-               
+                
                 CreateInstance("UICorner", dropdownSearchBox, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIPadding", dropdownSearchBox, {
                     PaddingLeft = UDim.new(0, 10),
                     PaddingRight = UDim.new(0, 10)
                 })
-               
+                
                 local dropdownValuesContainer = CreateInstance("ScrollingFrame", dropdownContainer, {
                     ScrollBarImageColor3 = Colors.Cyan,
                     Active = true,
@@ -1234,32 +1213,32 @@ local library = (function()
                     AutomaticCanvasSize = Enum.AutomaticSize.Y,
                     ZIndex = 4
                 })
-               
+                
                 CreateInstance("UICorner", dropdownValuesContainer, {
                     CornerRadius = UDim.new(0, 6)
                 })
-               
+                
                 CreateInstance("UIStroke", dropdownValuesContainer, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1,
                     Transparency = 0.7
                 })
-               
+                
                 CreateInstance("UIPadding", dropdownValuesContainer, {
                     PaddingTop = UDim.new(0, 5),
                     PaddingBottom = UDim.new(0, 5),
                     PaddingLeft = UDim.new(0, 5),
                     PaddingRight = UDim.new(0, 5)
                 })
-               
+                
                 CreateInstance("UIListLayout", dropdownValuesContainer, {
                     Padding = UDim.new(0, 4)
                 })
-               
+                
                 addMouseWheelScroll(dropdownValuesContainer)
-               
+                
                 local isOpen = false
-               
+                
                 local function addDropButton(value)
                     local btn = CreateInstance("TextButton", dropdownValuesContainer, {
                         TextSize = 13,
@@ -1272,13 +1251,13 @@ local library = (function()
                         BorderSizePixel = 0,
                         BackgroundColor3 = Colors.Gray.TogBox,
                     })
-                   
+                    
                     CreateInstance("UICorner", btn, {
                         CornerRadius = UDim.new(0, 5)
                     })
-                   
+                    
                     autobutcolor(btn, Colors.Gray.TogBox)
-                   
+                    
                     btn.MouseButton1Click:Connect(function()
                         pcall(function()
                             local clickSound = Instance.new("Sound", workspace)
@@ -1287,35 +1266,35 @@ local library = (function()
                             clickSound:Play()
                             game:GetService("Debris"):AddItem(clickSound, 2)
                         end)
-                       
+                        
                         TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
                             Size = UDim2.new(1, 0, 0, 38)
                         }):Play()
-                       
+                        
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
                             Rotation = 0
                         }):Play()
-                       
+                        
                         dropdownValuesContainer.Visible = false
                         dropdownSearchBox.Visible = false
                         dropdownSelectedLabel.Visible = true
                         dropdownSelectedLabel.Text = value
                         isOpen = false
-                       
+                        
                         callback(value, dropdown)
                     end)
-                   
+                    
                     return btn
                 end
-               
+                
                 for _, v in pairs(values) do
                     addDropButton(v)
                 end
-               
+                
                 function dropdown:AddValue(value)
                     addDropButton(value)
                 end
-               
+                
                 function dropdown:RemoveValue(value)
                     for _, v in pairs(dropdownValuesContainer:GetChildren()) do
                         if v:IsA("TextButton") and v.Text == value then
@@ -1323,7 +1302,7 @@ local library = (function()
                         end
                     end
                 end
-               
+                
                 function dropdown:ClearValues()
                     for _, v in pairs(dropdownValuesContainer:GetChildren()) do
                         if v:IsA("TextButton") then
@@ -1331,22 +1310,22 @@ local library = (function()
                         end
                     end
                 end
-               
+                
                 local searchHook = nil
-               
+                
                 function dropdown:SetSearchHook(func)
                     searchHook = func
                 end
-               
+                
                 function dropdown:ResetSearchHook()
                     searchHook = nil
                 end
-               
+                
                 local function UpdateSearch(prop)
                     if prop ~= "Text" then
                         return
                     end
-                   
+                    
                     if searchHook then
                         dropdown:ClearValues()
                         local results = searchHook(dropdownSearchBox.Text)
@@ -1371,9 +1350,9 @@ local library = (function()
                         end
                     end
                 end
-               
+                
                 dropdownSearchBox.Changed:Connect(UpdateSearch)
-               
+                
                 dropdownLabel.MouseButton1Click:Connect(function()
                     pcall(function()
                         local clickSound = Instance.new("Sound", workspace)
@@ -1382,16 +1361,16 @@ local library = (function()
                         clickSound:Play()
                         game:GetService("Debris"):AddItem(clickSound, 2)
                     end)
-                   
+                    
                     if not isOpen then
                         TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
                             Size = UDim2.new(1, 0, 0, 210)
                         }):Play()
-                       
+                        
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
                             Rotation = 180
                         }):Play()
-                       
+                        
                         dropdownValuesContainer.Visible = true
                         dropdownSearchBox.Visible = true
                         dropdownSelectedLabel.Visible = false
@@ -1400,65 +1379,56 @@ local library = (function()
                         TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
                             Size = UDim2.new(1, 0, 0, 38)
                         }):Play()
-                       
+                        
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
                             Rotation = 0
                         }):Play()
-                       
+                        
                         dropdownValuesContainer.Visible = false
                         dropdownSearchBox.Visible = false
                         dropdownSelectedLabel.Visible = true
                         isOpen = false
                     end
                 end)
-               
+                
                 function dropdown:GetValue()
                     return dropdownSelectedLabel.Text
                 end
-               
+                
                 function dropdown:SetValue(value)
                     dropdownSelectedLabel.Text = value
                 end
-               
+                
                 function dropdown:Destroy()
                     dropdownContainer:Destroy()
                 end
-          
+           
                 return dropdown
             end
-      
-            -- Entrance animation in a separate coroutine
-            coroutine.wrap(function()
-                task.wait(0.1)
-                top.Size = UDim2.new(0, 0, 0, 0)
-                top.Position = UDim2.new(0.5, 0, 0.5, 0)
-                TweenService:Create(top, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-                    Size = UDim2.new(0, 612, 0, 42),
-                    Position = UDim2.new(0.5, -306, 0.5, -225)
-                }):Play()
-                task.wait(0.2)
-                TweenService:Create(windowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
-                    Size = UDim2.new(0, 612, 0, 370)
-                }):Play()
-            end)()
-           
+       
             return tab
         end
-       
-        -- Example Usage for Walk Speed Slider
-        local mainTab = window:CreateTab("Main")
-        mainTab:CreateLabel("Settings", "Adjust game settings here.")
-        local walkSpeedSlider = mainTab:CreateSlider("Walk Speed", 16, 100, function(value)
-            local player = game.Players.LocalPlayer
-            if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.WalkSpeed = value
-            end
-            print("Walk Speed set to: " .. value)
-        end, 16)
-       
+        
+        -- Entrance animation
+        top.Size = UDim2.new(0, 0, 0, 0)
+        top.Position = UDim2.new(0.5, 0, 0.5, 0)
+        
+        task.wait(0.1)
+        
+        TweenService:Create(top, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 612, 0, 42),
+            Position = UDim2.new(0.5, -306, 0.5, -225)
+        }):Play()
+        
+        task.wait(0.2)
+        
+        TweenService:Create(windowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(0, 612, 0, 370)
+        }):Play()
+        
         return window
     end
-  
+   
     return library
 end)()
 
