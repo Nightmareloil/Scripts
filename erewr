@@ -6,7 +6,7 @@ pcall(function()
     snd.Volume = 0.5
     snd:Play()
     snd.Ended:Connect(function()
-        snd:Destroy()
+        sound:Destroy()
     end)
 end)
 
@@ -563,9 +563,9 @@ local library = (function()
             
             local tabContainer = CreateInstance("Frame", windowBody, {
                 Visible = false,
-                Size = UDim2.new(1, 0, 1, 0),
+                Size = UDim2.new(0, 507, 0, 400),
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(0.0179270469, 0, -0.00809493847, 0),
                 BorderColor3 = Colors.White,
                 ZIndex = 3,
                 Name = "Tab" .. tabId,
@@ -601,7 +601,8 @@ local library = (function()
                     Font = Font,
                     BackgroundTransparency = 0,
                     BackgroundColor3 = Colors.Gray.DarkButton,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
+                    Position = UDim2.new(0.348881781, 0, 2.46790123, 0),
                     TextSize = 14,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
@@ -698,9 +699,10 @@ local library = (function()
                 local sliderLabel = CreateInstance("TextLabel", tabContainer, {
                     TextColor3 = Colors.White,
                     Text = " " .. label,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
                     Font = Font,
                     Name = "Slider",
+                    Position = UDim2.new(0.349, 0, 0.468, 0),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     TextYAlignment = Enum.TextYAlignment.Top,
                     TextSize = 14,
@@ -848,7 +850,7 @@ local library = (function()
                     TextXAlignment = Enum.TextXAlignment.Left,
                     TextColor3 = Colors.White,
                     AutoButtonColor = false,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
                     Text = " " .. label,
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
@@ -969,7 +971,7 @@ local library = (function()
                     Font = Font,
                     Name = "Label",
                     TextXAlignment = Enum.TextXAlignment.Left,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
                     ZIndex = 0,
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
@@ -1032,9 +1034,10 @@ local library = (function()
                     TextColor3 = Colors.White,
                     Text = " " .. name,
                     Font = Font,
+                    Position = UDim2.new(0, 0, 0.166284561, 0),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     AutoButtonColor = false,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton
                 })
@@ -1111,8 +1114,9 @@ local library = (function()
                 
                 local dropdownContainer = CreateInstance("Frame", tabContainer, {
                     Name = "Dropdown",
+                    Position = UDim2.new(0, 0, 0.636, 0),
                     ClipsDescendants = false,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
                     BackgroundTransparency = 1,
                 })
                 
@@ -1123,7 +1127,7 @@ local library = (function()
                     TextXAlignment = Enum.TextXAlignment.Left,
                     Position = UDim2.new(0, 0, 0, 0),
                     AutoButtonColor = false,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(0, 438, 0, 38),
                     ZIndex = 3,
                     TextSize = 14,
                     BackgroundColor3 = Colors.Gray.DarkButton,
@@ -1183,7 +1187,7 @@ local library = (function()
                     Font = Enum.Font.Gotham,
                     Name = "SearchBar",
                     Position = UDim2.new(0, 0, 0, 45),
-                    Size = UDim2.new(1, 0, 0, 30),
+                    Size = UDim2.new(0, 438, 0, 30),
                     ZIndex = 4,
                     TextSize = 12,
                     BackgroundColor3 = Colors.Gray.TogBox,
@@ -1208,7 +1212,7 @@ local library = (function()
                     Position = UDim2.new(0, 0, 0, 80),
                     ScrollBarImageTransparency = 0.3,
                     Visible = false,
-                    Size = UDim2.new(1, 0, 0, 120),
+                    Size = UDim2.new(0, 438, 0, 120),
                     CanvasSize = UDim2.new(0, 0, 0, 0),
                     AutomaticCanvasSize = Enum.AutomaticSize.Y,
                     ZIndex = 4
@@ -1268,7 +1272,7 @@ local library = (function()
                         end)
                         
                         TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-                            Size = UDim2.new(1, 0, 0, 38)
+                            Size = UDim2.new(0, 438, 0, 38)
                         }):Play()
                         
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
@@ -1364,7 +1368,7 @@ local library = (function()
                     
                     if not isOpen then
                         TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-                            Size = UDim2.new(1, 0, 0, 210)
+                            Size = UDim2.new(0, 438, 0, 210)
                         }):Play()
                         
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
@@ -1377,7 +1381,7 @@ local library = (function()
                         isOpen = true
                     else
                         TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-                            Size = UDim2.new(1, 0, 0, 38)
+                            Size = UDim2.new(0, 438, 0, 38)
                         }):Play()
                         
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
