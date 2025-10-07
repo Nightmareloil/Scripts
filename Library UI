@@ -1,9 +1,9 @@
--- Osmium UI Library with Modern Design
+-- Enhanced Osmium UI Library with Modern Design and Fixes
 pcall(function()
     local snd = Instance.new("Sound", workspace)
     snd.SoundId = "rbxassetid://6026984224"
     snd.Name = "Notification"
-    snd.Volume = 1
+    snd.Volume = 0.5
     snd:Play()
     snd.Ended:Connect(function()
         snd:Destroy()
@@ -26,7 +26,7 @@ local function ShowLoadingScreen()
     title.Size = UDim2.new(0, 400, 0, 60)
     title.Position = UDim2.new(0.5, -200, 0.5, -80)
     title.BackgroundTransparency = 1
-    title.Text = "Demon Hub Loading..."
+    title.Text = "OSMIUM"
     title.TextColor3 = Color3.fromRGB(100, 200, 255)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 42
@@ -225,11 +225,12 @@ local library = (function()
             Text = title,
             Font = Font,
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, -100, 1, 0),
-            Position = UDim2.new(0, 15, 0, 0),
-            TextSize = 15,
-            TextWrapped = true,
-            TextXAlignment = Enum.TextXAlignment.Left
+            Size = UDim2.new(0, 400, 1, 0),
+            Position = UDim2.new(0.5, -200, 0.5, -12),
+            TextSize = 18,
+            TextScaled = true,
+            TextXAlignment = Enum.TextXAlignment.Center,
+            MaxSize = Vector2.new(400, 36)
         })
         
         local closeButton = CreateInstance("TextButton", top, {
@@ -398,6 +399,18 @@ local library = (function()
             CornerRadius = UDim.new(0, 6)
         })
         
+        CreateInstance("UIPadding", windowBody, {
+            PaddingTop = UDim.new(0, 8),
+            PaddingLeft = UDim.new(0, 8),
+            PaddingRight = UDim.new(0, 8),
+            PaddingBottom = UDim.new(0, 8)
+        })
+        
+        CreateInstance("UIListLayout", windowBody, {
+            Padding = UDim.new(0, 8),
+            SortOrder = Enum.SortOrder.LayoutOrder
+        })
+        
         local tabs = {}
         local tabsNames = {}
         local currentTab = 1
@@ -434,9 +447,11 @@ local library = (function()
         
         local function updateCanvas()
             scrollingFrameTabs.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset)
+            windowBody.CanvasSize = UDim2.new(0, 0, 0, windowBody.UIListLayout.AbsoluteContentSize.Y + windowBody.UIPadding.PaddingTop.Offset + windowBody.UIPadding.PaddingBottom.Offset)
         end
         
         gridLayout.Changed:Connect(updateCanvas)
+        windowBody.UIListLayout.Changed:Connect(updateCanvas)
         
         local function addMouseWheelScroll(frame)
             frame.InputChanged:Connect(function(input)
@@ -563,13 +578,14 @@ local library = (function()
             
             local tabContainer = CreateInstance("Frame", windowBody, {
                 Visible = false,
-                Size = UDim2.new(1, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Position = UDim2.new(0, 0, 0, 0),
                 BorderColor3 = Colors.White,
                 ZIndex = 3,
                 Name = "Tab" .. tabId,
-                BackgroundColor3 = Colors.White
+                BackgroundColor3 = Colors.White,
+                AutomaticSize = Enum.AutomaticSize.Y
             })
             
             if currentTab == tabId then
@@ -695,10 +711,15 @@ local library = (function()
                 local uis = game:GetService("UserInputService")
                 local Value;
                 
-                local sliderLabel = CreateInstance("TextLabel", tabContainer, {
+                local sliderContainer = CreateInstance("Frame", tabContainer, {
+                    Size = UDim2.new(1, 0, 0, 50),
+                    BackgroundTransparency = 1
+                })
+                
+                local sliderLabel = CreateInstance("TextLabel", sliderContainer, {
                     TextColor3 = Colors.White,
                     Text = " " .. label,
-                    Size = UDim2.new(1, 0, 0, 38),
+                    Size = UDim2.new(1, 0, 0, 20),
                     Font = Font,
                     Name = "Slider",
                     TextXAlignment = Enum.TextXAlignment.Left,
@@ -718,14 +739,15 @@ local library = (function()
                 })
                 
                 CreateInstance("UIPadding", sliderLabel, {
-                    PaddingBottom = UDim.new(0, 10),
+                    PaddingBottom = UDim.new(0, 5),
                     PaddingTop = UDim.new(0, 5),
+                    PaddingLeft = UDim.new(0, 10)
                 })
                
-                local SliderButton = CreateInstance("TextButton", sliderLabel, {
+                local SliderButton = CreateInstance("TextButton", sliderContainer, {
                     Name = "SliderButton",
                     BackgroundColor3 = Colors.Gray.TogBox,
-                    Position = UDim2.new(0, 10, 1, -14),
+                    Position = UDim2.new(0, 10, 1, -20),
                     Size = UDim2.new(1, -20, 0, 6),
                     Font = Enum.Font.SourceSans,
                     TextColor3 = Colors.Black,
@@ -756,11 +778,11 @@ local library = (function()
                     Color = Colors.Gradients.Cyan
                 })
                 
-                local SliderValue = CreateInstance("TextLabel", sliderLabel, {
+                local SliderValue = CreateInstance("TextLabel", sliderContainer, {
                     Name = "SliderValue",
                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                     BackgroundTransparency = 1.000,
-                    Position = UDim2.new(1, -60, 0, 5),
+                    Position = UDim2.new(1, -60, 0, 25),
                     Size = UDim2.new(0, 50, 0, 20),
                     Font = Enum.Font.GothamBold,
                     Text = tostring(default),
@@ -832,7 +854,7 @@ local library = (function()
                 end
                 
                 function slider:Destroy()
-                    sliderLabel:Destroy()
+                    sliderContainer:Destroy()
                 end
                 
                 return slider
@@ -1406,28 +1428,34 @@ local library = (function()
                 return dropdown
             end
        
-            return tab
+            -- Example Usage for Walk Speed Slider
+            local mainTab = window:CreateTab("Main")
+            mainTab:CreateLabel("Settings", "Adjust game settings here.")
+            local walkSpeedSlider = mainTab:CreateSlider("Walk Speed", 16, 100, function(value)
+                -- Placeholder for walk speed update
+                print("Walk Speed set to: " .. value)
+                -- Example: game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+            end, 16)
+            
+            -- Entrance animation
+            top.Size = UDim2.new(0, 0, 0, 0)
+            top.Position = UDim2.new(0.5, 0, 0.5, 0)
+            
+            task.wait(0.1)
+            
+            TweenService:Create(top, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+                Size = UDim2.new(0, 612, 0, 42),
+                Position = UDim2.new(0.5, -306, 0.5, -225)
+            }):Play()
+            
+            task.wait(0.2)
+            
+            TweenService:Create(windowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
+                Size = UDim2.new(0, 612, 0, 370)
+            }):Play()
+            
+            return window
         end
-        
-        -- Entrance animation
-        top.Size = UDim2.new(0, 0, 0, 0)
-        top.Position = UDim2.new(0.5, 0, 0.5, 0)
-        
-        task.wait(0.1)
-        
-        TweenService:Create(top, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, 612, 0, 42),
-            Position = UDim2.new(0.5, -306, 0.5, -225)
-        }):Play()
-        
-        task.wait(0.2)
-        
-        TweenService:Create(windowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
-            Size = UDim2.new(0, 612, 0, 370)
-        }):Play()
-        
-        return window
-    end
    
     return library
 end)()
