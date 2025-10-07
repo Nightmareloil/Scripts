@@ -1,1 +1,643 @@
-print("23")
+-- Demon Hub UI Library | Enhanced & Fixed by Gemini
+--[[
+    Fixes & Improvements:
+    - Renamed from "Osmium" to "Demon Hub" as requested.
+    - Added a new, modern loading screen for Demon Hub.
+    - Restructured the UI into a single main frame to fix the "disconnected" top bar bug.
+    - Corrected the layout system; removed all static positioning for elements within list layouts.
+    - Fixed the slider bug where it would overlap with other elements.
+    - Improved the tab scrolling frame to reliably support any number of tabs.
+    - Enhanced the dragging system to be smoother and more reliable.
+    - Polished visual elements, sounds, and tweens for a better user experience.
+    - Cleaned up and commented the code for better readability and maintenance.
+]]
+
+-- Initial sound effect for UI load
+pcall(function()
+    local snd = Instance.new("Sound", workspace)
+    snd.SoundId = "rbxassetid://6026984224" -- Generic UI sound
+    snd.Name = "Notification"
+    snd.Volume = 0.4
+    snd:Play()
+    game:GetService("Debris"):AddItem(snd, 3)
+end)
+
+-- Modern Loading Screen
+local function ShowLoadingScreen()
+    local loader = Instance.new("ScreenGui")
+    loader.Name = "DemonHubLoader"
+    loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    loader.ResetOnSpawn = false
+    loader.Parent = game:GetService("CoreGui")
+
+    local bg = Instance.new("Frame", loader)
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    bg.BorderSizePixel = 0
+
+    local title = Instance.new("TextLabel", bg)
+    title.Size = UDim2.new(1, 0, 0, 60)
+    title.Position = UDim2.new(0.5, 0, 0.5, -80)
+    title.AnchorPoint = Vector2.new(0.5, 0.5)
+    title.BackgroundTransparency = 1
+    title.Text = "DEMON HUB"
+    title.TextColor3 = Color3.fromRGB(200, 50, 50) -- Red theme
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 42
+    title.TextTransparency = 1
+
+    local subtitle = Instance.new("TextLabel", bg)
+    subtitle.Size = UDim2.new(1, 0, 0, 30)
+    subtitle.Position = UDim2.new(0.5, 0, 0.5, -20)
+    subtitle.AnchorPoint = Vector2.new(0.5, 0.5)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = "Loading UI..."
+    subtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextSize = 16
+    subtitle.TextTransparency = 1
+
+    local progressBarBg = Instance.new("Frame", bg)
+    progressBarBg.Size = UDim2.new(0, 300, 0, 4)
+    progressBarBg.Position = UDim2.new(0.5, 0, 0.5, 40)
+    progressBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
+    progressBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    progressBarBg.BorderSizePixel = 0
+    Instance.new("UICorner", progressBarBg).CornerRadius = UDim.new(1, 0)
+
+    local progressBar = Instance.new("Frame", progressBarBg)
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    progressBar.BorderSizePixel = 0
+    Instance.new("UICorner", progressBar).CornerRadius = UDim.new(1, 0)
+
+    local TweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Cubic)
+
+    TweenService:Create(title, tweenInfo, { TextTransparency = 0 }):Play()
+    TweenService:Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, 0.2), { TextTransparency = 0 }):Play()
+    TweenService:Create(progressBar, TweenInfo.new(1.5, Enum.EasingStyle.Quint), { Size = UDim2.new(1, 0, 1, 0) }):Play()
+
+    task.wait(1.6)
+
+    TweenService:Create(bg, TweenInfo.new(0.5, Enum.EasingStyle.Cubic), { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(title, TweenInfo.new(0.5, Enum.EasingStyle.Cubic), { TextTransparency = 1 }):Play()
+    TweenService:Create(subtitle, TweenInfo.new(0.5, Enum.EasingStyle.Cubic), { TextTransparency = 1 }):Play()
+
+    task.wait(0.6)
+    loader:Destroy()
+
+    pcall(function()
+        local successSound = Instance.new("Sound", workspace)
+        successSound.SoundId = "rbxassetid://6895079853" -- UI Success
+        successSound.Volume = 0.3
+        successSound:Play()
+        game:GetService("Debris"):AddItem(successSound, 2)
+    end)
+end
+
+spawn(ShowLoadingScreen)
+task.wait(1.7) -- Wait for loading screen to finish before creating the main UI
+
+local library = (function()
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    local library = {}
+
+    -- Modern Color Scheme
+    local Colors = {
+        White = Color3.fromRGB(245, 245, 250),
+        Black = Color3.fromRGB(0, 0, 0),
+        Red = Color3.fromRGB(200, 50, 50),
+        Gray = {
+            Stroke = Color3.fromRGB(60, 60, 75),
+            Button = Color3.fromRGB(45, 45, 55),
+            DarkButton = Color3.fromRGB(38, 38, 48),
+            Background = Color3.fromRGB(25, 25, 32),
+            TopBar = Color3.fromRGB(30, 30, 38),
+            ToggleBox = Color3.fromRGB(28, 28, 35)
+        },
+        Gradients = {
+            Red = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 50, 50)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 80, 80))
+            }),
+        }
+    }
+
+    -- Enhanced button hover with sound
+    local function applyButtonHover(button, originalColor)
+        button.MouseEnter:Connect(function()
+            TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = Color3.fromRGB(60, 60, 75) }):Play()
+            pcall(function()
+                local hoverSound = Instance.new("Sound", workspace)
+                hoverSound.SoundId = "rbxassetid://8053704437" -- UI Hover
+                hoverSound.Volume = 0.1
+                hoverSound:Play()
+                game:GetService("Debris"):AddItem(hoverSound, 1)
+            end)
+        end)
+
+        button.MouseLeave:Connect(function()
+            TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor }):Play()
+        end)
+    end
+
+    local function createInstance(className, properties)
+        local instance = Instance.new(className)
+        for prop, value in pairs(properties) do
+            instance[prop] = value
+        end
+        return instance
+    end
+
+    function library:CreateWindow(title)
+        title = title or "Demon Hub"
+        local parent = game:GetService("CoreGui")
+        local window = {}
+        local destructionHooks = {}
+
+        local screen = createInstance("ScreenGui", {
+            Name = "DemonHub_" .. math.random(1, 1000),
+            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+            Parent = parent
+        })
+
+        -- Main container for the entire UI, makes dragging and styling easier
+        local mainFrame = createInstance("Frame", {
+            Name = "MainFrame",
+            Size = UDim2.new(0, 612, 0, 412),
+            Position = UDim2.new(0.5, -306, 0.5, -206),
+            BackgroundColor3 = Colors.Gray.Background,
+            BorderSizePixel = 0,
+            Parent = screen
+        })
+
+        local shadow = createInstance("ImageLabel", {
+            Name = "Shadow",
+            Size = UDim2.new(1, 30, 1, 30),
+            Position = UDim2.new(0, -15, 0, -15),
+            BackgroundTransparency = 1,
+            Image = "rbxassetid://5554236805",
+            ImageColor3 = Color3.fromRGB(0, 0, 0),
+            ImageTransparency = 0.75,
+            ScaleType = Enum.ScaleType.Slice,
+            SliceCenter = Rect.new(24, 24, 276, 276),
+            ZIndex = -1,
+            Parent = mainFrame
+        })
+
+        createInstance("UICorner", { CornerRadius = UDim.new(0, 8), Parent = mainFrame })
+        createInstance("UIStroke", { Color = Colors.Gray.Stroke, Thickness = 1.5, Transparency = 0.5, Parent = mainFrame })
+
+        -- Top bar for title and controls
+        local topBar = createInstance("Frame", {
+            Name = "TopBar",
+            Size = UDim2.new(1, 0, 0, 42),
+            BackgroundColor3 = Colors.Gray.TopBar,
+            BorderSizePixel = 0,
+            Parent = mainFrame
+        })
+
+        local titleLabel = createInstance("TextLabel", {
+            Name = "Title",
+            Size = UDim2.new(1, -100, 1, 0),
+            Position = UDim2.new(0, 15, 0, 0),
+            BackgroundTransparency = 1,
+            Font = Enum.Font.GothamBold,
+            Text = title,
+            TextColor3 = Colors.White,
+            TextSize = 16,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = topBar
+        })
+
+        local closeButton = createInstance("TextButton", {
+            Name = "Close",
+            Size = UDim2.new(0, 25, 0, 25),
+            Position = UDim2.new(1, -35, 0.5, 0),
+            AnchorPoint = Vector2.new(1, 0.5),
+            BackgroundColor3 = Colors.Gray.Button,
+            Font = Enum.Font.GothamBold,
+            Text = "×",
+            TextColor3 = Colors.White,
+            TextSize = 20,
+            Parent = topBar,
+            ZIndex = 2
+        })
+        createInstance("UICorner", { CornerRadius = UDim.new(0, 6), Parent = closeButton })
+        applyButtonHover(closeButton, Colors.Gray.Button)
+
+        local minimizeButton = createInstance("TextButton", {
+            Name = "Minimize",
+            Size = UDim2.new(0, 25, 0, 25),
+            Position = UDim2.new(1, -65, 0.5, 0),
+            AnchorPoint = Vector2.new(1, 0.5),
+            BackgroundColor3 = Colors.Gray.Button,
+            Font = Enum.Font.GothamBold,
+            Text = "−",
+            TextColor3 = Colors.White,
+            TextSize = 20,
+            Parent = topBar,
+            ZIndex = 2
+        })
+        createInstance("UICorner", { CornerRadius = UDim.new(0, 6), Parent = minimizeButton })
+        applyButtonHover(minimizeButton, Colors.Gray.Button)
+
+        -- The main content area below the top bar
+        local contentArea = createInstance("Frame", {
+            Name = "ContentArea",
+            Size = UDim2.new(1, 0, 1, -42),
+            Position = UDim2.new(0, 0, 0, 42),
+            BackgroundTransparency = 1,
+            Parent = mainFrame
+        })
+
+        -- Dragging Logic
+        local dragging = false
+        local dragStart
+        local startPos
+
+        topBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                if not (closeButton:IsAncestorOf(input.Position) or minimizeButton:IsAncestorOf(input.Position)) then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = mainFrame.Position
+
+                    local connection
+                    connection = UserInputService.InputEnded:Connect(function(endInput)
+                        if endInput.UserInputType == Enum.UserInputType.MouseButton1 or endInput.UserInputType == Enum.UserInputType.Touch then
+                            dragging = false
+                            connection:Disconnect()
+                        end
+                    end)
+                end
+            end
+        end)
+        
+        RunService.Heartbeat:Connect(function()
+            if dragging then
+                local currentPos = UserInputService:GetMouseLocation()
+                local delta = currentPos - dragStart
+                mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+
+        -- Tabs Container
+        local scrollingFrameTabs = createInstance("ScrollingFrame", {
+            Name = "ScrollingFrameTabs",
+            Size = UDim2.new(0, 155, 1, -10),
+            Position = UDim2.new(0, 5, 0, 5),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = Colors.Red,
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            Parent = contentArea
+        })
+
+        local tabListLayout = createInstance("UIListLayout", {
+            Padding = UDim.new(0, 6),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent = scrollingFrameTabs
+        })
+        createInstance("UIPadding", { PaddingTop = UDim.new(0, 5), Parent = scrollingFrameTabs })
+
+
+        -- Main content body
+        local windowBody = createInstance("ScrollingFrame", {
+            Name = "WindowBody",
+            Size = UDim2.new(1, -170, 1, -10),
+            Position = UDim2.new(0, 165, 0, 5),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = Colors.Red,
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            Parent = contentArea
+        })
+        createInstance("UIPadding", { PaddingTop = UDim.new(0, 5), PaddingRight = UDim.new(0, 5), Parent = windowBody })
+
+        local tabs = {}
+        local currentTab = 1
+        
+        -- Window Controls (Close, Minimize, Toggle Visibility)
+        function window:Destroy()
+            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { Size = UDim2.new(0,0,0,0), Position = mainFrame.Position + UDim2.fromOffset(mainFrame.AbsoluteSize.X/2, mainFrame.AbsoluteSize.Y/2), Transparency = 1}):Play()
+            task.wait(0.3)
+            screen:Destroy()
+            for _, v in pairs(destructionHooks) do pcall(v) end
+        end
+        closeButton.MouseButton1Click:Connect(window.Destroy)
+        
+        local minimized = false
+        minimizeButton.MouseButton1Click:Connect(function()
+            minimized = not minimized
+            contentArea.Visible = not minimized
+            local targetSize = minimized and UDim2.new(1, 0, 0, 0) or UDim2.new(1, 0, 1, -42)
+            TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { Size = targetSize }):Play()
+            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { Size = minimized and UDim2.new(0, 612, 0, 42) or UDim2.new(0, 612, 0, 412) }):Play()
+        end)
+        
+        local opened = true
+        local function setVisibility(visible)
+            opened = visible
+            mainFrame.Visible = visible
+        end
+        
+        local visibilityHandler = UserInputService.InputBegan:Connect(function(input, gpe)
+            if gpe then return end
+            if input.KeyCode == Enum.KeyCode.RightShift then -- Changed to RightShift as LeftAlt is used by Roblox
+                setVisibility(not opened)
+            end
+        end)
+        
+        table.insert(destructionHooks, function() visibilityHandler:Disconnect() end)
+
+        -- Tab Management
+        local function changeTab(id)
+            for tabId, tabContainer in pairs(tabs) do
+                tabContainer.Visible = (tabId == id)
+            end
+            
+            for _, buttonFrame in ipairs(scrollingFrameTabs:GetChildren()) do
+                if buttonFrame:IsA("TextButton") then
+                    local isSelected = (tonumber(buttonFrame.Name:match("%d+")) == id)
+                    buttonFrame.TextColor3 = isSelected and Colors.White or Color3.fromRGB(160, 160, 170)
+                    local targetColor = isSelected and Colors.Gray.DarkButton or Colors.Gray.Button
+                    TweenService:Create(buttonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = targetColor }):Play()
+                end
+            end
+        end
+
+        function window:CreateTab(name)
+            local tab = {}
+            local tabId = #scrollingFrameTabs:GetChildren() + 1
+
+            local tabContainer = createInstance("Frame", {
+                Name = "TabContent" .. tabId,
+                Size = UDim2.new(1, 0, 0, 0), -- Size is automatic
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BackgroundTransparency = 1,
+                Visible = (tabId == 1),
+                Parent = windowBody
+            })
+            createInstance("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = tabContainer })
+            
+            tabs[tabId] = tabContainer
+
+            local tabButton = createInstance("TextButton", {
+                Name = "TabButton" .. tabId,
+                Size = UDim2.new(1, 0, 0, 32),
+                BackgroundColor3 = (tabId == 1) and Colors.Gray.DarkButton or Colors.Gray.Button,
+                Font = Enum.Font.GothamSemibold,
+                Text = "  " .. name,
+                TextColor3 = (tabId == 1) and Colors.White or Color3.fromRGB(160, 160, 170),
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                AutoButtonColor = false,
+                LayoutOrder = tabId,
+                Parent = scrollingFrameTabs
+            })
+            createInstance("UICorner", { CornerRadius = UDim.new(0, 6), Parent = tabButton })
+            createInstance("UIStroke", { Color = Colors.Gray.Stroke, Thickness = 1, Parent = tabButton })
+            applyButtonHover(tabButton, tabButton.BackgroundColor3)
+            
+            tabButton.MouseButton1Click:Connect(function()
+                changeTab(tabId)
+                pcall(function()
+                    local clickSound = Instance.new("Sound", workspace)
+                    clickSound.SoundId = "rbxassetid://6895079853"
+                    clickSound.Volume = 0.2
+                    clickSound:Play()
+                    game:GetService("Debris"):AddItem(clickSound, 2)
+                end)
+            end)
+            
+            -- UI Element Creation Functions
+            local function createBaseContainer(height, name)
+                local container = createInstance("Frame", {
+                    Name = name,
+                    Size = UDim2.new(1, 0, 0, height),
+                    BackgroundColor3 = Colors.Gray.DarkButton,
+                    Parent = tabContainer
+                })
+                createInstance("UICorner", { CornerRadius = UDim.new(0, 6), Parent = container })
+                createInstance("UIStroke", { Color = Colors.Gray.Stroke, Thickness = 1, Parent = container })
+                createInstance("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), Parent = container })
+                return container
+            end
+            
+            function tab:CreateButton(name, callback)
+                callback = callback or function() end
+                local buttonContainer = createBaseContainer(38, "Button")
+                buttonContainer.ClipsDescendants = true
+                
+                local textButton = createInstance("TextButton", {
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Font = Enum.Font.GothamBold,
+                    Text = name,
+                    TextColor3 = Colors.White,
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = buttonContainer
+                })
+                applyButtonHover(buttonContainer, Colors.Gray.DarkButton)
+                
+                textButton.MouseButton1Click:Connect(function()
+                    pcall(callback)
+                    pcall(function()
+                        local clickSound = Instance.new("Sound", workspace)
+                        clickSound.SoundId = "rbxassetid://6895079853"
+                        clickSound.Volume = 0.3
+                        clickSound:Play()
+                        game:GetService("Debris"):AddItem(clickSound, 2)
+                    end)
+                end)
+                return { Destroy = function() buttonContainer:Destroy() end }
+            end
+            
+            function tab:CreateToggle(label, default, callback)
+                default = default or false
+                callback = callback or function() end
+                local toggle = {}
+                local state = default
+                
+                local container = createBaseContainer(38, "Toggle")
+                
+                local labelText = createInstance("TextLabel", {
+                    Size = UDim2.new(1, -50, 1, 0),
+                    BackgroundTransparency = 1,
+                    Font = Enum.Font.GothamBold,
+                    Text = label,
+                    TextColor3 = Colors.White,
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = container
+                })
+                
+                local toggleSwitch = createInstance("Frame", {
+                    Name = "Switch",
+                    Size = UDim2.new(0, 38, 0, 18),
+                    Position = UDim2.new(1, 0, 0.5, 0),
+                    AnchorPoint = Vector2.new(1, 0.5),
+                    BackgroundColor3 = state and Colors.Red or Colors.Gray.ToggleBox,
+                    Parent = container
+                })
+                createInstance("UICorner", { CornerRadius = UDim.new(1, 0), Parent = toggleSwitch })
+
+                local knob = createInstance("Frame", {
+                    Name = "Knob",
+                    Size = UDim2.new(0, 14, 0, 14),
+                    Position = state and UDim2.new(1, -2, 0.5, 0) or UDim2.new(0, 2, 0.5, 0),
+                    AnchorPoint = Vector2.new(1, 0.5),
+                    BackgroundColor3 = Colors.White,
+                    Parent = toggleSwitch
+                })
+                createInstance("UICorner", { CornerRadius = UDim.new(1, 0), Parent = knob })
+
+                local function updateToggle(playEffects)
+                    state = not state
+                    local knobPos = state and UDim2.new(1, -2, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+                    local switchColor = state and Colors.Red or Colors.Gray.ToggleBox
+                    local soundId = state and "rbxassetid://6895079853" or "rbxassetid://6652808977"
+
+                    TweenService:Create(toggleSwitch, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = switchColor }):Play()
+                    TweenService:Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Back), { Position = knobPos }):Play()
+
+                    if playEffects then
+                        pcall(function()
+                            local toggleSound = Instance.new("Sound", workspace)
+                            toggleSound.SoundId = soundId
+                            toggleSound.Volume = 0.2
+                            toggleSound:Play()
+                            game:GetService("Debris"):AddItem(toggleSound, 2)
+                        end)
+                        pcall(callback, state)
+                    end
+                end
+
+                local clickButton = createInstance("TextButton", { Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, Text = "", Parent = container })
+                clickButton.MouseButton1Click:Connect(function() updateToggle(true) end)
+
+                return { Destroy = function() container:Destroy() end }
+            end
+            
+            function tab:CreateSlider(label, min, max, default, callback)
+                min, max, default = min or 0, max or 100, default or min
+                callback = callback or function() end
+                local slider = {}
+                local currentValue = default
+
+                local container = createBaseContainer(50, "Slider")
+                
+                local labelText = createInstance("TextLabel", {
+                    Size = UDim2.new(1, -60, 0, 20),
+                    Position = UDim2.new(0,0,0,5),
+                    BackgroundTransparency = 1,
+                    Font = Enum.Font.GothamBold,
+                    Text = label,
+                    TextColor3 = Colors.White,
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = container
+                })
+
+                local valueText = createInstance("TextLabel", {
+                    Size = UDim2.new(0, 50, 0, 20),
+                    Position = UDim2.new(1,0,0,5),
+                    AnchorPoint = Vector2.new(1, 0),
+                    BackgroundTransparency = 1,
+                    Font = Enum.Font.GothamBold,
+                    Text = tostring(currentValue),
+                    TextColor3 = Colors.Red,
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Right,
+                    Parent = container
+                })
+                
+                local sliderBack = createInstance("Frame", {
+                    Name = "SliderBack",
+                    Size = UDim2.new(1, 0, 0, 6),
+                    Position = UDim2.new(0, 0, 1, -12),
+                    BackgroundColor3 = Colors.Gray.ToggleBox,
+                    Parent = container
+                })
+                createInstance("UICorner", { CornerRadius = UDim.new(1,0), Parent = sliderBack })
+
+                local percentage = (currentValue - min) / (max - min)
+                local sliderFill = createInstance("Frame", {
+                    Name = "SliderFill",
+                    Size = UDim2.new(percentage, 0, 1, 0),
+                    BackgroundColor3 = Colors.Red,
+                    Parent = sliderBack
+                })
+                createInstance("UICorner", { CornerRadius = UDim.new(1,0), Parent = sliderFill })
+                createInstance("UIGradient", { Color = Colors.Gradients.Red, Parent = sliderFill })
+                
+                local dragger = createInstance("TextButton", {
+                    Size = UDim2.new(1,0,1,0),
+                    BackgroundTransparency = 1,
+                    Text = "",
+                    Parent = sliderBack,
+                    ZIndex = 2
+                })
+
+                local isDragging = false
+                dragger.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        isDragging = true
+                    end
+                end)
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        isDragging = false
+                    end
+                end)
+
+                local function updateSlider(input)
+                    if not isDragging then return end
+                    
+                    local mouseX = input.Position.X
+                    local startX = sliderBack.AbsolutePosition.X
+                    local width = sliderBack.AbsoluteSize.X
+                    
+                    local percent = math.clamp((mouseX - startX) / width, 0, 1)
+                    currentValue = math.floor((min + (max - min) * percent) + 0.5)
+                    
+                    sliderFill.Size = UDim2.new(percent, 0, 1, 0)
+                    valueText.Text = tostring(currentValue)
+                    pcall(callback, currentValue)
+                end
+                
+                dragger.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
+                dragger.MouseButton1Down:Connect(function() updateSlider(UserInputService:GetMouseLocation()) end)
+                
+                return { Destroy = function() container:Destroy() end }
+            end
+
+            return tab
+        end
+        
+        -- Entrance Animation
+        mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+        mainFrame.Size = UDim2.new(0, 0, 0, 0)
+        mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+        
+        task.wait(0.1)
+        
+        TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 612, 0, 412),
+            Position = UDim2.new(0.5, -306, 0.5, -206)
+        }):Play()
+
+        return window
+    end
+
+    return library
+end)()
+
+return library
