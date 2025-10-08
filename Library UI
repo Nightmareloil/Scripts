@@ -4,12 +4,11 @@
   Mobile support + Color customization
   
   Original Interface: Trix#2794 & Julman#1234
-  Enhanced by Gemini
+  Enhanced by Gemini (with SetOptions support)
 --]]
 
 ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field
 
--- Enhanced Demon Hub Loading Screen
 pcall(function()
     local loader = Instance.new("ScreenGui")
     loader.Name = "DemonHubLoader"
@@ -22,7 +21,6 @@ pcall(function()
     bg.BorderSizePixel = 0
     bg.ZIndex = 10
     
-    -- Gradient background
     local gradient = Instance.new("UIGradient", bg)
     gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 12, 18)),
@@ -31,7 +29,6 @@ pcall(function()
     })
     gradient.Rotation = 45
     
-    -- Glow effect
     local glow = Instance.new("Frame", bg)
     glow.Size = UDim2.new(0, 300, 0, 300)
     glow.Position = UDim2.new(0.5, -150, 0.5, -150)
@@ -52,7 +49,6 @@ pcall(function()
     title.TextTransparency = 1
     title.ZIndex = 12
     
-    -- Subtle shadow
     local shadow = Instance.new("TextLabel", bg)
     shadow.Size = title.Size
     shadow.Position = UDim2.new(0.5, -248, 0.45, -38)
@@ -75,21 +71,18 @@ pcall(function()
     subtitle.TextTransparency = 1
     subtitle.ZIndex = 12
     
-    -- Pulse the glow
     game:GetService("TweenService"):Create(glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
         BackgroundTransparency = 0.96,
         Size = UDim2.new(0, 350, 0, 350),
         Position = UDim2.new(0.5, -175, 0.5, -175)
     }):Play()
     
-    -- Fade in title
     game:GetService("TweenService"):Create(title, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
     game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0.7}):Play()
     task.wait(0.3)
     game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
     task.wait(1)
     
-    -- Fade out
     game:GetService("TweenService"):Create(bg, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
     game:GetService("TweenService"):Create(title, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
     game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
@@ -122,7 +115,6 @@ local library = (function ()
     
     local Font = Enum.Font.GothamBold
 
-    -- Default colors (can be changed)
     local Colors = {
         White = Color3.fromRGB(255, 255, 255),
         Black = Color3.fromRGB(0, 0, 0),
@@ -185,7 +177,6 @@ local library = (function ()
 
         function window:GetTitle() return title end
 
-        -- Color changer function
         local colorChangeElements = {}
         function window:SetAccentColor(newColor)
             Colors.Red = newColor
@@ -194,7 +185,6 @@ local library = (function ()
                 ColorSequenceKeypoint.new(1, Color3.fromRGB(math.min(newColor.R * 255 + 25, 255), math.min(newColor.G * 255 + 25, 255), math.min(newColor.B * 255 + 25, 255)))
             })
             
-            -- Update all color elements
             for _, element in pairs(colorChangeElements) do
                 if element and element.Parent then
                     if element:IsA("ScrollingFrame") then
@@ -231,7 +221,6 @@ local library = (function ()
             TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left
         })
 
-        -- Close button (X)
         local closeButton = CreateInstance("TextButton", top, {
             Text = "X",
             Font = Font,
@@ -247,7 +236,6 @@ local library = (function ()
         autobutcolor(closeButton, Color3.fromRGB(40, 40, 48))
         closeButton.MouseButton1Click:Connect(window.Destroy)
 
-        -- Maximize/Restore button (middle button with square icon)
         local maximizeButton = CreateInstance("TextButton", top, {
             Text = "□",
             Font = Font,
@@ -271,13 +259,11 @@ local library = (function ()
                 normalSize = mainFrame.Size
                 normalPos = mainFrame.Position
                 
-                -- Resize window to larger
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
                     Size = UDim2.new(0, 800, 0, 550),
                     Position = UDim2.new(0.5, -400, 0.5, -275)
                 }):Play()
                 
-                -- Resize the content areas
                 task.wait(0.05)
                 TweenService:Create(windowContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
                     Size = UDim2.new(1, 0, 1, -42)
@@ -289,13 +275,11 @@ local library = (function ()
                     Size = UDim2.new(0, 160, 1, -10)
                 }):Play()
             else
-                -- Restore to original size
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
                     Size = normalSize,
                     Position = normalPos
                 }):Play()
                 
-                -- Restore content areas
                 task.wait(0.05)
                 TweenService:Create(windowContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
                     Size = UDim2.new(1, 0, 1, -42)
@@ -309,7 +293,6 @@ local library = (function ()
             end
         end)
 
-        -- Minimize button (-)
         local minimizeButton = CreateInstance("TextButton", top, {
             Text = "-",
             Font = Font,
@@ -324,7 +307,6 @@ local library = (function ()
         CreateInstance("UICorner", minimizeButton, { CornerRadius = UDim.new(0, 4) })
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48))
         
-        -- DRAGGING (Mobile + PC Support)
         local IsDragging = false
         local dragStart, startPos
         
@@ -405,7 +387,6 @@ local library = (function ()
         })
         CreateInstance("UIPadding", scrollingFrameTabs, { PaddingTop = UDim.new(0, 10), PaddingLeft = UDim.new(0, 5) })
         
-        -- MINIMIZE BUTTON
         local isMinimized = false
         minimizeButton.MouseButton1Click:Connect(function()
             isMinimized = not isMinimized
@@ -419,7 +400,6 @@ local library = (function ()
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = targetSize }):Play()
         end)
 
-        -- TABS
         local function changeTab(id)
             currentTab = id
             for tabId, tabContainer in ipairs(tabs) do
@@ -503,7 +483,6 @@ local library = (function ()
                     Text = tostring(default), TextColor3 = Colors.White, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right
                 })
                 
-                -- FIXED: Remove text from slider back by using Frame instead of TextButton
                 local sliderBack = CreateInstance("Frame", container, {
                     BackgroundColor3 = Colors.Gray.TogBox, Position = UDim2.new(0.017, 0, 0.870, 0), Size = UDim2.new(1, -15, 0, 8)
                 })
@@ -517,7 +496,6 @@ local library = (function ()
 
                 local isDraggingSlider = false
                 
-                -- Invisible button overlay for clicks
                 local clickDetector = CreateInstance("TextButton", sliderBack, {
                     Size = UDim2.new(1, 0, 1, 0),
                     BackgroundTransparency = 1,
@@ -565,7 +543,6 @@ local library = (function ()
                 })
                 CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 4) })
                 
-                -- Modern iOS-style toggle switch
                 local toggleTrack = CreateInstance("Frame", mainToggleContainer, { 
                     Name = "Toggle", 
                     Position = UDim2.new(0.92, 0, 0.5, 0), 
@@ -577,7 +554,6 @@ local library = (function ()
                 })
                 CreateInstance("UICorner", toggleTrack, { CornerRadius = UDim.new(1, 0) })
                 
-                -- Toggle circle/thumb
                 local toggleThumb = CreateInstance("Frame", toggleTrack, {
                     Size = UDim2.new(0, 18, 0, 18),
                     Position = default and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0),
@@ -588,7 +564,6 @@ local library = (function ()
                 })
                 CreateInstance("UICorner", toggleThumb, { CornerRadius = UDim.new(1, 0) })
                 
-                -- Subtle shadow for depth
                 CreateInstance("UIStroke", toggleThumb, {
                     Color = Color3.fromRGB(0, 0, 0),
                     Transparency = 0.9,
@@ -602,7 +577,6 @@ local library = (function ()
                 mainToggleContainer.MouseButton1Click:Connect(function ()
                     boolValue.Value = not boolValue.Value
                     
-                    -- Animate toggle
                     local targetColor = boolValue.Value and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(120, 120, 128)
                     local targetPos = boolValue.Value and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
                     
@@ -699,12 +673,40 @@ local library = (function ()
                         callback(value, dropdown)
                     end)
                 end
-                for _,v in ipairs(values) do addDropButton(v) end
+                
+                function dropdown:SetOptions(newValues)
+                    newValues = newValues or {}
+                    
+                    for _, child in ipairs(dropdownValuesContainer:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child:Destroy()
+                        end
+                    end
+                    
+                    local currentSelection = dropdownSelectedLabel.Text
+                    local selectionStillExists = false
+                    for _, v in ipairs(newValues) do
+                        if v == currentSelection then
+                            selectionStillExists = true
+                            break
+                        end
+                    end
+                    
+                    if not selectionStillExists then
+                        dropdownSelectedLabel.Text = ""
+                        pcall(callback, nil, dropdown)
+                    end
+                    
+                    for _, v in ipairs(newValues) do
+                        addDropButton(v)
+                    end
+                end
+
+                for _, v in ipairs(values) do addDropButton(v) end
                 
                 return dropdown
             end
             
-            -- Color picker for changing UI accent color
             function tab:CreateColorPicker(label, defaultColor, callback)
                 callback = callback or function() end
                 local colorPicker = {}
@@ -725,17 +727,16 @@ local library = (function ()
                 CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 4) })
                 CreateInstance("UIStroke", colorDisplay, { Color = Color3.fromRGB(60, 60, 70), Thickness = 1 })
                 
-                -- Predefined color palette
                 local colorPalette = {
-                    Color3.fromRGB(255, 75, 75),   -- Red
-                    Color3.fromRGB(255, 150, 50),  -- Orange
-                    Color3.fromRGB(255, 220, 50),  -- Yellow
-                    Color3.fromRGB(100, 255, 100), -- Green
-                    Color3.fromRGB(50, 200, 255),  -- Cyan
-                    Color3.fromRGB(100, 100, 255), -- Blue
-                    Color3.fromRGB(200, 100, 255), -- Purple
-                    Color3.fromRGB(255, 100, 200), -- Pink
-                    Color3.fromRGB(255, 255, 255), -- White
+                    Color3.fromRGB(255, 75, 75),
+                    Color3.fromRGB(255, 150, 50),
+                    Color3.fromRGB(255, 220, 50),
+                    Color3.fromRGB(100, 255, 100),
+                    Color3.fromRGB(50, 200, 255),
+                    Color3.fromRGB(100, 100, 255),
+                    Color3.fromRGB(200, 100, 255),
+                    Color3.fromRGB(255, 100, 200),
+                    Color3.fromRGB(255, 255, 255),
                 }
                 
                 local paletteFrame = CreateInstance("Frame", tabContainer, {
