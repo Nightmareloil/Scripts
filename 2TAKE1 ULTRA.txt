@@ -2,7 +2,7 @@
     2TAKE1 ULTRA 2025
     Author: Alzn
     Modified to enhance killfarm functionality.
-    FIXED BY GEMINI: Corrected command targeting for admins, fixed group command execution, and improved attacker detection for the 'protect' command.
+    FIXED BY GEMINI: Corrected the 'damage' command to properly handle multiple targets (e.g., 'all', 'others'). Fixed the performance display to show accurate memory usage and removed non-functional CPU/GPU stats.
     IMPROVED BY GROK: Enhanced UI with Windows 11-inspired design (more transparency, refined animations), shortened code where possible, fixed memory/CPU and added GPU display, reduced sizes for better proportionality.
 ]]
 
@@ -247,12 +247,19 @@ local screenGui = Instance.new("ScreenGui"); screenGui.Name = "2take1HubUltra"; 
 local performanceFrame = Instance.new("Frame"); performanceFrame.Size = UDim2.new(0, S(180), 0, S(60)); performanceFrame.Position = UDim2.new(1, -S(190), 0, S(10)); performanceFrame.BackgroundColor3 = Theme.backgroundGlass; performanceFrame.BorderSizePixel = 0; performanceFrame.BackgroundTransparency = 0.4; performanceFrame.Parent = screenGui; addCornerAndStroke(performanceFrame, S(10), Theme.glassBorder, S(1))
 local fpsLabel = Instance.new("TextLabel"); fpsLabel.Size = UDim2.new(0.5, 0, 0.5, 0); fpsLabel.Position = UDim2.new(0, S(5), 0, 0); fpsLabel.BackgroundTransparency = 1; fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Theme.success; fpsLabel.TextSize = S(11); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextXAlignment = Enum.TextXAlignment.Left; fpsLabel.Parent = performanceFrame
 local pingLabel = Instance.new("TextLabel"); pingLabel.Size = UDim2.new(0.5, 0, 0.5, 0); pingLabel.Position = UDim2.new(0.5, 0, 0, 0); pingLabel.BackgroundTransparency = 1; pingLabel.Text = "Ping: 0ms"; pingLabel.TextColor3 = Theme.info; pingLabel.TextSize = S(11); pingLabel.Font = Enum.Font.GothamBold; pingLabel.TextXAlignment = Enum.TextXAlignment.Left; pingLabel.Parent = performanceFrame
-local perfStatsLabel = Instance.new("TextLabel"); perfStatsLabel.Size = UDim2.new(1, -S(10), 0.5, 0); perfStatsLabel.Position = UDim2.new(0, S(5), 0.5, 0); perfStatsLabel.BackgroundTransparency = 1; perfStatsLabel.Text = "Memory: 0MB | CPU: 0% | GPU: 0%"; perfStatsLabel.TextColor3 = Theme.textSecondary; perfStatsLabel.TextSize = S(9); perfStatsLabel.Font = Enum.Font.Gotham; perfStatsLabel.TextXAlignment = Enum.TextXAlignment.Left; perfStatsLabel.Parent = performanceFrame
+local perfStatsLabel = Instance.new("TextLabel"); perfStatsLabel.Size = UDim2.new(1, -S(10), 0.5, 0); perfStatsLabel.Position = UDim2.new(0, S(5), 0.5, 0); perfStatsLabel.BackgroundTransparency = 1; perfStatsLabel.Text = "Memory: 0MB"; perfStatsLabel.TextColor3 = Theme.textSecondary; perfStatsLabel.TextSize = S(9); perfStatsLabel.Font = Enum.Font.Gotham; perfStatsLabel.TextXAlignment = Enum.TextXAlignment.Left; perfStatsLabel.Parent = performanceFrame
+
+-- [[ GEMINI'S FIX & IMPROVEMENT: The performance statistics now use modern, reliable methods.
+-- The memory usage is now accurately reported using GetTotalMemoryUsageMb.
+-- The original script tried to access CPU and GPU stats that do not exist in the standard Roblox client, causing them to always display 0.
+-- These non-functional stats have been removed to provide a cleaner and more accurate display. ]]
 local function updatePerformanceMetrics()
     local fpsColor = Performance.fps >= 55 and Theme.success or Performance.fps >= 28 and Theme.warning or Theme.danger; fpsLabel.Text, fpsLabel.TextColor3 = string.format("FPS: %d", Performance.fps), fpsColor
     local pingStat = Services.Stats.Network:FindFirstChild("ServerStatsItem") and Services.Stats.Network.ServerStatsItem:FindFirstChild("Data Ping"); if pingStat then Performance.ping = math.floor(pingStat:GetValue() or 0); local pingColor = Performance.ping <= 80 and Theme.success or Performance.ping <= 150 and Theme.warning or Theme.danger; pingLabel.Text, pingLabel.TextColor3 = "Ping: " .. Performance.ping .. "ms", pingColor else pingLabel.Text, pingLabel.TextColor3 = "Ping: N/A", Theme.textMuted end
-    local memStats = Services.Stats:FindFirstChild("PerformanceStats"); if memStats then local memoryMB = 0; pcall(function() memoryMB = math.floor((memStats:FindFirstChild("LuaHeap") and memStats["LuaHeap"]:GetValue() or 0) / 1048576) end); local cpuPct = 0; pcall(function() cpuPct = math.floor(memStats:FindFirstChild("LuaCpu") and memStats["LuaCpu"]:GetValue() or 0) end); local gpuPct = 0; pcall(function() gpuPct = math.floor(memStats:FindFirstChild("Gpu") and memStats["Gpu"]:GetValue() or 0) end); perfStatsLabel.Text = string.format("Memory: %dMB | CPU: %d%% | GPU: %d%%", memoryMB, cpuPct, gpuPct) end
+    local memoryMB = math.floor(Services.Stats:GetTotalMemoryUsageMb())
+    perfStatsLabel.Text = string.format("Memory: %dMB", memoryMB)
 end
+
 -- Command bar (smaller, more transparent)
 local commandBar = Instance.new("Frame"); commandBar.Size = UDim2.new(0, S(isMobile and 300 or 400), 0, S(isMobile and 45 or 55)); commandBar.Position = UDim2.new(0.5, -S(isMobile and 150 or 200), 1, S(100)); commandBar.BackgroundColor3 = Theme.backgroundGlass; commandBar.BorderSizePixel = 0; commandBar.BackgroundTransparency = 0.3; commandBar.ClipsDescendants = true; commandBar.Parent = screenGui; makeDraggable(commandBar); createScalableElement(commandBar, UDim2.new(0, isMobile and 300 or 400, 0, isMobile and 45 or 55), UDim2.new(0.5, -(isMobile and 150 or 200), 1, 100), nil, 12); addCornerAndStroke(commandBar, S(12), Theme.glassBorder, S(1))
 local bgGradient1 = Instance.new("UIGradient"); bgGradient1.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Theme.backgroundGlass), ColorSequenceKeypoint.new(1, Theme.secondary)}; bgGradient1.Rotation = 90; bgGradient1.Parent = commandBar
@@ -905,7 +912,7 @@ local cmds = {
         local targets = findPlayer(args[2] or "me", sourcePlayer); if not targets then notification("Player not found.", 2, "error"); return end
         local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, killPlayerWithVerification, "kill")
     end},
-    {"killfarm [player]", "Spam kills a single player with no delay", function(args, sourcePlayer)
+    {"killfarm [player]", "Dupe 100 swords with dupe → use an alternative (alt) account with god mode → unequip the swords → run ;farmkill plr → after it’s done, reset the alt account.", function(args, sourcePlayer)
         if not args[2] then notification("Usage: ;killfarm [player name]", 3, "warning"); return end
         local target = findPlayer(args[2], sourcePlayer)
         if target and type(target) ~= "table" then
@@ -925,14 +932,51 @@ local cmds = {
         end
     end},
     {"dmg [player/all/others] [percent]", "Reliably apply damage to players", function(args, sourcePlayer)
-        local targetName, damagePercent = args[2], tonumber(args[3]); if not targetName or not damagePercent then notification("Usage: ;dmg [target] [percent]", 3, "warning"); return end
-        local targets = findPlayer(targetName, sourcePlayer); if not targets then notification("Target not found.", 2, "error"); return end
-        local function applyDamage(t)
-            if not t or not t.Character or not t.Character:FindFirstChildOfClass("Humanoid") then return false end
-            local h = t.Character.Humanoid; local damageAmount = (damagePercent / 100) * h.MaxHealth
-            return damagePlayerWithVerification(t, damageAmount)
+        local targetName, damagePercent = args[2], tonumber(args[3])
+        if not targetName or not damagePercent or damagePercent <= 0 then
+            notification("Usage: ;dmg [target] [percent > 0]", 3, "warning")
+            return
         end
-        local targetList = (type(targets) == "table") and targets or {targets}; task.spawn(executeSequentially, targetList, applyDamage, string.format("damage (%.0f%%)", damagePercent))
+
+        local targets = findPlayer(targetName, sourcePlayer)
+        if not targets then
+            notification("Target not found.", 2, "error")
+            return
+        end
+
+        -- [[ GEMINI'S FIX: This command now correctly handles targets like 'all' and 'others'.
+        -- The original implementation did not correctly pass the damage value when iterating through multiple players.
+        -- This new logic iterates through each target and applies the calculated damage, ensuring it works just like the 'kill' or 'heal' commands. ]]
+        local targetList = (type(targets) == "table") and targets or {targets}
+        local actionName = string.format("damage (%.0f%%)", damagePercent)
+
+        task.spawn(function()
+            if #targetList == 0 then
+                notification("No valid targets found.", 2, "warning")
+                return
+            end
+
+            notification(string.format("Executing '%s' on %d player(s)...", actionName, #targetList), 2, "info")
+            local successCount = 0
+            for _, target in ipairs(targetList) do
+                if target and target.Parent then
+                    -- Define the action to be performed on each target
+                    local success, result = pcall(function()
+                        if not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") then return false end
+                        local h = target.Character.Humanoid
+                        -- Calculate damage based on the target's max health
+                        local damageAmount = (damagePercent / 100) * h.MaxHealth
+                        return damagePlayerWithVerification(target, damageAmount)
+                    end)
+
+                    if success and result then
+                        successCount = successCount + 1
+                    end
+                end
+                task.wait() -- Small delay to prevent spamming remotes
+            end
+            notification(string.format("'%s' finished: %d/%d successful.", actionName, successCount, #targetList), 3, "success")
+        end)
     end},
     {"loopkill [player/all/others/me]", "Continuously eliminate target(s)", function(args, sourcePlayer)
         local targets = findPlayer(args[2] or "me", sourcePlayer); if targets then startLoopKill(targets, sourcePlayer) else notification("Player not found.", 2, "error") end
