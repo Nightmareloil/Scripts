@@ -626,42 +626,100 @@ local library = (function ()
                 values, callback = values or {}, callback or function() end
                 local dropdown = {}
                 
-                local dropdownContainer = CreateInstance("Frame", tabContainer, { Size = UDim2.new(0, 438, 0, 35), BackgroundTransparency = 1, ClipsDescendants=false })
+                local dropdownContainer = CreateInstance("Frame", tabContainer, { 
+                    Size = UDim2.new(0, 438, 0, 35), 
+                    BackgroundTransparency = 1, 
+                    ClipsDescendants = true 
+                })
                 
                 local dropdownLabel = CreateInstance("TextButton", dropdownContainer, {
-                    TextColor3 = Colors.White, Text = "  " .. text, Font = Font, TextXAlignment = Enum.TextXAlignment.Left,
-                    AutoButtonColor = false, Size = UDim2.new(1, 0, 1, 0), ZIndex = 3, TextSize = 14, BackgroundColor3 = Colors.Gray.DarkButton
+                    TextColor3 = Colors.White, 
+                    Text = "  " .. text, 
+                    Font = Font, 
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    AutoButtonColor = false, 
+                    Size = UDim2.new(1, 0, 0, 35), 
+                    ZIndex = 3, 
+                    TextSize = 14, 
+                    BackgroundColor3 = Colors.Gray.DarkButton
                 })
                 CreateInstance("UICorner", dropdownLabel, { CornerRadius = UDim.new(0, 4) })
                 autobutcolor(dropdownLabel, Colors.Gray.DarkButton)
 
+                local dropdownArrow = CreateInstance("TextLabel", dropdownLabel, {
+                    Text = "▼",
+                    TextColor3 = Colors.White,
+                    Font = Font,
+                    TextSize = 12,
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(1, -20, 0.5, -6),
+                    Size = UDim2.new(0, 15, 0, 15),
+                    ZIndex = 4
+                })
+
                 local dropdownSelectedLabel = CreateInstance("TextLabel", dropdownLabel, {
-                    TextWrapped = true, TextColor3 = Colors.White, Text = "", Font = Font, BackgroundTransparency = 1,
-                    Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.new(0.5, -10, 1, 0), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Right
+                    TextWrapped = true, 
+                    TextColor3 = Colors.White, 
+                    Text = "", 
+                    Font = Font, 
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0.5, 0, 0, 0), 
+                    Size = UDim2.new(0.5, -30, 1, 0), 
+                    TextSize = 12, 
+                    TextXAlignment = Enum.TextXAlignment.Right
                 })
 
                 local dropdownValuesContainer = CreateInstance("ScrollingFrame", dropdownContainer, {
-                    ScrollBarImageColor3 = Colors.Red, Active = true, ScrollBarThickness = 5, BackgroundColor3 = Colors.Gray.DarkButton,
-                    Position = UDim2.new(0, 0, 1, 5), Visible = false, Size = UDim2.new(1, 0, 0, 98), AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                    ZIndex=4, BorderSizePixel = 0,
+                    ScrollBarImageColor3 = Colors.Red, 
+                    Active = true, 
+                    ScrollBarThickness = 5, 
+                    BackgroundColor3 = Colors.Gray.DarkButton,
+                    Position = UDim2.new(0, 0, 0, 40), 
+                    Visible = false, 
+                    Size = UDim2.new(1, 0, 0, 100), 
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    ZIndex = 4, 
+                    BorderSizePixel = 0,
+                    CanvasSize = UDim2.new(0, 0, 0, 0)
                 })
                 CreateInstance("UICorner", dropdownValuesContainer, { CornerRadius = UDim.new(0, 4) })
-                CreateInstance("UIListLayout", dropdownValuesContainer, { Padding = UDim.new(0, 3) })
-                CreateInstance("UIPadding", dropdownValuesContainer, { PaddingLeft=UDim.new(0,5), PaddingRight=UDim.new(0,5), PaddingTop=UDim.new(0,5), PaddingBottom=UDim.new(0,5)})
+                CreateInstance("UIListLayout", dropdownValuesContainer, { 
+                    Padding = UDim.new(0, 4), 
+                    SortOrder = Enum.SortOrder.LayoutOrder 
+                })
+                CreateInstance("UIPadding", dropdownValuesContainer, { 
+                    PaddingLeft = UDim.new(0, 8), 
+                    PaddingRight = UDim.new(0, 8), 
+                    PaddingTop = UDim.new(0, 8), 
+                    PaddingBottom = UDim.new(0, 8)
+                })
                 table.insert(colorChangeElements, dropdownValuesContainer)
 
                 local isOpen = false
-                dropdownLabel.MouseButton1Click:Connect(function()
+                local function toggleDropdown()
                     isOpen = not isOpen
                     dropdownValuesContainer.Visible = isOpen
-                    dropdownContainer.Size = isOpen and UDim2.new(0, 438, 0, 140) or UDim2.new(0, 438, 0, 35)
-                end)
+                    dropdownContainer.Size = isOpen and UDim2.new(0, 438, 0, 145) or UDim2.new(0, 438, 0, 35)
+                    TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                        Rotation = isOpen and 180 or 0
+                    }):Play()
+                end
+
+                dropdownLabel.MouseButton1Click:Connect(toggleDropdown)
 
                 local function addDropButton(value)
                     local btn = CreateInstance("TextButton", dropdownValuesContainer, {
-                        TextSize = 14, Font = Font, TextColor3 = Colors.White, Size = UDim2.new(1, 0, 0, 25), AutoButtonColor = false,
-                        Text = " " .. value, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = Colors.Gray.DropDownButton
-                    }, {CreateInstance("UICorner", nil, {CornerRadius=UDim.new(0,4)})})
+                        TextSize = 14, 
+                        Font = Font, 
+                        TextColor3 = Colors.White, 
+                        Size = UDim2.new(1, -10, 0, 28), 
+                        AutoButtonColor = false,
+                        Text = "  " .. value, 
+                        TextXAlignment = Enum.TextXAlignment.Left, 
+                        BackgroundColor3 = Colors.Gray.DropDownButton
+                    }, {
+                        CreateInstance("UICorner", nil, {CornerRadius = UDim.new(0, 4)})
+                    })
                     
                     autobutcolor(btn, Colors.Gray.DropDownButton)
                     
@@ -670,6 +728,7 @@ local library = (function ()
                         dropdownValuesContainer.Visible = false
                         dropdownContainer.Size = UDim2.new(0, 438, 0, 35)
                         dropdownSelectedLabel.Text = value
+                        TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Rotation = 0}):Play()
                         callback(value, dropdown)
                     end)
                 end
