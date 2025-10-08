@@ -233,9 +233,9 @@ local library = (function ()
 
         -- Close button (X)
         local closeButton = CreateInstance("TextButton", top, {
-            Text = "✕",
+            Text = "X",
             Font = Font,
-            TextSize = 16,
+            TextSize = 14,
             TextColor3 = Colors.White,
             Name = "close",
             Position = UDim2.new(1, -35, 0.5, -12),
@@ -270,23 +270,50 @@ local library = (function ()
             if isMaximized then
                 normalSize = mainFrame.Size
                 normalPos = mainFrame.Position
+                
+                -- Resize window to larger
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-                    Size = UDim2.new(0, 900, 0, 600),
-                    Position = UDim2.new(0.5, -450, 0.5, -300)
+                    Size = UDim2.new(0, 800, 0, 550),
+                    Position = UDim2.new(0.5, -400, 0.5, -275)
+                }):Play()
+                
+                -- Resize the content areas
+                task.wait(0.05)
+                TweenService:Create(windowContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(1, 0, 1, -42)
+                }):Play()
+                TweenService:Create(windowBody, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(0, 620, 0, 490)
+                }):Play()
+                TweenService:Create(scrollingFrameTabs, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(0, 160, 1, -10)
                 }):Play()
             else
+                -- Restore to original size
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
                     Size = normalSize,
                     Position = normalPos
+                }):Play()
+                
+                -- Restore content areas
+                task.wait(0.05)
+                TweenService:Create(windowContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(1, 0, 1, -42)
+                }):Play()
+                TweenService:Create(windowBody, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(0, 451, 0, 350)
+                }):Play()
+                TweenService:Create(scrollingFrameTabs, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(0, 150, 1, -10)
                 }):Play()
             end
         end)
 
         -- Minimize button (-)
         local minimizeButton = CreateInstance("TextButton", top, {
-            Text = "─",
+            Text = "-",
             Font = Font,
-            TextSize = 14,
+            TextSize = 18,
             TextColor3 = Colors.White,
             Name = "minimize",
             Position = UDim2.new(1, -95, 0.5, -12),
