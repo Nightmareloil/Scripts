@@ -565,10 +565,35 @@ local library = (function ()
                 })
                 CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 4) })
                 
-                local toggleButton = CreateInstance("Frame", mainToggleContainer, { Name = "Toggle", Position = UDim2.new(0.94, 0, 0.5, 0), AnchorPoint = Vector2.new(1,0.5), ZIndex = 2, Size = UDim2.new(0, 37, 0, 17) })
-                CreateInstance("UICorner", toggleButton, { CornerRadius = UDim.new(1,0)})
-                local toggleGradient = CreateInstance("UIGradient", toggleButton, { Color = Colors.Gradients.Red, Enabled=default })
-                table.insert(colorChangeElements, toggleGradient)
+                -- Modern iOS-style toggle switch
+                local toggleTrack = CreateInstance("Frame", mainToggleContainer, { 
+                    Name = "Toggle", 
+                    Position = UDim2.new(0.92, 0, 0.5, 0), 
+                    AnchorPoint = Vector2.new(1, 0.5), 
+                    ZIndex = 2, 
+                    Size = UDim2.new(0, 44, 0, 22),
+                    BackgroundColor3 = default and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(120, 120, 128),
+                    BorderSizePixel = 0
+                })
+                CreateInstance("UICorner", toggleTrack, { CornerRadius = UDim.new(1, 0) })
+                
+                -- Toggle circle/thumb
+                local toggleThumb = CreateInstance("Frame", toggleTrack, {
+                    Size = UDim2.new(0, 18, 0, 18),
+                    Position = default and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0),
+                    AnchorPoint = Vector2.new(0, 0.5),
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    BorderSizePixel = 0,
+                    ZIndex = 3
+                })
+                CreateInstance("UICorner", toggleThumb, { CornerRadius = UDim.new(1, 0) })
+                
+                -- Subtle shadow for depth
+                CreateInstance("UIStroke", toggleThumb, {
+                    Color = Color3.fromRGB(0, 0, 0),
+                    Transparency = 0.9,
+                    Thickness = 1
+                })
 
                 autobutcolor(mainToggleContainer, Colors.Gray.DarkButton)
                 
@@ -576,7 +601,19 @@ local library = (function ()
                 
                 mainToggleContainer.MouseButton1Click:Connect(function ()
                     boolValue.Value = not boolValue.Value
-                    toggleButton.UIGradient.Enabled = boolValue.Value
+                    
+                    -- Animate toggle
+                    local targetColor = boolValue.Value and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(120, 120, 128)
+                    local targetPos = boolValue.Value and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+                    
+                    TweenService:Create(toggleTrack, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                        BackgroundColor3 = targetColor
+                    }):Play()
+                    
+                    TweenService:Create(toggleThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                        Position = targetPos
+                    }):Play()
+                    
                     callback(boolValue.Value, toggle)
                 end)
                 return toggle
