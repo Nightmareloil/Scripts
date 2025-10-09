@@ -798,7 +798,9 @@ local library = (function ()
                     local players = game.Players:GetPlayers() 
                     local names = {} 
                     for _, player in ipairs(players) do 
-                        table.insert(names, player.Name) 
+                        if player ~= game.Players.LocalPlayer then 
+                            table.insert(names, player.Name) 
+                        end 
                     end 
                     table.sort(names) 
                     return names 
