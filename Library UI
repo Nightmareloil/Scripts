@@ -798,9 +798,7 @@ local library = (function ()
                     local players = game.Players:GetPlayers() 
                     local names = {} 
                     for _, player in ipairs(players) do 
-                        if player ~= game.Players.LocalPlayer then 
-                            table.insert(names, player.Name) 
-                        end 
+                        table.insert(names, player.Name) 
                     end 
                     table.sort(names) 
                     return names 
@@ -815,7 +813,16 @@ local library = (function ()
                 local playerAddedConn = game.Players.PlayerAdded:Connect(updateDropdown) 
                 local playerRemovingConn = game.Players.PlayerRemoving:Connect(updateDropdown) 
 
+                local active = true 
+                task.spawn(function() 
+                    while active do 
+                        updateDropdown() 
+                        task.wait(5) 
+                    end 
+                end) 
+
                 window:OnDestroy(function() 
+                    active = false 
                     playerAddedConn:Disconnect() 
                     playerRemovingConn:Disconnect() 
                 end) 
