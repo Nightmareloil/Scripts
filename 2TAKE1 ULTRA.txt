@@ -894,7 +894,7 @@ local cmds = {
         local amount = tonumber(args[2]); if not amount or amount <= 0 or amount > 750 then notification("Usage: ;dupe [1-750]", 4, "warning"); return end
         local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent"); if not remote then notification("Duplication unavailable.", 3, "error"); return end
         if sourcePlayer == player then
-            task.spawn(function() notification(string.format("Duplicating %d items...", amount), 3, "info"); for i = 1, amount do equipAll(); remote:FireServer(); task.wait(0.20) end; equipAll(); notification("Duplication finished.", 5, "success") end)
+            task.spawn(function() notification(string.format("Duplicating %d items...", amount), 3, "info"); for i = 1, amount do equipAll(); remote:FireServer(); task.wait(0.1) end; equipAll(); notification("Duplication finished.", 5, "success") end)
             return
         end
         task.spawn(function()
