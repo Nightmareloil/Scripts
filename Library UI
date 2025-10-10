@@ -1,6 +1,6 @@
 --[[ 
 Demon Hub UI Library - Enhanced Edition 
-✨ Fixed mobile dragging performance
+✨ Fixed mobile dragging performance and bugs
 ✨ Improved loading screen animations
 ✨ Better fluidity and responsiveness
 
@@ -325,7 +325,7 @@ local library = (function ()
         CreateInstance("UICorner", minimizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48)) 
 
-        -- ✨ OPTIMIZED DRAGGING - Super smooth on mobile and PC
+        -- ✨ [FIXED] DRAGGING - Now works perfectly on mobile and PC
         local isDragging = false
         local dragStart = nil
         local startPos = nil
@@ -335,16 +335,15 @@ local library = (function ()
         top.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 isDragging = true
-                dragStart = input.Position
+                -- FIX: Use GetMouseLocation() to get a Vector2, preventing the error
+                dragStart = UserInputService:GetMouseLocation() 
                 startPos = mainFrame.Position
                 
-                -- Disconnect old connections if they exist
                 if dragConnection then dragConnection:Disconnect() end
                 if releaseConnection then releaseConnection:Disconnect() end
                 
-                -- Use RenderStepped for buttery smooth 60fps dragging
-                dragConnection = RunService.RenderStepped:Connect(function()
-                    if isDragging then
+                dragConnection = UserInputService.InputChanged:Connect(function(inputObject)
+                    if isDragging and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                         local mousePos = UserInputService:GetMouseLocation()
                         local delta = mousePos - dragStart
                         mainFrame.Position = UDim2.new(
@@ -356,8 +355,8 @@ local library = (function ()
                     end
                 end)
                 
-                releaseConnection = input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
+                releaseConnection = UserInputService.InputEnded:Connect(function(inputObject)
+                    if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                         isDragging = false
                         if dragConnection then 
                             dragConnection:Disconnect() 
@@ -401,8 +400,8 @@ local library = (function ()
                 local startMousePos = UserInputService:GetMouseLocation()
                 aspectRatioConstraint.Active = false
 
-                resizeMoveConnection = RunService.RenderStepped:Connect(function()
-                    if isResizing then
+                resizeMoveConnection = UserInputService.InputChanged:Connect(function(inputObject)
+                    if isResizing and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                         local currentMousePos = UserInputService:GetMouseLocation()
                         local delta = currentMousePos - startMousePos
                         local newSize = startSize + delta
@@ -410,8 +409,8 @@ local library = (function ()
                     end
                 end)
 
-                resizeConnection = input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
+                resizeConnection = UserInputService.InputEnded:Connect(function(inputObject)
+                    if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                         isResizing = false
                         if resizeMoveConnection then resizeMoveConnection:Disconnect() end
                         if resizeConnection then resizeConnection:Disconnect() end
@@ -693,8 +692,8 @@ local library = (function ()
                         local value = minvalue + (maxvalue - minvalue) * percent
                         setValue(value)
 
-                        moveConnection = RunService.RenderStepped:Connect(function()
-                            if isSliding then
+                        moveConnection = UserInputService.InputChanged:Connect(function(inputObject)
+                            if isSliding and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                                 local mousePos = UserInputService:GetMouseLocation()
                                 local percent = math.clamp((mousePos.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
                                 local value = minvalue + (maxvalue - minvalue) * percent
@@ -702,8 +701,8 @@ local library = (function ()
                             end
                         end)
 
-                        dragConnection = input.Changed:Connect(function()
-                            if input.UserInputState == Enum.UserInputState.End then
+                        dragConnection = UserInputService.InputEnded:Connect(function(inputObject)
+                             if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                                 isSliding = false
                                 if moveConnection then moveConnection:Disconnect() end
                                 if dragConnection then dragConnection:Disconnect() end
