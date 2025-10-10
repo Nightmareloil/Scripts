@@ -1,7 +1,8 @@
 --[[ 
 Demon Hub UI Library - Enhanced Edition 
-100% Compatible with original functionality 
-Mobile support + Color customization 
+✨ Fixed mobile dragging performance
+✨ Improved loading screen animations
+✨ Better fluidity and responsiveness
 
 Original Interface: Trix#2794 & Julman#1234 
 Enhanced by Gemini (with SetOptions support, Resizing, Keybinds, and more) 
@@ -20,73 +21,106 @@ pcall(function()
     bg.BorderSizePixel = 0 
     bg.ZIndex = 10 
 
+    -- Enhanced gradient with smoother transitions
     local gradient = Instance.new("UIGradient", bg) 
     gradient.Color = ColorSequence.new({ 
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 12, 18)), 
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 15, 22)), 
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 10, 18)) 
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 12, 20)), 
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25, 18, 28)), 
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 12, 22)) 
     }) 
     gradient.Rotation = 45 
 
+    -- Animated glow with better performance
     local glow = Instance.new("Frame", bg) 
-    glow.Size = UDim2.new(0, 300, 0, 300) 
-    glow.Position = UDim2.new(0.5, -150, 0.5, -150) 
+    glow.Size = UDim2.new(0, 250, 0, 250) 
+    glow.Position = UDim2.new(0.5, -125, 0.5, -125) 
     glow.BackgroundColor3 = Color3.fromRGB(255, 70, 70) 
-    glow.BackgroundTransparency = 0.92 
+    glow.BackgroundTransparency = 0.94 
     glow.BorderSizePixel = 0 
     glow.ZIndex = 11 
     Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0) 
 
+    -- Smoother pulse animation
+    game:GetService("TweenService"):Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { 
+        BackgroundTransparency = 0.97, 
+        Size = UDim2.new(0, 350, 0, 350), 
+        Position = UDim2.new(0.5, -175, 0.5, -175) 
+    }):Play() 
+
     local title = Instance.new("TextLabel", bg) 
     title.Size = UDim2.new(0, 500, 0, 80) 
-    title.Position = UDim2.new(0.5, -250, 0.45, -40) 
+    title.Position = UDim2.new(0.5, -250, 0.43, -40) 
     title.BackgroundTransparency = 1 
     title.Text = "DEMON HUB" 
-    title.TextColor3 = Color3.fromRGB(255, 80, 80) 
+    title.TextColor3 = Color3.fromRGB(255, 85, 85) 
     title.Font = Enum.Font.GothamBold 
-    title.TextSize = 52 
+    title.TextSize = 56 
     title.TextTransparency = 1 
     title.ZIndex = 12 
 
     local shadow = Instance.new("TextLabel", bg) 
     shadow.Size = title.Size 
-    shadow.Position = UDim2.new(0.5, -248, 0.45, -38) 
+    shadow.Position = UDim2.new(0.5, -247, 0.43, -37) 
     shadow.BackgroundTransparency = 1 
     shadow.Text = "DEMON HUB" 
     shadow.TextColor3 = Color3.fromRGB(0, 0, 0) 
     shadow.Font = Enum.Font.GothamBold 
-    shadow.TextSize = 52 
-    shadow.TextTransparency = 0.7 
+    shadow.TextSize = 56 
+    shadow.TextTransparency = 1 
     shadow.ZIndex = 11 
+
+    -- Loading bar for better visual feedback
+    local loadingBarBG = Instance.new("Frame", bg)
+    loadingBarBG.Size = UDim2.new(0, 300, 0, 4)
+    loadingBarBG.Position = UDim2.new(0.5, -150, 0.6, 0)
+    loadingBarBG.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    loadingBarBG.BorderSizePixel = 0
+    loadingBarBG.BackgroundTransparency = 1
+    loadingBarBG.ZIndex = 12
+    Instance.new("UICorner", loadingBarBG).CornerRadius = UDim.new(1, 0)
+
+    local loadingBar = Instance.new("Frame", loadingBarBG)
+    loadingBar.Size = UDim2.new(0, 0, 1, 0)
+    loadingBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+    loadingBar.BorderSizePixel = 0
+    loadingBar.ZIndex = 13
+    Instance.new("UICorner", loadingBar).CornerRadius = UDim.new(1, 0)
 
     local subtitle = Instance.new("TextLabel", bg) 
     subtitle.Size = UDim2.new(0, 500, 0, 35) 
-    subtitle.Position = UDim2.new(0.5, -250, 0.55, 0) 
+    subtitle.Position = UDim2.new(0.5, -250, 0.57, 0) 
     subtitle.BackgroundTransparency = 1 
     subtitle.Text = "Initializing UI Components..." 
-    subtitle.TextColor3 = Color3.fromRGB(200, 200, 220) 
+    subtitle.TextColor3 = Color3.fromRGB(210, 210, 230) 
     subtitle.Font = Enum.Font.Gotham 
-    subtitle.TextSize = 17 
+    subtitle.TextSize = 16 
     subtitle.TextTransparency = 1 
     subtitle.ZIndex = 12 
 
-    game:GetService("TweenService"):Create(glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { BackgroundTransparency = 0.96, Size = UDim2.new(0, 350, 0, 350), Position = UDim2.new(0.5, -175, 0.5, -175) }):Play() 
-
-    game:GetService("TweenService"):Create(title, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
-    game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0.7}):Play() 
-    task.wait(0.3) 
-    game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
-    task.wait(1) 
-    game:GetService("TweenService"):Create(bg, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(title, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(glow, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play() 
-    task.wait(0.7) 
+    -- Smooth fade-in animations
+    game:GetService("TweenService"):Create(title, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
+    game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0.6}):Play() 
+    task.wait(0.4) 
+    game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
+    game:GetService("TweenService"):Create(loadingBarBG, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    task.wait(0.3)
+    
+    -- Animated loading bar
+    game:GetService("TweenService"):Create(loadingBar, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+    task.wait(0.9) 
+    
+    -- Smooth fade-out
+    game:GetService("TweenService"):Create(bg, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
+    game:GetService("TweenService"):Create(title, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
+    game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
+    game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
+    game:GetService("TweenService"):Create(glow, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
+    game:GetService("TweenService"):Create(loadingBarBG, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+    task.wait(0.6) 
     loader:Destroy() 
 
     local snd = 6026984224 
-    local sound = Instance.new("Sound", Workspace) 
+    local sound = Instance.new("Sound", workspace) 
     sound.SoundId = "rbxassetid://" .. snd 
     sound.Name = "Notification" 
     sound.Volume = 1 
@@ -125,10 +159,10 @@ local library = (function ()
 
     function autobutcolor(value, color) 
         value.MouseEnter:Connect(function() 
-            TweenService:Create(value, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play() 
+            TweenService:Create(value, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play() 
         end) 
         value.MouseLeave:Connect(function() 
-            TweenService:Create(value, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = color}):Play() 
+            TweenService:Create(value, TweenInfo.new(0.22, Enum.EasingStyle.Quint), {BackgroundColor3 = color}):Play() 
         end) 
     end 
 
@@ -265,12 +299,12 @@ local library = (function ()
             if isMaximized then 
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
-                TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
+                TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { 
                     Size = UDim2.new(0.9, 0, 0.9, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             else 
-                TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
+                TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { 
                     Size = normalSize, 
                     Position = normalPos 
                 }):Play() 
@@ -291,37 +325,48 @@ local library = (function ()
         CreateInstance("UICorner", minimizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48)) 
 
-        -- [FIXED] New dragging logic that is mobile-friendly and prevents UI from following game controls.
-        top.InputBegan:Connect(function(input, gameProcessedEvent)
-            -- If the input is already being used by the game (e.g., a thumbstick press), ignore it.
-            -- This prevents a drag from starting when interacting with other mobile controls.
-            if gameProcessedEvent then return end
-
+        -- ✨ OPTIMIZED DRAGGING - Super smooth on mobile and PC
+        local isDragging = false
+        local dragStart = nil
+        local startPos = nil
+        local dragConnection = nil
+        local releaseConnection = nil
+        
+        top.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                local startPos = mainFrame.Position
-                local inputStartPos = input.Position
+                isDragging = true
+                dragStart = input.Position
+                startPos = mainFrame.Position
                 
-                -- These connections are created locally for each drag attempt.
-                local moveConnection
-                local endConnection
-
-                moveConnection = UserInputService.InputChanged:Connect(function(inputObject, gameProcessedEvent)
-                    -- This check is crucial for mobile. If the player moves their character using the joystick,
-                    -- that input is "processed by the game". We should ignore it to stop the UI from following the joystick.
-                    if gameProcessedEvent and inputObject.UserInputType ~= Enum.UserInputType.MouseMovement then return end
-
-                    if inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch then
-                        local delta = inputObject.Position - inputStartPos
-                        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                -- Disconnect old connections if they exist
+                if dragConnection then dragConnection:Disconnect() end
+                if releaseConnection then releaseConnection:Disconnect() end
+                
+                -- Use RenderStepped for buttery smooth 60fps dragging
+                dragConnection = RunService.RenderStepped:Connect(function()
+                    if isDragging then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        local delta = mousePos - dragStart
+                        mainFrame.Position = UDim2.new(
+                            startPos.X.Scale, 
+                            startPos.X.Offset + delta.X, 
+                            startPos.Y.Scale, 
+                            startPos.Y.Offset + delta.Y
+                        )
                     end
                 end)
-
-                endConnection = UserInputService.InputEnded:Connect(function(inputObject)
-                    -- When any mouse button or touch ends, we assume the drag is over.
-                    if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
-                        -- Disconnect the listeners to clean up and stop the dragging behavior.
-                        moveConnection:Disconnect()
-                        endConnection:Disconnect()
+                
+                releaseConnection = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        isDragging = false
+                        if dragConnection then 
+                            dragConnection:Disconnect() 
+                            dragConnection = nil
+                        end
+                        if releaseConnection then 
+                            releaseConnection:Disconnect() 
+                            releaseConnection = nil
+                        end
                     end
                 end)
             end
@@ -345,32 +390,36 @@ local library = (function ()
             ZIndex = 100
         })
 
-        local isMinimized = false -- Define isMinimized before it's used in resizeHandle
+        local isMinimized = false
+        local isResizing = false
         local resizeConnection, resizeMoveConnection
+        
         resizeHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isResizing = true
                 local startSize = mainFrame.AbsoluteSize
-                local inputStartPos = input.Position
-                aspectRatioConstraint.Active = false -- [FIX] Use .Active instead of .Enabled
+                local startMousePos = UserInputService:GetMouseLocation()
+                aspectRatioConstraint.Active = false
 
-                resizeMoveConnection = UserInputService.InputChanged:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                        local delta = input.Position - inputStartPos
+                resizeMoveConnection = RunService.RenderStepped:Connect(function()
+                    if isResizing then
+                        local currentMousePos = UserInputService:GetMouseLocation()
+                        local delta = currentMousePos - startMousePos
                         local newSize = startSize + delta
                         mainFrame.Size = UDim2.new(0, math.max(newSize.X, MIN_WINDOW_SIZE.X), 0, math.max(newSize.Y, MIN_WINDOW_SIZE.Y))
                     end
                 end)
 
-                resizeConnection = UserInputService.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        resizeMoveConnection:Disconnect()
-                        resizeConnection:Disconnect()
-                        aspectRatioConstraint.Active = not isMinimized -- [FIX] Use .Active instead of .Enabled
+                resizeConnection = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        isResizing = false
+                        if resizeMoveConnection then resizeMoveConnection:Disconnect() end
+                        if resizeConnection then resizeConnection:Disconnect() end
+                        aspectRatioConstraint.Active = not isMinimized
                     end
                 end)
             end
         end)
-
 
         local opened = true 
         function window:Hide() 
@@ -389,7 +438,11 @@ local library = (function ()
             end 
         end) 
         window:OnDestroy(function () 
-            handler:Disconnect() 
+            handler:Disconnect()
+            if dragConnection then dragConnection:Disconnect() end
+            if releaseConnection then releaseConnection:Disconnect() end
+            if resizeMoveConnection then resizeMoveConnection:Disconnect() end
+            if resizeConnection then resizeConnection:Disconnect() end
         end) 
 
         local windowBody = CreateInstance("ScrollingFrame", windowContainer, { 
@@ -402,7 +455,9 @@ local library = (function ()
             CanvasSize = UDim2.new(0, 0, 0, 0), 
             Size = UDim2.new(0.73, 0, 0.95, 0),
             BorderSizePixel = 0, 
-            BackgroundColor3 = Colors.Gray.FramesBack 
+            BackgroundColor3 = Colors.Gray.FramesBack,
+            ScrollingEnabled = true,
+            ScrollBarImageTransparency = 0
         }) 
         table.insert(colorChangeElements, windowBody) 
 
@@ -418,7 +473,8 @@ local library = (function ()
             Name = "ScrollingFrameTabs", 
             Position = UDim2.new(0.015, 0, 0.025, 0), 
             Size = UDim2.new(0.22, 0, 0.95, 0), 
-            BackgroundTransparency = 1, 
+            BackgroundTransparency = 1,
+            ScrollingEnabled = true
         }) 
         table.insert(colorChangeElements, scrollingFrameTabs) 
         CreateInstance("UIListLayout", scrollingFrameTabs, { 
@@ -435,7 +491,7 @@ local library = (function ()
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             windowContainer.Visible = not isMinimized 
             resizeHandle.Visible = not isMinimized
-            aspectRatioConstraint.Active = not isMinimized -- [FIX] Use .Active instead of .Enabled
+            aspectRatioConstraint.Active = not isMinimized
 
             local targetSize
             if isMinimized then
@@ -445,7 +501,7 @@ local library = (function ()
                 targetSize = lastSizeBeforeMinimize or mainFrame.Size
             end
             
-            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = targetSize }):Play()
+            TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
         end) 
 
         local function changeTab(id) 
@@ -456,7 +512,9 @@ local library = (function ()
             for _, button in ipairs(scrollingFrameTabs:GetChildren()) do 
                 if button:IsA("TextButton") then 
                     local isSelected = (button.Name == "Tab" .. id) 
-                    button.TextColor3 = _if(isSelected, Colors.White, Color3.fromRGB(173, 173, 173)) 
+                    TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
+                        TextColor3 = _if(isSelected, Colors.White, Color3.fromRGB(173, 173, 173))
+                    }):Play()
                 end 
             end 
         end 
@@ -609,7 +667,9 @@ local library = (function ()
                         value = math.floor(value + 0.5)
                     end
                     local newPercent = (value - minvalue) / (maxvalue - minvalue)
-                    sliderFill.Size = UDim2.new(newPercent, 0, 1, 0)
+                    TweenService:Create(sliderFill, TweenInfo.new(0.1, Enum.EasingStyle.Quint), {
+                        Size = UDim2.new(newPercent, 0, 1, 0)
+                    }):Play()
                     valueDisplay.Text = tostring(value)
                     pcall(callback, value)
                 end
@@ -623,25 +683,30 @@ local library = (function ()
                     end)
                 end
 
+                local isSliding = false
                 local dragConnection, moveConnection
+                
                 sliderBack.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        isSliding = true
                         local percent = math.clamp((input.Position.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
                         local value = minvalue + (maxvalue - minvalue) * percent
                         setValue(value)
 
-                        moveConnection = UserInputService.InputChanged:Connect(function(input)
-                           if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                                local percent = math.clamp((input.Position.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
+                        moveConnection = RunService.RenderStepped:Connect(function()
+                            if isSliding then
+                                local mousePos = UserInputService:GetMouseLocation()
+                                local percent = math.clamp((mousePos.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
                                 local value = minvalue + (maxvalue - minvalue) * percent
                                 setValue(value)
-                           end
+                            end
                         end)
 
-                        dragConnection = UserInputService.InputEnded:Connect(function(input)
-                            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                                moveConnection:Disconnect()
-                                dragConnection:Disconnect()
+                        dragConnection = input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                isSliding = false
+                                if moveConnection then moveConnection:Disconnect() end
+                                if dragConnection then dragConnection:Disconnect() end
                             end
                         end)
                     end
@@ -696,9 +761,9 @@ local library = (function ()
                     local targetGradient = boolValue.Value and Colors.Gradients.Red or ColorSequence.new(Color3.fromRGB(120,120,128))
                     local targetPos = boolValue.Value and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0) 
                     
-                    TweenService:Create(toggleTrack, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = targetColor }):Play() 
+                    TweenService:Create(toggleTrack, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundColor3 = targetColor }):Play() 
                     toggleTrack.UIGradient.Color = targetGradient
-                    TweenService:Create(toggleThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Position = targetPos }):Play() 
+                    TweenService:Create(toggleThumb, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { Position = targetPos }):Play() 
                     callback(boolValue.Value, toggle) 
                 end) 
                 return toggle 
@@ -835,7 +900,7 @@ local library = (function ()
                     dropdownValuesContainer.Visible = isOpen 
                     local targetSize = isOpen and UDim2.new(1, 0, 0, 145) or UDim2.new(1, 0, 0, 35) 
                     dropdownContainer.Size = targetSize
-                    TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Rotation = isOpen and 180 or 0 }):Play() 
+                    TweenService:Create(dropdownArrow, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { Rotation = isOpen and 180 or 0 }):Play() 
                 end 
                 dropdownLabel.MouseButton1Click:Connect(toggleDropdown) 
 
@@ -979,7 +1044,6 @@ local library = (function ()
                 return keybind
             end
 
-
             function tab:CreateColorPicker(label, defaultColor, callback) 
                 callback = callback or function() end 
                 local colorPicker = {} 
@@ -1049,7 +1113,7 @@ local library = (function ()
                         window:SetAccentColor(color) 
                         callback(color) 
                         paletteFrame.Visible = false 
-                        TweenService:Create(paletteFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 0)}):Play() 
+                        TweenService:Create(paletteFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, 0)}):Play() 
                     end) 
                 end 
 
@@ -1058,7 +1122,7 @@ local library = (function ()
                     isOpen = not isOpen 
                     paletteFrame.Visible = isOpen 
                     local targetSize = isOpen and UDim2.new(1, 0, 0, 100) or UDim2.new(1, 0, 0, 0) 
-                    TweenService:Create(paletteFrame, TweenInfo.new(0.2), {Size = targetSize}):Play() 
+                    TweenService:Create(paletteFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Size = targetSize}):Play() 
                 end) 
                 return colorPicker 
             end 
