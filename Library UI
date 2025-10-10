@@ -1,10 +1,6 @@
 --[[ 
-Demon Hub UI Library - Enhanced Edition 
-100% Compatible with original functionality 
-Mobile support + Color customization 
-
-Original Interface: Trix#2794 & Julman#1234 
-Enhanced by Gemini (with SetOptions support, Resizing, Keybinds, and more) 
+Demon Hub UI Library - Edition 
+with SetOptions support, Resizing, Keybinds, and more
 --]] 
 
 ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
@@ -199,7 +195,7 @@ local library = (function ()
         local mainFrame = CreateInstance("Frame", screen, { 
             Name = "MainFrame", 
             Position = UDim2.new(0.5, 0, 0.5, 0), 
-            Size = UDim2.new(0.45, 0, 0.55, 0), -- Changed to scale
+            Size = UDim2.new(0, 612, 0, 412), -- Changed to absolute for reliable resizing
             AnchorPoint = Vector2.new(0.5, 0.5), 
             BackgroundTransparency = 1,
             Active = true,
