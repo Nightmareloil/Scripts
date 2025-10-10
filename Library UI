@@ -186,23 +186,21 @@ local library = (function ()
             end 
         end 
 
-        -- FIX: Use Scale for positioning and AnchorPoint to center the UI. This makes it responsive on all screens. 
         local mainFrame = CreateInstance("Frame", screen, { 
             Name = "MainFrame", 
             Position = UDim2.new(0.5, 0, 0.5, 0), 
-            Size = UDim2.new(0, 612, 0, 412), -- Initial size in pixels, will be used by aspect ratio constraint
+            Size = UDim2.new(0, 612, 0, 412), 
             AnchorPoint = Vector2.new(0.5, 0.5), 
             BackgroundTransparency = 1 
         }) 
 
-        -- FIX: Added UIAspectRatioConstraint to prevent stretching on different screen sizes. 
-        CreateInstance("UIAspectRatioConstraint", mainFrame, { 
+        -- BUG FIX: Removed the non-existent 'ScaleWithParentSize' property that caused the script to error.
+        -- IMPROVEMENT: Stored the constraint in a variable to easily enable/disable it later.
+        local aspectRatioConstraint = CreateInstance("UIAspectRatioConstraint", mainFrame, { 
             AspectRatio = 612 / 412, 
             DominantAxis = Enum.DominantAxis.Height, 
-            -- FIX: Adjust size for mobile. This makes the UI take up 75% of the screen height on any device.
-            ScaleWithParentSize = true, 
         })
-        mainFrame.Size = UDim2.new(0, 612, 0.75, 0) -- Now control size with scale
+        mainFrame.Size = UDim2.new(0, 612, 0.75, 0)
 
         local top = CreateInstance("Frame", mainFrame, { 
             Name = "Top", 
@@ -251,8 +249,6 @@ local library = (function ()
         CreateInstance("UICorner", maximizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(maximizeButton, Color3.fromRGB(40, 40, 48)) 
         
-        -- FIX: Revamped the maximize function to use Scale instead of broken Offset values. 
-        -- This ensures all child elements resize correctly without needing their own tweens. 
         local isMaximized = false 
         local normalSize = mainFrame.Size 
         local normalPos = mainFrame.Position 
@@ -262,7 +258,7 @@ local library = (function ()
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
                 TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
-                    Size = UDim2.new(0, 800, 0.9, 0), -- Maximize to 90% of screen height
+                    Size = UDim2.new(0, 800, 0.9, 0), 
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             else 
@@ -350,7 +346,6 @@ local library = (function ()
             handler:Disconnect() 
         end) 
 
-        -- FIX: Changed Size and Position to use Scale so it adapts to the parent container.
         local windowBody = CreateInstance("ScrollingFrame", windowContainer, { 
             ScrollBarImageColor3 = Colors.Red, 
             Active = true, 
@@ -367,7 +362,6 @@ local library = (function ()
 
         local tabs = {} 
         local currentTab = 1 
-        -- FIX: Changed Size and Position to use Scale for mobile compatibility.
         local scrollingFrameTabs = CreateInstance("ScrollingFrame", windowContainer, { 
             ScrollBarImageColor3 = Colors.Red, 
             Active = true, 
@@ -395,21 +389,14 @@ local library = (function ()
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             windowContainer.Visible = not isMinimized 
             
-            mainFrame:FindFirstChildOfClass("UIAspectRatioConstraint"):Destroy()
+            -- IMPROVEMENT: Instead of destroying the constraint, we just disable it. This is safer and cleaner.
+            aspectRatioConstraint.Enabled = not isMinimized
             
-            local fullSize = UDim2.new(0, 612, 0.75, 0) 
-            local collapsedSize = UDim2.new(0, 612, 0, 42) 
+            local fullSize = mainFrame.Size -- We can just use the current size before minimizing
+            local collapsedSize = UDim2.new(fullSize.X.Scale, fullSize.X.Offset, 0, 42) 
             local targetSize = isMinimized and collapsedSize or fullSize 
             
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = targetSize }):Play()
-            
-            if not isMinimized then
-                 CreateInstance("UIAspectRatioConstraint", mainFrame, { 
-                    AspectRatio = 612 / 412, 
-                    DominantAxis = Enum.DominantAxis.Height, 
-                    ScaleWithParentSize = true, 
-                })
-            end
         end) 
 
         local function changeTab(id) 
@@ -461,9 +448,7 @@ local library = (function ()
             tabButton.MouseButton1Click:Connect(function() 
                 changeTab(tabId) 
             end) 
-
-            -- FIX: Changed Size on all created elements to use Scale (UDim2.new(1, ...)) 
-            -- This makes them fill their container on any screen size.
+            
             function tab:CreateTextbox(label, callback, placeholder) 
                 local callback = callback or function (_) end; 
                 local placeholder = placeholder or "Write Here" 
