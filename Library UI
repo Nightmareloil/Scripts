@@ -1,4 +1,12 @@
--- Demon Hub UI Library - Edition 
+--[[ 
+Demon Hub UI Library - Enhanced Edition 
+100% Compatible with original functionality 
+Mobile support + Color customization 
+
+Original Interface: Trix#2794 & Julman#1234 
+Enhanced by Gemini (with SetOptions support, Resizing, Keybinds, and more) 
+--]] 
+
 ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
 pcall(function() 
     local loader = Instance.new("ScreenGui") 
@@ -284,45 +292,36 @@ local library = (function ()
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48)) 
 
         -- [FIXED] New dragging logic that is mobile-friendly and prevents UI from following game controls.
-        local dragActive = false
-        local dragStart = nil
-        local startPos = nil
-        local moveConnection, endConnection
-
         top.InputBegan:Connect(function(input, gameProcessedEvent)
-            -- If the input is already being used by the game (e.g., thumbstick), ignore it.
+            -- If the input is already being used by the game (e.g., a thumbstick press), ignore it.
+            -- This prevents a drag from starting when interacting with other mobile controls.
             if gameProcessedEvent then return end
-            -- Don't start a new drag if one is already in progress.
-            if dragActive then return end
 
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragActive = true
-                startPos = mainFrame.Position
-                dragStart = input.Position
+                local startPos = mainFrame.Position
+                local inputStartPos = input.Position
+                
+                -- These connections are created locally for each drag attempt.
+                local moveConnection
+                local endConnection
 
-                -- Create listeners for movement and release.
-                moveConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
-                    -- This is the crucial fix: If the input is being handled by game controls,
-                    -- we ignore it completely, preventing the UI from moving unexpectedly.
-                    if gameProcessedEvent then return end
-                    
-                    if not dragActive then return end
+                moveConnection = UserInputService.InputChanged:Connect(function(inputObject, gameProcessedEvent)
+                    -- This check is crucial for mobile. If the player moves their character using the joystick,
+                    -- that input is "processed by the game". We should ignore it to stop the UI from following the joystick.
+                    if gameProcessedEvent and inputObject.UserInputType ~= Enum.UserInputType.MouseMovement then return end
 
-                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                         local delta = input.Position - dragStart
-                         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    if inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch then
+                        local delta = inputObject.Position - inputStartPos
+                        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                     end
                 end)
 
-                endConnection = UserInputService.InputEnded:Connect(function(endedInput)
-                    if endedInput.UserInputType == Enum.UserInputType.MouseButton1 or endedInput.UserInputType == Enum.UserInputType.Touch then
-                        if dragActive then
-                            dragActive = false
-                            -- Disconnect the listeners to stop tracking movement. This is crucial for cleanup.
-                            if moveConnection then moveConnection:Disconnect() end
-                            if endConnection then endConnection:Disconnect() end
-                            moveConnection, endConnection = nil, nil
-                        end
+                endConnection = UserInputService.InputEnded:Connect(function(inputObject)
+                    -- When any mouse button or touch ends, we assume the drag is over.
+                    if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
+                        -- Disconnect the listeners to clean up and stop the dragging behavior.
+                        moveConnection:Disconnect()
+                        endConnection:Disconnect()
                     end
                 end)
             end
@@ -346,12 +345,13 @@ local library = (function ()
             ZIndex = 100
         })
 
+        local isMinimized = false -- Define isMinimized before it's used in resizeHandle
         local resizeConnection, resizeMoveConnection
         resizeHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 local startSize = mainFrame.AbsoluteSize
                 local inputStartPos = input.Position
-                aspectRatioConstraint.Enabled = false
+                aspectRatioConstraint.Active = false -- [FIX] Use .Active instead of .Enabled
 
                 resizeMoveConnection = UserInputService.InputChanged:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
@@ -365,7 +365,7 @@ local library = (function ()
                     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                         resizeMoveConnection:Disconnect()
                         resizeConnection:Disconnect()
-                        aspectRatioConstraint.Enabled = not isMinimized
+                        aspectRatioConstraint.Active = not isMinimized -- [FIX] Use .Active instead of .Enabled
                     end
                 end)
             end
@@ -429,14 +429,13 @@ local library = (function ()
             PaddingTop = UDim.new(0, 10), 
         }) 
 
-        local isMinimized = false 
         local lastSizeBeforeMinimize
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             windowContainer.Visible = not isMinimized 
             resizeHandle.Visible = not isMinimized
-            aspectRatioConstraint.Enabled = not isMinimized
+            aspectRatioConstraint.Active = not isMinimized -- [FIX] Use .Active instead of .Enabled
 
             local targetSize
             if isMinimized then
