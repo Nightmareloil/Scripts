@@ -1,4 +1,12 @@
---[[ Demon Hub UI Library - Enhanced Edition 100% Compatible with original functionality Mobile support + Color customization Original Interface: Trix#2794 & Julman#1234 Enhanced by Gemini (with SetOptions support) --]] 
+--[[ 
+Demon Hub UI Library - Enhanced Edition 
+100% Compatible with original functionality 
+Mobile support + Color customization 
+
+Original Interface: Trix#2794 & Julman#1234 
+Enhanced by Gemini (with SetOptions support, Resizing, Keybinds, and more) 
+--]] 
+
 ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
 pcall(function() 
     local loader = Instance.new("ScreenGui") 
@@ -89,6 +97,7 @@ end)
 local library = (function () 
     local UserInputService = game:GetService("UserInputService") 
     local TweenService = game:GetService("TweenService") 
+    local RunService = game:GetService("RunService")
     local library = { 
         WindowState = { Opened = 1, Minimized = 0, Destroyed = -1 } 
     } 
@@ -186,21 +195,22 @@ local library = (function ()
             end 
         end 
 
+        -- [IMPROVEMENT] MainFrame now uses scale for sizing to be more responsive.
         local mainFrame = CreateInstance("Frame", screen, { 
             Name = "MainFrame", 
             Position = UDim2.new(0.5, 0, 0.5, 0), 
-            Size = UDim2.new(0, 612, 0, 412), 
+            Size = UDim2.new(0.45, 0, 0.55, 0), -- Changed to scale
             AnchorPoint = Vector2.new(0.5, 0.5), 
-            BackgroundTransparency = 1 
+            BackgroundTransparency = 1,
+            Active = true,
+            ClipsDescendants = true
         }) 
+        local MIN_WINDOW_SIZE = Vector2.new(450, 350)
 
-        -- BUG FIX: Removed the non-existent 'ScaleWithParentSize' property that caused the script to error.
-        -- IMPROVEMENT: Stored the constraint in a variable to easily enable/disable it later.
         local aspectRatioConstraint = CreateInstance("UIAspectRatioConstraint", mainFrame, { 
             AspectRatio = 612 / 412, 
             DominantAxis = Enum.DominantAxis.Height, 
         })
-        mainFrame.Size = UDim2.new(0, 612, 0.75, 0)
 
         local top = CreateInstance("Frame", mainFrame, { 
             Name = "Top", 
@@ -250,15 +260,14 @@ local library = (function ()
         autobutcolor(maximizeButton, Color3.fromRGB(40, 40, 48)) 
         
         local isMaximized = false 
-        local normalSize = mainFrame.Size 
-        local normalPos = mainFrame.Position 
+        local normalSize, normalPos
         maximizeButton.MouseButton1Click:Connect(function() 
             isMaximized = not isMaximized 
             if isMaximized then 
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
                 TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
-                    Size = UDim2.new(0, 800, 0.9, 0), 
+                    Size = UDim2.new(0.9, 0, 0.9, 0), -- Maximize to 90% of screen
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             else 
@@ -283,39 +292,28 @@ local library = (function ()
         CreateInstance("UICorner", minimizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48)) 
 
-        local IsDragging = false 
-        local dragStart, startPos 
-        local function updateInput(input) 
-            if IsDragging then 
-                local delta = input.Position - dragStart 
-                mainFrame.Position = UDim2.new( 
-                    startPos.X.Scale, startPos.X.Offset + delta.X, 
-                    startPos.Y.Scale, startPos.Y.Offset + delta.Y 
-                ) 
-            end 
-        end 
-        top.InputBegan:Connect(function(input) 
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-                IsDragging = true 
-                dragStart = input.Position 
-                startPos = mainFrame.Position 
-                input.Changed:Connect(function() 
-                    if input.UserInputState == Enum.UserInputState.End then 
-                        IsDragging = false 
-                    end 
-                end) 
-            end 
-        end) 
-        top.InputChanged:Connect(function(input) 
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-                updateInput(input) 
-            end 
-        end) 
-        UserInputService.InputChanged:Connect(function(input) 
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-                updateInput(input) 
-            end 
-        end) 
+        -- [IMPROVEMENT] Optimized dragging logic to only run when needed.
+        local dragConnection, moveConnection
+        top.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                local startPos = mainFrame.Position
+                local inputStartPos = input.Position
+                
+                moveConnection = UserInputService.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                        local delta = input.Position - inputStartPos
+                        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    end
+                end)
+
+                dragConnection = UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        moveConnection:Disconnect()
+                        dragConnection:Disconnect()
+                    end
+                end)
+            end
+        end)
 
         local windowContainer = CreateInstance("Frame", mainFrame, { 
             Position = UDim2.new(0, 0, 0, 42), 
@@ -326,6 +324,42 @@ local library = (function ()
         }) 
         CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 5) }) 
 
+        -- [NEW FEATURE] Window resizing handle
+        local resizeHandle = CreateInstance("Frame", mainFrame, {
+            Name = "ResizeHandle",
+            Position = UDim2.new(1, -12, 1, -12),
+            Size = UDim2.new(0, 12, 0, 12),
+            AnchorPoint = Vector2.new(1, 1),
+            BackgroundTransparency = 1,
+            ZIndex = 100
+        })
+
+        local resizeConnection, resizeMoveConnection
+        resizeHandle.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                local startSize = mainFrame.AbsoluteSize
+                local inputStartPos = input.Position
+                aspectRatioConstraint.Enabled = false
+
+                resizeMoveConnection = UserInputService.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                        local delta = input.Position - inputStartPos
+                        local newSize = startSize + delta
+                        mainFrame.Size = UDim2.new(0, math.max(newSize.X, MIN_WINDOW_SIZE.X), 0, math.max(newSize.Y, MIN_WINDOW_SIZE.Y))
+                    end
+                end)
+
+                resizeConnection = UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        resizeMoveConnection:Disconnect()
+                        resizeConnection:Disconnect()
+                        aspectRatioConstraint.Enabled = not isMinimized
+                    end
+                end)
+            end
+        end)
+
+
         local opened = true 
         function window:Hide() 
             opened, screen.Enabled = false, false 
@@ -334,7 +368,7 @@ local library = (function ()
             opened, screen.Enabled = true, true 
         end 
         local handler = UserInputService.InputBegan:Connect(function (input) 
-            if input.KeyCode == Enum.KeyCode.LeftControl then 
+            if input.KeyCode == Enum.KeyCode.RightControl then -- Changed to RightControl to avoid conflicts
                 if opened then 
                     window:Hide() 
                 else 
@@ -384,17 +418,21 @@ local library = (function ()
         }) 
 
         local isMinimized = false 
+        local lastSizeBeforeMinimize
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             windowContainer.Visible = not isMinimized 
-            
-            -- IMPROVEMENT: Instead of destroying the constraint, we just disable it. This is safer and cleaner.
+            resizeHandle.Visible = not isMinimized
             aspectRatioConstraint.Enabled = not isMinimized
-            
-            local fullSize = mainFrame.Size -- We can just use the current size before minimizing
-            local collapsedSize = UDim2.new(fullSize.X.Scale, fullSize.X.Offset, 0, 42) 
-            local targetSize = isMinimized and collapsedSize or fullSize 
+
+            local targetSize
+            if isMinimized then
+                lastSizeBeforeMinimize = mainFrame.Size
+                targetSize = UDim2.new(lastSizeBeforeMinimize.X.Scale, lastSizeBeforeMinimize.X.Offset, 0, 42)
+            else
+                targetSize = lastSizeBeforeMinimize or mainFrame.Size
+            end
             
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = targetSize }):Play()
         end) 
@@ -487,15 +525,13 @@ local library = (function ()
                 return textbox 
             end 
 
-            function tab:CreateSlider(label, minvalue, maxvalue, arg4, arg5) 
-                local default, callback, supportFloats 
-                if type(arg4) == "function" then 
-                    callback = arg4; default = minvalue; supportFloats = arg5 
-                else 
-                    default = arg4; callback = arg5 
-                end 
+            -- [IMPROVEMENT] Slider can now include a textbox for precise input.
+            function tab:CreateSlider(label, minvalue, maxvalue, default, callback, options)
+                options = options or {}
                 minvalue, maxvalue, default, callback = minvalue or 0, maxvalue or 100, default or minvalue, callback or function() end 
-                if supportFloats == true then supportFloats = 2 end 
+                local supportFloats = options.floats and (type(options.floats) == "number" and options.floats or 2)
+                local hasTextbox = options.textbox or false
+                
                 local slider = {} 
                 local container = CreateInstance("TextLabel", tabContainer, { 
                     TextColor3 = Colors.White, 
@@ -512,16 +548,33 @@ local library = (function ()
                     PaddingBottom = UDim.new(0, 10), 
                     PaddingTop = UDim.new(0, 3) 
                 }) 
-                local valueText = CreateInstance("TextLabel", container, { 
-                    BackgroundTransparency = 1, 
-                    Position = UDim2.new(1, -180, 0.25, 0),
-                    Size = UDim2.new(0, 175, 0, 8), 
-                    Font = Enum.Font.GothamBold, 
-                    Text = tostring(default), 
-                    TextColor3 = Colors.White, 
-                    TextSize = 12, 
-                    TextXAlignment = Enum.TextXAlignment.Right 
-                }) 
+                
+                local valueDisplay
+                if hasTextbox then
+                    valueDisplay = CreateInstance("TextBox", container, {
+                        BackgroundColor3 = Colors.Gray.TogBox,
+                        Position = UDim2.new(1, -105, 0.25, -10),
+                        Size = UDim2.new(0, 100, 0, 20),
+                        Font = Enum.Font.GothamBold,
+                        Text = tostring(default),
+                        TextColor3 = Colors.White,
+                        TextSize = 12,
+                        ClearTextOnFocus = false
+                    })
+                    CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 4)})
+                else
+                     valueDisplay = CreateInstance("TextLabel", container, { 
+                        BackgroundTransparency = 1, 
+                        Position = UDim2.new(1, -180, 0.25, 0),
+                        Size = UDim2.new(0, 175, 0, 8), 
+                        Font = Enum.Font.GothamBold, 
+                        Text = tostring(default), 
+                        TextColor3 = Colors.White, 
+                        TextSize = 12, 
+                        TextXAlignment = Enum.TextXAlignment.Right 
+                    })
+                end
+
                 local sliderBack = CreateInstance("Frame", container, { 
                     BackgroundColor3 = Colors.Gray.TogBox, 
                     Position = UDim2.new(0.02, 0, 0.870, 0), 
@@ -538,43 +591,51 @@ local library = (function ()
                 CreateInstance("UIGradient", sliderFill, { Color = Colors.Gradients.Red }) 
                 table.insert(colorChangeElements, sliderFill) 
 
-                local isDraggingSlider = false 
-                local clickDetector = CreateInstance("TextButton", sliderBack, { 
-                    Size = UDim2.new(1, 0, 1, 0), 
-                    BackgroundTransparency = 1, 
-                    Text = "", 
-                    ZIndex = 5 
-                }) 
-                clickDetector.InputBegan:Connect(function(input) 
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-                        isDraggingSlider = true 
-                    end 
-                end) 
-                UserInputService.InputEnded:Connect(function(input) 
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-                        isDraggingSlider = false 
-                    end 
-                end) 
-                local function updateSlider(inputPos) 
-                    local percent = math.clamp((inputPos.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1) 
-                    local value 
-                    if supportFloats then 
-                        value = math.floor((minvalue + (maxvalue - minvalue) * percent) * 10^supportFloats) / 10^supportFloats 
-                    else 
-                        value = math.floor(minvalue + (maxvalue - minvalue) * percent + 0.5) 
-                    end 
-                    sliderFill.Size = UDim2.new(percent, 0, 1, 0) 
-                    valueText.Text = tostring(value) 
-                    pcall(callback, value) 
-                end 
-                clickDetector.MouseButton1Click:Connect(function() 
-                    updateSlider(UserInputService:GetMouseLocation()) 
-                end) 
-                UserInputService.InputChanged:Connect(function(input) 
-                    if isDraggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then 
-                        updateSlider(input.Position) 
-                    end 
-                end) 
+                local function setValue(value)
+                    value = math.clamp(value, minvalue, maxvalue)
+                    if supportFloats then
+                        value = math.floor(value * 10^supportFloats) / 10^supportFloats
+                    else
+                        value = math.floor(value + 0.5)
+                    end
+                    local newPercent = (value - minvalue) / (maxvalue - minvalue)
+                    sliderFill.Size = UDim2.new(newPercent, 0, 1, 0)
+                    valueDisplay.Text = tostring(value)
+                    pcall(callback, value)
+                end
+
+                if hasTextbox then
+                    valueDisplay.FocusLost:Connect(function(enter)
+                        if enter then
+                           local num = tonumber(valueDisplay.Text)
+                           if num then setValue(num) else valueDisplay.Text = tostring(default) end
+                        end
+                    end)
+                end
+
+                local dragConnection, moveConnection
+                sliderBack.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        local percent = math.clamp((input.Position.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
+                        local value = minvalue + (maxvalue - minvalue) * percent
+                        setValue(value)
+
+                        moveConnection = UserInputService.InputChanged:Connect(function(input)
+                           if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                                local percent = math.clamp((input.Position.X - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
+                                local value = minvalue + (maxvalue - minvalue) * percent
+                                setValue(value)
+                           end
+                        end)
+
+                        dragConnection = UserInputService.InputEnded:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                                moveConnection:Disconnect()
+                                dragConnection:Disconnect()
+                            end
+                        end)
+                    end
+                end)
                 return slider 
             end 
 
@@ -598,9 +659,11 @@ local library = (function ()
                     AnchorPoint = Vector2.new(1, 0.5), 
                     ZIndex = 2, 
                     Size = UDim2.new(0, 44, 0, 22), 
-                    BackgroundColor3 = default and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(120, 120, 128), 
+                    BackgroundColor3 = default and Colors.Red or Color3.fromRGB(120, 120, 128), 
                     BorderSizePixel = 0 
                 }) 
+                CreateInstance("UIGradient", toggleTrack, { Color = _if(default, Colors.Gradients.Red, ColorSequence.new(Color3.fromRGB(120,120,128)))})
+                table.insert(colorChangeElements, toggleTrack:FindFirstChildOfClass("UIGradient"))
                 CreateInstance("UICorner", toggleTrack, { CornerRadius = UDim.new(1, 0) }) 
                 local toggleThumb = CreateInstance("Frame", toggleTrack, { 
                     Size = UDim2.new(0, 18, 0, 18), 
@@ -619,9 +682,12 @@ local library = (function ()
                 }) 
                 mainToggleContainer.MouseButton1Click:Connect(function () 
                     boolValue.Value = not boolValue.Value 
-                    local targetColor = boolValue.Value and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(120, 120, 128) 
+                    local targetColor = boolValue.Value and Colors.Red or Color3.fromRGB(120, 120, 128) 
+                    local targetGradient = boolValue.Value and Colors.Gradients.Red or ColorSequence.new(Color3.fromRGB(120,120,128))
                     local targetPos = boolValue.Value and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0) 
+                    
                     TweenService:Create(toggleTrack, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = targetColor }):Play() 
+                    toggleTrack.UIGradient.Color = targetGradient
                     TweenService:Create(toggleThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Position = targetPos }):Play() 
                     callback(boolValue.Value, toggle) 
                 end) 
@@ -656,6 +722,15 @@ local library = (function ()
                 end 
                 return {} 
             end 
+            
+            -- [NEW FEATURE] A simple separator line for organizing UI elements.
+            function tab:CreateSeparator()
+                CreateInstance("Frame", tabContainer, {
+                    Size = UDim2.new(1, 0, 0, 1),
+                    BackgroundColor3 = Colors.Gray.Stroke,
+                    BorderSizePixel = 0
+                })
+            end
 
             function tab:CreateButton(name, callback) 
                 local buttonContainer = CreateInstance("TextButton", tabContainer, { 
@@ -747,6 +822,7 @@ local library = (function ()
                 local isOpen = false 
                 local function toggleDropdown() 
                     isOpen = not isOpen 
+                    dropdownContainer:SetAttribute("IsOpen", isOpen)
                     dropdownValuesContainer.Visible = isOpen 
                     local targetSize = isOpen and UDim2.new(1, 0, 0, 145) or UDim2.new(1, 0, 0, 35) 
                     dropdownContainer.Size = targetSize
@@ -769,11 +845,8 @@ local library = (function ()
                     }) 
                     autobutcolor(btn, Colors.Gray.DropDownButton) 
                     btn.MouseButton1Click:Connect(function() 
-                        isOpen = false 
-                        dropdownValuesContainer.Visible = false 
-                        dropdownContainer.Size = UDim2.new(1, 0, 0, 35) 
+                        toggleDropdown()
                         dropdownSelectedLabel.Text = value 
-                        TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Rotation = 0}):Play() 
                         callback(value, dropdown) 
                     end) 
                 end 
@@ -835,6 +908,69 @@ local library = (function ()
 
                 return dropdown 
             end 
+            
+            -- [NEW FEATURE] A keybind element. Click to set, press key to trigger, right-click to clear.
+            function tab:CreateKeybind(label, defaultKey, callback)
+                defaultKey = defaultKey or "..."
+                callback = callback or function() end
+                
+                local keybind = {}
+                local currentKey = defaultKey
+                local isSettingKey = false
+                
+                local container = CreateInstance("TextLabel", tabContainer, {
+                    TextColor3 = Colors.White,
+                    Text = " " .. label,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Font = Font,
+                    Size = UDim2.new(1, 0, 0, 35),
+                    TextSize = 14,
+                    BackgroundColor3 = Colors.Gray.DarkButton
+                })
+                CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 4)})
+
+                local keyButton = CreateInstance("TextButton", container, {
+                    Text = currentKey,
+                    AnchorPoint = Vector2.new(1, 0.5),
+                    Position = UDim2.new(1, -5, 0.5, 0),
+                    Size = UDim2.new(0, 85, 0, 27),
+                    Font = Font,
+                    TextSize = 12,
+                    TextColor3 = Colors.White,
+                    BackgroundColor3 = Colors.Gray.TogBox,
+                    AutoButtonColor = false
+                })
+                CreateInstance("UICorner", keyButton, {CornerRadius = UDim.new(0, 4)})
+                autobutcolor(keyButton, Colors.Gray.TogBox)
+
+                keyButton.MouseButton1Click:Connect(function()
+                    isSettingKey = true
+                    keyButton.Text = "..."
+                end)
+                
+                keyButton.MouseButton2Click:Connect(function() -- Right click to clear
+                    isSettingKey = false
+                    currentKey = "..."
+                    keyButton.Text = currentKey
+                end)
+
+                local keypressConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                    if not gameProcessed then
+                        if isSettingKey then
+                            currentKey = input.KeyCode.Name
+                            keyButton.Text = currentKey
+                            isSettingKey = false
+                        elseif input.KeyCode.Name == currentKey and currentKey ~= "..." then
+                            pcall(callback)
+                        end
+                    end
+                end)
+                
+                window:OnDestroy(function() keypressConnection:Disconnect() end)
+                
+                return keybind
+            end
+
 
             function tab:CreateColorPicker(label, defaultColor, callback) 
                 callback = callback or function() end 
