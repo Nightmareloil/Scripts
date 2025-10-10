@@ -1,8 +1,4 @@
---[[ 
-Demon Hub UI Library - Edition 
-with SetOptions support, Resizing, Keybinds, and more
---]] 
-
+-- Demon Hub UI Library - Edition 
 ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
 pcall(function() 
     local loader = Instance.new("ScreenGui") 
@@ -191,11 +187,10 @@ local library = (function ()
             end 
         end 
 
-        -- [IMPROVEMENT] MainFrame now uses scale for sizing to be more responsive.
         local mainFrame = CreateInstance("Frame", screen, { 
             Name = "MainFrame", 
             Position = UDim2.new(0.5, 0, 0.5, 0), 
-            Size = UDim2.new(0, 612, 0, 412), -- Changed to absolute for reliable resizing
+            Size = UDim2.new(0, 612, 0, 412),
             AnchorPoint = Vector2.new(0.5, 0.5), 
             BackgroundTransparency = 1,
             Active = true,
@@ -263,7 +258,7 @@ local library = (function ()
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
                 TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
-                    Size = UDim2.new(0.9, 0, 0.9, 0), -- Maximize to 90% of screen
+                    Size = UDim2.new(0.9, 0, 0.9, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             else 
@@ -288,24 +283,46 @@ local library = (function ()
         CreateInstance("UICorner", minimizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48)) 
 
-        -- [IMPROVEMENT] Optimized dragging logic to only run when needed.
-        local dragConnection, moveConnection
-        top.InputBegan:Connect(function(input)
+        -- [FIXED] New dragging logic that is mobile-friendly and prevents UI from following game controls.
+        local dragActive = false
+        local dragStart = nil
+        local startPos = nil
+        local moveConnection, endConnection
+
+        top.InputBegan:Connect(function(input, gameProcessedEvent)
+            -- If the input is already being used by the game (e.g., thumbstick), ignore it.
+            if gameProcessedEvent then return end
+            -- Don't start a new drag if one is already in progress.
+            if dragActive then return end
+
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                local startPos = mainFrame.Position
-                local inputStartPos = input.Position
-                
-                moveConnection = UserInputService.InputChanged:Connect(function(input)
+                dragActive = true
+                startPos = mainFrame.Position
+                dragStart = input.Position
+
+                -- Create listeners for movement and release.
+                moveConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
+                    -- This is the crucial fix: If the input is being handled by game controls,
+                    -- we ignore it completely, preventing the UI from moving unexpectedly.
+                    if gameProcessedEvent then return end
+                    
+                    if not dragActive then return end
+
                     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                        local delta = input.Position - inputStartPos
-                        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                         local delta = input.Position - dragStart
+                         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                     end
                 end)
 
-                dragConnection = UserInputService.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        moveConnection:Disconnect()
-                        dragConnection:Disconnect()
+                endConnection = UserInputService.InputEnded:Connect(function(endedInput)
+                    if endedInput.UserInputType == Enum.UserInputType.MouseButton1 or endedInput.UserInputType == Enum.UserInputType.Touch then
+                        if dragActive then
+                            dragActive = false
+                            -- Disconnect the listeners to stop tracking movement. This is crucial for cleanup.
+                            if moveConnection then moveConnection:Disconnect() end
+                            if endConnection then endConnection:Disconnect() end
+                            moveConnection, endConnection = nil, nil
+                        end
                     end
                 end)
             end
@@ -320,7 +337,6 @@ local library = (function ()
         }) 
         CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 5) }) 
 
-        -- [NEW FEATURE] Window resizing handle
         local resizeHandle = CreateInstance("Frame", mainFrame, {
             Name = "ResizeHandle",
             Position = UDim2.new(1, -12, 1, -12),
@@ -364,7 +380,7 @@ local library = (function ()
             opened, screen.Enabled = true, true 
         end 
         local handler = UserInputService.InputBegan:Connect(function (input) 
-            if input.KeyCode == Enum.KeyCode.RightControl then -- Changed to RightControl to avoid conflicts
+            if input.KeyCode == Enum.KeyCode.RightControl then
                 if opened then 
                     window:Hide() 
                 else 
@@ -521,7 +537,6 @@ local library = (function ()
                 return textbox 
             end 
 
-            -- [IMPROVEMENT] Slider can now include a textbox for precise input.
             function tab:CreateSlider(label, minvalue, maxvalue, default, callback, options)
                 options = options or {}
                 minvalue, maxvalue, default, callback = minvalue or 0, maxvalue or 100, default or minvalue, callback or function() end 
@@ -719,7 +734,6 @@ local library = (function ()
                 return {} 
             end 
             
-            -- [NEW FEATURE] A simple separator line for organizing UI elements.
             function tab:CreateSeparator()
                 CreateInstance("Frame", tabContainer, {
                     Size = UDim2.new(1, 0, 0, 1),
@@ -905,7 +919,6 @@ local library = (function ()
                 return dropdown 
             end 
             
-            -- [NEW FEATURE] A keybind element. Click to set, press key to trigger, right-click to clear.
             function tab:CreateKeybind(label, defaultKey, callback)
                 defaultKey = defaultKey or "..."
                 callback = callback or function() end
@@ -944,7 +957,7 @@ local library = (function ()
                     keyButton.Text = "..."
                 end)
                 
-                keyButton.MouseButton2Click:Connect(function() -- Right click to clear
+                keyButton.MouseButton2Click:Connect(function()
                     isSettingKey = false
                     currentKey = "..."
                     keyButton.Text = currentKey
