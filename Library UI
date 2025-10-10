@@ -186,12 +186,23 @@ local library = (function ()
             end 
         end 
 
+        -- FIX: Use Scale for positioning and AnchorPoint to center the UI. This makes it responsive on all screens. 
         local mainFrame = CreateInstance("Frame", screen, { 
             Name = "MainFrame", 
-            Position = UDim2.new(0.375, 0, 0.184, 0), 
-            Size = UDim2.new(0, 612, 0, 412), 
+            Position = UDim2.new(0.5, 0, 0.5, 0), 
+            Size = UDim2.new(0, 612, 0, 412), -- Initial size in pixels, will be used by aspect ratio constraint
+            AnchorPoint = Vector2.new(0.5, 0.5), 
             BackgroundTransparency = 1 
         }) 
+
+        -- FIX: Added UIAspectRatioConstraint to prevent stretching on different screen sizes. 
+        CreateInstance("UIAspectRatioConstraint", mainFrame, { 
+            AspectRatio = 612 / 412, 
+            DominantAxis = Enum.DominantAxis.Height, 
+            -- FIX: Adjust size for mobile. This makes the UI take up 75% of the screen height on any device.
+            ScaleWithParentSize = true, 
+        })
+        mainFrame.Size = UDim2.new(0, 612, 0.75, 0) -- Now control size with scale
 
         local top = CreateInstance("Frame", mainFrame, { 
             Name = "Top", 
@@ -239,25 +250,26 @@ local library = (function ()
         }) 
         CreateInstance("UICorner", maximizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(maximizeButton, Color3.fromRGB(40, 40, 48)) 
+        
+        -- FIX: Revamped the maximize function to use Scale instead of broken Offset values. 
+        -- This ensures all child elements resize correctly without needing their own tweens. 
         local isMaximized = false 
-        local normalSize = UDim2.new(0, 612, 0, 412) 
-        local normalPos = UDim2.new(0.375, 0, 0.184, 0) 
+        local normalSize = mainFrame.Size 
+        local normalPos = mainFrame.Position 
         maximizeButton.MouseButton1Click:Connect(function() 
             isMaximized = not isMaximized 
             if isMaximized then 
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
-                TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 800, 0, 550), Position = UDim2.new(0.5, -400, 0.5, -275) }):Play() 
-                task.wait(0.05) 
-                TweenService:Create(windowContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 1, -42) }):Play() 
-                TweenService:Create(windowBody, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 620, 0, 490) }):Play() 
-                TweenService:Create(scrollingFrameTabs, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 160, 1, -10) }):Play() 
+                TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
+                    Size = UDim2.new(0, 800, 0.9, 0), -- Maximize to 90% of screen height
+                    Position = UDim2.new(0.5, 0, 0.5, 0) 
+                }):Play() 
             else 
-                TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = normalSize, Position = normalPos }):Play() 
-                task.wait(0.05) 
-                TweenService:Create(windowContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 1, -42) }):Play() 
-                TweenService:Create(windowBody, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 451, 0, 350) }):Play() 
-                TweenService:Create(scrollingFrameTabs, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 150, 1, -10) }):Play() 
+                TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { 
+                    Size = normalSize, 
+                    Position = normalPos 
+                }):Play() 
             end 
         end) 
 
@@ -338,15 +350,16 @@ local library = (function ()
             handler:Disconnect() 
         end) 
 
+        -- FIX: Changed Size and Position to use Scale so it adapts to the parent container.
         local windowBody = CreateInstance("ScrollingFrame", windowContainer, { 
             ScrollBarImageColor3 = Colors.Red, 
             Active = true, 
             BorderColor3 = Colors.Gray.Stroke, 
             ScrollBarThickness = 5, 
-            Position = UDim2.new(0.257, 0, 0.025, 0), 
+            Position = UDim2.new(0.25, 0, 0.025, 0),
             AutomaticCanvasSize = Enum.AutomaticSize.Y, 
             CanvasSize = UDim2.new(0, 0, 0, 0), 
-            Size = UDim2.new(0, 451, 0, 350), 
+            Size = UDim2.new(0.73, 0, 0.95, 0),
             BorderSizePixel = 0, 
             BackgroundColor3 = Colors.Gray.FramesBack 
         }) 
@@ -354,6 +367,7 @@ local library = (function ()
 
         local tabs = {} 
         local currentTab = 1 
+        -- FIX: Changed Size and Position to use Scale for mobile compatibility.
         local scrollingFrameTabs = CreateInstance("ScrollingFrame", windowContainer, { 
             ScrollBarImageColor3 = Colors.Red, 
             Active = true, 
@@ -362,8 +376,8 @@ local library = (function ()
             VerticalScrollBarInset = Enum.ScrollBarInset.Always, 
             AutomaticCanvasSize = Enum.AutomaticSize.Y, 
             Name = "ScrollingFrameTabs", 
-            Position = UDim2.new(0.01, 0, 0.01, 0), 
-            Size = UDim2.new(0, 150, 1, -10), 
+            Position = UDim2.new(0.015, 0, 0.025, 0), 
+            Size = UDim2.new(0.22, 0, 0.95, 0), 
             BackgroundTransparency = 1, 
         }) 
         table.insert(colorChangeElements, scrollingFrameTabs) 
@@ -373,7 +387,6 @@ local library = (function ()
         }) 
         CreateInstance("UIPadding", scrollingFrameTabs, { 
             PaddingTop = UDim.new(0, 10), 
-            PaddingLeft = UDim.new(0, 5) 
         }) 
 
         local isMinimized = false 
@@ -381,10 +394,22 @@ local library = (function ()
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             windowContainer.Visible = not isMinimized 
-            local fullSize = UDim2.new(0, 612, 0, 412) 
+            
+            mainFrame:FindFirstChildOfClass("UIAspectRatioConstraint"):Destroy()
+            
+            local fullSize = UDim2.new(0, 612, 0.75, 0) 
             local collapsedSize = UDim2.new(0, 612, 0, 42) 
             local targetSize = isMinimized and collapsedSize or fullSize 
-            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = targetSize }):Play() 
+            
+            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = targetSize }):Play()
+            
+            if not isMinimized then
+                 CreateInstance("UIAspectRatioConstraint", mainFrame, { 
+                    AspectRatio = 612 / 412, 
+                    DominantAxis = Enum.DominantAxis.Height, 
+                    ScaleWithParentSize = true, 
+                })
+            end
         end) 
 
         local function changeTab(id) 
@@ -412,7 +437,9 @@ local library = (function ()
             }) 
             table.insert(tabs, tabContainer) 
             CreateInstance("UIPadding", tabContainer, { 
-                PaddingTop = UDim.new(0, 7) 
+                PaddingTop = UDim.new(0, 10),
+                PaddingLeft = UDim.new(0, 10),
+                PaddingRight = UDim.new(0, 10)
             }) 
             CreateInstance("UIListLayout", tabContainer, { 
                 Padding = UDim.new(0, 7), 
@@ -435,6 +462,8 @@ local library = (function ()
                 changeTab(tabId) 
             end) 
 
+            -- FIX: Changed Size on all created elements to use Scale (UDim2.new(1, ...)) 
+            -- This makes them fill their container on any screen size.
             function tab:CreateTextbox(label, callback, placeholder) 
                 local callback = callback or function (_) end; 
                 local placeholder = placeholder or "Write Here" 
@@ -444,7 +473,7 @@ local library = (function ()
                     Text = " " .. label, 
                     TextXAlignment = Enum.TextXAlignment.Left, 
                     Font = Font, 
-                    Size = UDim2.new(0, 438, 0, 35), 
+                    Size = UDim2.new(1, 0, 0, 35), 
                     ZIndex = 0, 
                     TextSize = 14, 
                     BackgroundColor3 = Colors.Gray.DarkButton 
@@ -454,9 +483,9 @@ local library = (function ()
                     TextColor3 = Color3.new(0.698039, 0.698039, 0.698039), 
                     BorderColor3 = Colors.Gray.Stroke, 
                     Text = "", 
-                    AnchorPoint = Vector2.new(0, 1), 
+                    AnchorPoint = Vector2.new(1, 0.5), 
                     Font = Font, 
-                    Position = UDim2.new(0.796531916, 0, 0.927345312, 0), 
+                    Position = UDim2.new(1, -5, 0.5, 0), 
                     Size = UDim2.new(0, 85, 0, 27), 
                     PlaceholderText = placeholder, 
                     TextSize = 12, 
@@ -486,7 +515,7 @@ local library = (function ()
                 local container = CreateInstance("TextLabel", tabContainer, { 
                     TextColor3 = Colors.White, 
                     Text = " " .. label, 
-                    Size = UDim2.new(0, 438, 0, 35), 
+                    Size = UDim2.new(1, 0, 0, 35), 
                     Font = Font, 
                     TextXAlignment = Enum.TextXAlignment.Left, 
                     TextYAlignment = Enum.TextYAlignment.Top, 
@@ -500,7 +529,7 @@ local library = (function ()
                 }) 
                 local valueText = CreateInstance("TextLabel", container, { 
                     BackgroundTransparency = 1, 
-                    Position = UDim2.new(0.585, 0, 0.25, 0), 
+                    Position = UDim2.new(1, -180, 0.25, 0),
                     Size = UDim2.new(0, 175, 0, 8), 
                     Font = Enum.Font.GothamBold, 
                     Text = tostring(default), 
@@ -510,8 +539,8 @@ local library = (function ()
                 }) 
                 local sliderBack = CreateInstance("Frame", container, { 
                     BackgroundColor3 = Colors.Gray.TogBox, 
-                    Position = UDim2.new(0.017, 0, 0.870, 0), 
-                    Size = UDim2.new(1, -15, 0, 8) 
+                    Position = UDim2.new(0.02, 0, 0.870, 0), 
+                    Size = UDim2.new(0.96, 0, 0, 8) 
                 }) 
                 CreateInstance("UICorner", sliderBack, { CornerRadius = UDim.new(1, 0) }) 
                 local percentage = math.clamp((default - minvalue) / (maxvalue - minvalue), 0, 1) 
@@ -572,7 +601,7 @@ local library = (function ()
                     TextXAlignment = Enum.TextXAlignment.Left, 
                     TextColor3 = Colors.White, 
                     AutoButtonColor = false, 
-                    Size = UDim2.new(0, 438, 0, 35), 
+                    Size = UDim2.new(1, 0, 0, 35), 
                     Text = " " .. label, 
                     TextSize = 14, 
                     BackgroundColor3 = Colors.Gray.DarkButton 
@@ -580,7 +609,7 @@ local library = (function ()
                 CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 4) }) 
                 local toggleTrack = CreateInstance("Frame", mainToggleContainer, { 
                     Name = "Toggle", 
-                    Position = UDim2.new(0.92, 0, 0.5, 0), 
+                    Position = UDim2.new(1, -10, 0.5, 0), 
                     AnchorPoint = Vector2.new(1, 0.5), 
                     ZIndex = 2, 
                     Size = UDim2.new(0, 44, 0, 22), 
@@ -622,7 +651,7 @@ local library = (function ()
                     TextYAlignment = Enum.TextYAlignment.Top, 
                     Font = Font, 
                     TextXAlignment = Enum.TextXAlignment.Left, 
-                    Size = UDim2.new(0, 438, 0, (description and #description > 0) and 50 or 35), 
+                    Size = UDim2.new(1, 0, 0, (description and #description > 0) and 50 or 35), 
                     ZIndex = 0, 
                     TextSize = 14, 
                     BackgroundColor3 = Colors.Gray.DarkButton 
@@ -650,7 +679,7 @@ local library = (function ()
                     Font = Font, 
                     TextXAlignment = Enum.TextXAlignment.Left, 
                     AutoButtonColor = false, 
-                    Size = UDim2.new(0, 438, 0, 35), 
+                    Size = UDim2.new(1, 0, 0, 35), 
                     TextSize = 14, 
                     BackgroundColor3 = Colors.Gray.DarkButton 
                 }) 
@@ -666,7 +695,7 @@ local library = (function ()
                 values, callback = values or {}, callback or function() end 
                 local dropdown = {} 
                 local dropdownContainer = CreateInstance("Frame", tabContainer, { 
-                    Size = UDim2.new(0, 438, 0, 35), 
+                    Size = UDim2.new(1, 0, 0, 35), 
                     BackgroundTransparency = 1, 
                     ClipsDescendants = true 
                 }) 
@@ -734,7 +763,8 @@ local library = (function ()
                 local function toggleDropdown() 
                     isOpen = not isOpen 
                     dropdownValuesContainer.Visible = isOpen 
-                    dropdownContainer.Size = isOpen and UDim2.new(0, 438, 0, 145) or UDim2.new(0, 438, 0, 35) 
+                    local targetSize = isOpen and UDim2.new(1, 0, 0, 145) or UDim2.new(1, 0, 0, 35) 
+                    dropdownContainer.Size = targetSize
                     TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Rotation = isOpen and 180 or 0 }):Play() 
                 end 
                 dropdownLabel.MouseButton1Click:Connect(toggleDropdown) 
@@ -744,7 +774,7 @@ local library = (function ()
                         TextSize = 14, 
                         Font = Font, 
                         TextColor3 = Colors.White, 
-                        Size = UDim2.new(1, -10, 0, 28), 
+                        Size = UDim2.new(1, 0, 0, 28), 
                         AutoButtonColor = false, 
                         Text = " " .. value, 
                         TextXAlignment = Enum.TextXAlignment.Left, 
@@ -756,7 +786,7 @@ local library = (function ()
                     btn.MouseButton1Click:Connect(function() 
                         isOpen = false 
                         dropdownValuesContainer.Visible = false 
-                        dropdownContainer.Size = UDim2.new(0, 438, 0, 35) 
+                        dropdownContainer.Size = UDim2.new(1, 0, 0, 35) 
                         dropdownSelectedLabel.Text = value 
                         TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Rotation = 0}):Play() 
                         callback(value, dropdown) 
@@ -830,7 +860,7 @@ local library = (function ()
                     Font = Font, 
                     TextXAlignment = Enum.TextXAlignment.Left, 
                     AutoButtonColor = false, 
-                    Size = UDim2.new(0, 438, 0, 35), 
+                    Size = UDim2.new(1, 0, 0, 35), 
                     TextSize = 14, 
                     BackgroundColor3 = Colors.Gray.DarkButton 
                 }) 
@@ -858,7 +888,7 @@ local library = (function ()
                 } 
 
                 local paletteFrame = CreateInstance("Frame", tabContainer, { 
-                    Size = UDim2.new(0, 438, 0, 0), 
+                    Size = UDim2.new(1, 0, 0, 0), 
                     BackgroundColor3 = Colors.Gray.DarkButton, 
                     Visible = false, 
                     ClipsDescendants = true 
@@ -890,7 +920,7 @@ local library = (function ()
                         window:SetAccentColor(color) 
                         callback(color) 
                         paletteFrame.Visible = false 
-                        TweenService:Create(paletteFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 438, 0, 0)}):Play() 
+                        TweenService:Create(paletteFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 0)}):Play() 
                     end) 
                 end 
 
@@ -898,7 +928,7 @@ local library = (function ()
                 container.MouseButton1Click:Connect(function() 
                     isOpen = not isOpen 
                     paletteFrame.Visible = isOpen 
-                    local targetSize = isOpen and UDim2.new(0, 438, 0, 100) or UDim2.new(0, 438, 0, 0) 
+                    local targetSize = isOpen and UDim2.new(1, 0, 0, 100) or UDim2.new(1, 0, 0, 0) 
                     TweenService:Create(paletteFrame, TweenInfo.new(0.2), {Size = targetSize}):Play() 
                 end) 
                 return colorPicker 
