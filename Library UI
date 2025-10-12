@@ -1,5 +1,5 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v3.0
+Demon Hub UI Library - Complete Redesign v4.0
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -391,7 +391,7 @@ local library = (function ()
     -- Hover sound effect function
     local function playHoverSound()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://8679509159"
+        sound.SoundId = "rbxassetid://10066942189"  -- Replaced with valid hover sound ID
         sound.Volume = 0.15
         sound.PlayOnRemove = false
         sound.Parent = workspace
@@ -401,7 +401,7 @@ local library = (function ()
 
     local function playClickSound()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://8679507179"
+        sound.SoundId = "rbxassetid://8053704437"  -- Replaced with valid click sound ID
         sound.Volume = 0.2
         sound.Parent = workspace
         sound:Play()
@@ -628,7 +628,9 @@ local library = (function ()
                 Transparency = 0.6
             })
             autobutcolor(btn, Colors.Gray.Button) 
-            btn.MouseButton1Click:Connect(callback)
+            if callback then
+                btn.MouseButton1Click:Connect(callback)
+            end
             return btn
         end
 
@@ -637,7 +639,7 @@ local library = (function ()
         end)
         
         local maximizeButton = createControlButton("⬜", UDim2.new(1, -82, 0.5, -16), nil)
-        local minimizeButton = createControlButton("−", UDim2.new(1, -124, 0.5, -16), nil)  -- Changed symbol to "−" for better rendering
+        local minimizeButton = createControlButton("−", UDim2.new(1, -124, 0.5, -16), nil)
 
         -- Dragging system
         local isDragging = false
