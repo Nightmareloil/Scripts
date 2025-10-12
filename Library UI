@@ -1,5 +1,5 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v4.0
+Demon Hub UI Library - Complete Redesign v5.0
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -638,8 +638,6 @@ local library = (function ()
             window:Destroy()
         end)
         
-        --vvv-- MODIFICATION START --vvv--
-
         -- State variables for window management
         local isMaximized = false
         local isMinimized = false
@@ -756,12 +754,14 @@ local library = (function ()
             local targetSize
             if isMinimized then
                 -- Becoming Minimized
+                aspectRatioConstraint.Enabled = false -- <-- FIX: Disable the constraint to prevent squashing
+
                 if not isMaximized then
                     -- Save the current size only if we aren't maximized
                     normalSize = mainFrame.Size
                     normalPos = mainFrame.Position
                 else
-                    -- If we are maximized, we must exit that state
+                    -- If we are maximized, we must exit that state before minimizing
                     isMaximized = false
                     maximizeButton.Text = "🗖"
                 end
@@ -769,14 +769,14 @@ local library = (function ()
                 targetSize = UDim2.new(mainFrame.Size.X.Scale, mainFrame.Size.X.Offset, 0, 48)
             else
                 -- Restoring from Minimized
+                aspectRatioConstraint.Enabled = true -- <-- FIX: Re-enable the constraint for normal resizing
+                
                 -- Restore to the last saved "normal" size
                 targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
         end)
-        
-        --^^^-- MODIFICATION END --^^^--
 
         -- Resize functionality
         local isResizing = false
