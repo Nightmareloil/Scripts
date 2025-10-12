@@ -1,5 +1,5 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v4.0
+Demon Hub UI Library - Complete Redesign v3.0
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -451,7 +451,7 @@ local library = (function ()
     end 
 
     function library:CreateWindow(title) 
-        title = title or "Demon Hub" 
+        title = title or "Demon Hub 2025 | discord.gg/QjHVJd9Ku" 
         local parent = game.CoreGui 
         local state = library.WindowState.Opened 
         local window_id = math.random(1, 400) 
@@ -612,7 +612,7 @@ local library = (function ()
             local btn = CreateInstance("TextButton", top, { 
                 Text = text, 
                 Font = Font, 
-                TextSize = 16, 
+                TextSize = 14,  -- Reduced for better fit
                 TextColor3 = Colors.White, 
                 Position = pos, 
                 BackgroundColor3 = Colors.Gray.Button,
@@ -634,12 +634,12 @@ local library = (function ()
             return btn
         end
 
-        local closeButton = createControlButton("✕", UDim2.new(1, -40, 0.5, -16), function()
+        local closeButton = createControlButton("X", UDim2.new(1, -40, 0.5, -16), function()
             window:Destroy()
         end)
         
-        local maximizeButton = createControlButton("⬜", UDim2.new(1, -82, 0.5, -16), nil)
-        local minimizeButton = createControlButton("−", UDim2.new(1, -124, 0.5, -16), nil)
+        local maximizeButton = createControlButton("[]", UDim2.new(1, -82, 0.5, -16), nil)
+        local minimizeButton = createControlButton("-", UDim2.new(1, -124, 0.5, -16), nil)
 
         -- Dragging system
         local isDragging = false
@@ -1019,8 +1019,8 @@ local library = (function ()
                     valueDisplay = CreateInstance("TextBox", container, {
                         BackgroundColor3 = Colors.Gray.TogBox,
                         BackgroundTransparency = 0.2,
-                        Position = UDim2.new(1, -120, 0, 0),
-                        Size = UDim2.new(0, 110, 0, 24),
+                        Position = UDim2.new(1, -100, 0, 0),  -- Adjusted from -120 to -100 for slight separation
+                        Size = UDim2.new(0, 90, 0, 24),  -- Reduced width for tighter fit
                         Font = Enum.Font.GothamBold,
                         Text = tostring(default),
                         TextColor3 = Colors.White,
@@ -1036,11 +1036,11 @@ local library = (function ()
                 else
                      valueDisplay = CreateInstance("TextLabel", container, { 
                         BackgroundTransparency = 1, 
-                        Position = UDim2.new(1, -120, 0, 0),
-                        Size = UDim2.new(0, 110, 0, 18), 
+                        Position = UDim2.new(1, -100, 0, 0),  -- Adjusted for separation
+                        Size = UDim2.new(0, 90, 0, 18), 
                         Font = Enum.Font.GothamBold, 
                         Text = tostring(default), 
-                        TextColor3 = Colors.Accent,
+                        TextColor3 = Colors.White,  -- Changed to White for contrast
                         TextSize = 13, 
                         TextXAlignment = Enum.TextXAlignment.Right 
                     })
