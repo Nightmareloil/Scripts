@@ -1,5 +1,5 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v3.0
+Demon Hub UI Library - Complete Redesign v4.0
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -186,7 +186,7 @@ pcall(function()
 
     local subtitle = Instance.new("TextLabel", logoContainer) 
     subtitle.Size = UDim2.new(1, 0, 0, 30) 
-    subtitle.Position = UDim2.new(0.5, 0, 0, 100)  -- Increased spacing from 90 to 100
+    subtitle.Position = UDim2.new(0.5, 0, 0, 100)
     subtitle.AnchorPoint = Vector2.new(0.5, 0)
     subtitle.BackgroundTransparency = 1 
     subtitle.Text = "⚡ Initializing Systems..." 
@@ -199,7 +199,7 @@ pcall(function()
     -- Modern loading bar with glassmorphism
     local loadingBarContainer = Instance.new("Frame", bg)
     loadingBarContainer.Size = UDim2.new(0, 450, 0, 50)
-    loadingBarContainer.Position = UDim2.new(0.5, -225, 0.65, 0)  -- Lowered from 0.62 to 0.65 for more spread
+    loadingBarContainer.Position = UDim2.new(0.5, -225, 0.65, 0)
     loadingBarContainer.BackgroundTransparency = 1
     loadingBarContainer.ZIndex = 13
 
@@ -253,7 +253,7 @@ pcall(function()
 
     local percentText = Instance.new("TextLabel", loadingBarContainer)
     percentText.Size = UDim2.new(1, 0, 0, 25)
-    percentText.Position = UDim2.new(0, 0, 1, 15)  -- Increased from 5 to 15 for better spacing
+    percentText.Position = UDim2.new(0, 0, 1, 15)
     percentText.BackgroundTransparency = 1
     percentText.Text = "0%"
     percentText.TextColor3 = Color3.fromHSV(0.75, 0.7, 1)
@@ -265,7 +265,7 @@ pcall(function()
     -- Status indicators
     local statusText = Instance.new("TextLabel", bg)
     statusText.Size = UDim2.new(0, 400, 0, 20)
-    statusText.Position = UDim2.new(0.5, -200, 0.78, 0)  -- Lowered from 0.72 to 0.78 for spread
+    statusText.Position = UDim2.new(0.5, -200, 0.78, 0)
     statusText.BackgroundTransparency = 1
     statusText.Text = "⬤ Starting..."
     statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
@@ -391,7 +391,7 @@ local library = (function ()
     -- Hover sound effect function
     local function playHoverSound()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://10066942189"  -- Replaced with valid hover sound ID
+        sound.SoundId = "rbxassetid://10066942189"
         sound.Volume = 0.15
         sound.PlayOnRemove = false
         sound.Parent = workspace
@@ -401,7 +401,7 @@ local library = (function ()
 
     local function playClickSound()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://8053704437"  -- Replaced with valid click sound ID
+        sound.SoundId = "rbxassetid://8053704437"
         sound.Volume = 0.2
         sound.Parent = workspace
         sound:Play()
@@ -612,7 +612,7 @@ local library = (function ()
             local btn = CreateInstance("TextButton", top, { 
                 Text = text, 
                 Font = Font, 
-                TextSize = 14,  -- Reduced for better fit
+                TextSize = 14,
                 TextColor3 = Colors.White, 
                 Position = pos, 
                 BackgroundColor3 = Colors.Gray.Button,
@@ -638,8 +638,16 @@ local library = (function ()
             window:Destroy()
         end)
         
-        local maximizeButton = createControlButton("[]", UDim2.new(1, -82, 0.5, -16), nil)
-        local minimizeButton = createControlButton("-", UDim2.new(1, -124, 0.5, -16), nil)
+        --vvv-- MODIFICATION START --vvv--
+
+        -- State variables for window management
+        local isMaximized = false
+        local isMinimized = false
+        local normalSize, normalPos -- Stores size/position before maximizing or minimizing
+
+        -- Use proper icons for maximize/minimize buttons
+        local maximizeButton = createControlButton("🗖", UDim2.new(1, -82, 0.5, -16), nil)
+        local minimizeButton = createControlButton("—", UDim2.new(1, -124, 0.5, -16), nil)
 
         -- Dragging system
         local isDragging = false
@@ -710,43 +718,65 @@ local library = (function ()
             ZIndex = 100
         })
 
-        local isMaximized = false 
-        local normalSize, normalPos
+        -- Rewritten Maximize and Minimize Logic
         maximizeButton.MouseButton1Click:Connect(function() 
+            if isMinimized then return end -- Prevent maximizing while minimized
+
             isMaximized = not isMaximized 
             if isMaximized then 
+                -- Becoming maximized
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
+                maximizeButton.Text = "🗗" -- Restore icon
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { 
                     Size = UDim2.new(0.92, 0, 0.92, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             else 
+                -- Restoring from maximized
+                maximizeButton.Text = "🗖" -- Maximize icon
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { 
-                    Size = normalSize, 
-                    Position = normalPos 
+                    Size = normalSize or UDim2.new(0, 650, 0, 450), 
+                    Position = normalPos or UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             end 
         end)
 
-        local isMinimized = false
-        local lastSizeBeforeMinimize
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
-            windowContainer.Visible = not isMinimized 
-            resizeHandle.Visible = not isMinimized
+            
+            -- Toggle visibility of all components that aren't part of the top bar
+            local shouldBeVisible = not isMinimized
+            windowContainer.Visible = shouldBeVisible 
+            resizeHandle.Visible = shouldBeVisible
+            glassEffect.Visible = shouldBeVisible
+            accentGlow.Visible = shouldBeVisible
             
             local targetSize
             if isMinimized then
-                lastSizeBeforeMinimize = mainFrame.Size
-                targetSize = UDim2.new(lastSizeBeforeMinimize.X.Scale, lastSizeBeforeMinimize.X.Offset, 0, 48)
+                -- Becoming Minimized
+                if not isMaximized then
+                    -- Save the current size only if we aren't maximized
+                    normalSize = mainFrame.Size
+                    normalPos = mainFrame.Position
+                else
+                    -- If we are maximized, we must exit that state
+                    isMaximized = false
+                    maximizeButton.Text = "🗖"
+                end
+                -- Shrink to the height of the top bar, keeping current width
+                targetSize = UDim2.new(mainFrame.Size.X.Scale, mainFrame.Size.X.Offset, 0, 48)
             else
-                targetSize = lastSizeBeforeMinimize or mainFrame.Size
+                -- Restoring from Minimized
+                -- Restore to the last saved "normal" size
+                targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
-            TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
+            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
         end)
+        
+        --^^^-- MODIFICATION END --^^^--
 
         -- Resize functionality
         local isResizing = false
@@ -1019,8 +1049,8 @@ local library = (function ()
                     valueDisplay = CreateInstance("TextBox", container, {
                         BackgroundColor3 = Colors.Gray.TogBox,
                         BackgroundTransparency = 0.2,
-                        Position = UDim2.new(1, -100, 0, 0),  -- Adjusted from -120 to -100 for slight separation
-                        Size = UDim2.new(0, 90, 0, 24),  -- Reduced width for tighter fit
+                        Position = UDim2.new(1, -100, 0, 0),
+                        Size = UDim2.new(0, 90, 0, 24),
                         Font = Enum.Font.GothamBold,
                         Text = tostring(default),
                         TextColor3 = Colors.White,
@@ -1036,11 +1066,11 @@ local library = (function ()
                 else
                      valueDisplay = CreateInstance("TextLabel", container, { 
                         BackgroundTransparency = 1, 
-                        Position = UDim2.new(1, -100, 0, 0),  -- Adjusted for separation
+                        Position = UDim2.new(1, -100, 0, 0),
                         Size = UDim2.new(0, 90, 0, 18), 
                         Font = Enum.Font.GothamBold, 
                         Text = tostring(default), 
-                        TextColor3 = Colors.White,  -- Changed to White for contrast
+                        TextColor3 = Colors.White,
                         TextSize = 13, 
                         TextXAlignment = Enum.TextXAlignment.Right 
                     })
