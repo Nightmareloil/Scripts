@@ -1,5 +1,5 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v5.0
+Demon Hub UI Library - Complete Redesign v6.0
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -611,8 +611,8 @@ local library = (function ()
         local function createControlButton(text, pos, callback)
             local btn = CreateInstance("TextButton", top, { 
                 Text = text, 
-                Font = Font, 
-                TextSize = 14,
+                Font = Enum.Font.GothamBold,
+                TextSize = 16,
                 TextColor3 = Colors.White, 
                 Position = pos, 
                 BackgroundColor3 = Colors.Gray.Button,
@@ -638,14 +638,56 @@ local library = (function ()
             window:Destroy()
         end)
         
+        local minimizeButton = createControlButton("—", UDim2.new(1, -124, 0.5, -16), nil)
+        
+        --vvv-- MODIFICATION START: NEW MAXIMIZE BUTTON AND ICONS --vvv--
+        
+        -- Create button with empty text
+        local maximizeButton = createControlButton("", UDim2.new(1, -82, 0.5, -16), nil)
+
+        -- Create Maximize icon (single square)
+        local maximizeIcon = CreateInstance("Frame", maximizeButton, {
+            Name = "MaximizeIcon",
+            Size = UDim2.new(0, 12, 0, 12),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Visible = true -- Visible by default
+        })
+        CreateInstance("UIStroke", maximizeIcon, { Color = Colors.White, Thickness = 1.5 })
+
+        -- Create Restore icon (two overlapping squares)
+        local restoreIcon = CreateInstance("Frame", maximizeButton, {
+            Name = "RestoreIcon",
+            Size = UDim2.new(1, 0, 1, 0),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            Visible = false -- Hidden by default
+        })
+        local restoreIconBack = CreateInstance("Frame", restoreIcon, {
+            Size = UDim2.new(0, 10, 0, 10),
+            Position = UDim2.new(0.5, -3, 0.5, -4),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+        })
+        CreateInstance("UIStroke", restoreIconBack, { Color = Colors.White, Thickness = 1.5 })
+        local restoreIconFront = CreateInstance("Frame", restoreIcon, {
+            Size = UDim2.new(0, 10, 0, 10),
+            Position = UDim2.new(0.5, 0, 0.5, -1),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = Colors.Gray.Button, -- Hides the line behind it
+            BorderSizePixel = 0
+        })
+        CreateInstance("UIStroke", restoreIconFront, { Color = Colors.White, Thickness = 1.5 })
+
         -- State variables for window management
         local isMaximized = false
         local isMinimized = false
-        local normalSize, normalPos -- Stores size/position before maximizing or minimizing
+        local normalSize, normalPos
 
-        -- Use proper icons for maximize/minimize buttons
-        local maximizeButton = createControlButton("🗖", UDim2.new(1, -82, 0.5, -16), nil)
-        local minimizeButton = createControlButton("—", UDim2.new(1, -124, 0.5, -16), nil)
+        --^^^-- MODIFICATION END --^^^--
 
         -- Dragging system
         local isDragging = false
@@ -718,21 +760,21 @@ local library = (function ()
 
         -- Rewritten Maximize and Minimize Logic
         maximizeButton.MouseButton1Click:Connect(function() 
-            if isMinimized then return end -- Prevent maximizing while minimized
+            if isMinimized then return end
 
             isMaximized = not isMaximized 
             if isMaximized then 
-                -- Becoming maximized
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
-                maximizeButton.Text = "🗗" -- Restore icon
+                maximizeIcon.Visible = false -- Switch to restore icon
+                restoreIcon.Visible = true
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { 
                     Size = UDim2.new(0.92, 0, 0.92, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
                 }):Play() 
             else 
-                -- Restoring from maximized
-                maximizeButton.Text = "🗖" -- Maximize icon
+                maximizeIcon.Visible = true -- Switch to maximize icon
+                restoreIcon.Visible = false
                 TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { 
                     Size = normalSize or UDim2.new(0, 650, 0, 450), 
                     Position = normalPos or UDim2.new(0.5, 0, 0.5, 0) 
@@ -740,11 +782,11 @@ local library = (function ()
             end 
         end)
 
+        --vvv-- MODIFICATION START: NEW MINIMIZE BUG FIX --vvv--
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             
-            -- Toggle visibility of all components that aren't part of the top bar
             local shouldBeVisible = not isMinimized
             windowContainer.Visible = shouldBeVisible 
             resizeHandle.Visible = shouldBeVisible
@@ -753,30 +795,25 @@ local library = (function ()
             
             local targetSize
             if isMinimized then
-                -- Becoming Minimized
-                aspectRatioConstraint.Enabled = false -- <-- FIX: Disable the constraint to prevent squashing
-
+                aspectRatioConstraint.Enabled = false
                 if not isMaximized then
-                    -- Save the current size only if we aren't maximized
                     normalSize = mainFrame.Size
                     normalPos = mainFrame.Position
                 else
-                    -- If we are maximized, we must exit that state before minimizing
                     isMaximized = false
-                    maximizeButton.Text = "🗖"
+                    maximizeIcon.Visible = true
+                    restoreIcon.Visible = false
                 end
-                -- Shrink to the height of the top bar, keeping current width
-                targetSize = UDim2.new(mainFrame.Size.X.Scale, mainFrame.Size.X.Offset, 0, 48)
+                local currentPixelWidth = mainFrame.AbsoluteSize.X
+                targetSize = UDim2.new(0, currentPixelWidth, 0, 48)
             else
-                -- Restoring from Minimized
-                aspectRatioConstraint.Enabled = true -- <-- FIX: Re-enable the constraint for normal resizing
-                
-                -- Restore to the last saved "normal" size
+                aspectRatioConstraint.Enabled = true
                 targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
         end)
+        --^^^-- MODIFICATION END --^^^--
 
         -- Resize functionality
         local isResizing = false
