@@ -640,8 +640,6 @@ local library = (function ()
         
         local minimizeButton = createControlButton("—", UDim2.new(1, -124, 0.5, -16), nil)
         
-        --vvv-- MODIFICATION START: NEW MAXIMIZE BUTTON AND ICONS --vvv--
-        
         -- Create button with empty text
         local maximizeButton = createControlButton("", UDim2.new(1, -82, 0.5, -16), nil)
 
@@ -686,8 +684,6 @@ local library = (function ()
         local isMaximized = false
         local isMinimized = false
         local normalSize, normalPos
-
-        --^^^-- MODIFICATION END --^^^--
 
         -- Dragging system
         local isDragging = false
@@ -782,7 +778,7 @@ local library = (function ()
             end 
         end)
 
-        --vvv-- MODIFICATION START: NEW MINIMIZE BUG FIX --vvv--
+        --vvv-- MODIFICATION START: FULLY CORRECTED MINIMIZE FUNCTION --vvv--
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
@@ -795,7 +791,9 @@ local library = (function ()
             
             local targetSize
             if isMinimized then
-                aspectRatioConstraint.Enabled = false
+                -- Becoming Minimized
+                aspectRatioConstraint.Active = false -- <-- FIX: Use 'Active' instead of 'Enabled'
+
                 if not isMaximized then
                     normalSize = mainFrame.Size
                     normalPos = mainFrame.Position
@@ -807,7 +805,8 @@ local library = (function ()
                 local currentPixelWidth = mainFrame.AbsoluteSize.X
                 targetSize = UDim2.new(0, currentPixelWidth, 0, 48)
             else
-                aspectRatioConstraint.Enabled = true
+                -- Restoring from Minimized
+                aspectRatioConstraint.Active = true -- <-- FIX: Use 'Active' instead of 'Enabled'
                 targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
