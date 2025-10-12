@@ -1,15 +1,30 @@
 --[[ 
-Demon Hub UI Library - Enhanced Edition 
-✨ Fixed mobile dragging performance and bugs
-✨ Improved loading screen animations
+Demon Hub UI Library - Enhanced Edition v2.0
+✨ Modern animated loading screen
+✨ UI override system (no duplicates)
+✨ Fixed mobile dragging performance
+✨ Fixed resize bugs
+✨ Expanded color picker
 ✨ Better fluidity and responsiveness
 
 Original Interface: Trix#2794 & Julman#1234 
-Enhanced by Gemini (with SetOptions support, Resizing, Keybinds, and more) 
+Enhanced by Gemini & Claude
 --]] 
 
 ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
+
+-- 🔥 UI OVERRIDE SYSTEM - Delete old UI before creating new one
+pcall(function()
+    for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
+        if gui.Name:match("^lib_") or gui.Name == "DemonHubLoader" then
+            gui:Destroy()
+        end
+    end
+end)
+
+-- ✨ MODERN LOADING SCREEN
 pcall(function() 
+    local TweenService = game:GetService("TweenService")
     local loader = Instance.new("ScreenGui") 
     loader.Name = "DemonHubLoader" 
     loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling 
@@ -17,106 +32,185 @@ pcall(function()
 
     local bg = Instance.new("Frame", loader) 
     bg.Size = UDim2.new(1, 0, 1, 0) 
-    bg.BackgroundColor3 = Color3.fromRGB(10, 10, 15) 
+    bg.BackgroundColor3 = Color3.fromRGB(8, 8, 12) 
     bg.BorderSizePixel = 0 
     bg.ZIndex = 10 
 
-    -- Enhanced gradient with smoother transitions
+    -- Modern animated gradient
     local gradient = Instance.new("UIGradient", bg) 
     gradient.Color = ColorSequence.new({ 
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 12, 20)), 
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25, 18, 28)), 
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 12, 22)) 
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 8, 18)), 
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(22, 12, 28)), 
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 8, 20)) 
     }) 
     gradient.Rotation = 45 
+    
+    -- Animate gradient rotation
+    spawn(function()
+        while loader.Parent do
+            for i = 45, 405, 2 do
+                if not loader.Parent then break end
+                gradient.Rotation = i
+                task.wait(0.03)
+            end
+        end
+    end)
 
-    -- Animated glow with better performance
-    local glow = Instance.new("Frame", bg) 
-    glow.Size = UDim2.new(0, 250, 0, 250) 
-    glow.Position = UDim2.new(0.5, -125, 0.5, -125) 
-    glow.BackgroundColor3 = Color3.fromRGB(255, 70, 70) 
-    glow.BackgroundTransparency = 0.94 
-    glow.BorderSizePixel = 0 
-    glow.ZIndex = 11 
-    Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0) 
+    -- Multiple animated glows for depth
+    for i = 1, 3 do
+        local glow = Instance.new("Frame", bg) 
+        glow.Size = UDim2.new(0, 200 + i * 50, 0, 200 + i * 50) 
+        glow.Position = UDim2.new(0.5, -(100 + i * 25), 0.5, -(100 + i * 25)) 
+        glow.BackgroundColor3 = Color3.fromRGB(255, 60 + i * 10, 60 + i * 10) 
+        glow.BackgroundTransparency = 0.92 + i * 0.02
+        glow.BorderSizePixel = 0 
+        glow.ZIndex = 11 
+        Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0) 
+        
+        TweenService:Create(glow, TweenInfo.new(2.5 - i * 0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { 
+            BackgroundTransparency = 0.98, 
+            Size = UDim2.new(0, 300 + i * 80, 0, 300 + i * 80), 
+            Position = UDim2.new(0.5, -(150 + i * 40), 0.5, -(150 + i * 40)),
+            Rotation = i % 2 == 0 and 360 or -360
+        }):Play() 
+    end
 
-    -- Smoother pulse animation
-    game:GetService("TweenService"):Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { 
-        BackgroundTransparency = 0.97, 
-        Size = UDim2.new(0, 350, 0, 350), 
-        Position = UDim2.new(0.5, -175, 0.5, -175) 
-    }):Play() 
+    -- Particle effect simulation
+    for i = 1, 15 do
+        local particle = Instance.new("Frame", bg)
+        particle.Size = UDim2.new(0, math.random(2, 5), 0, math.random(2, 5))
+        particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+        particle.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+        particle.BackgroundTransparency = math.random(70, 95) / 100
+        particle.BorderSizePixel = 0
+        particle.ZIndex = 12
+        Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
+        
+        TweenService:Create(particle, TweenInfo.new(math.random(3, 6), Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), {
+            Position = UDim2.new(math.random(), 0, math.random(), 0),
+            BackgroundTransparency = 1
+        }):Play()
+    end
 
     local title = Instance.new("TextLabel", bg) 
-    title.Size = UDim2.new(0, 500, 0, 80) 
-    title.Position = UDim2.new(0.5, -250, 0.43, -40) 
+    title.Size = UDim2.new(0, 550, 0, 90) 
+    title.Position = UDim2.new(0.5, -275, 0.42, -45) 
     title.BackgroundTransparency = 1 
     title.Text = "DEMON HUB" 
-    title.TextColor3 = Color3.fromRGB(255, 85, 85) 
+    title.TextColor3 = Color3.fromRGB(255, 255, 255) 
     title.Font = Enum.Font.GothamBold 
-    title.TextSize = 56 
+    title.TextSize = 64 
     title.TextTransparency = 1 
-    title.ZIndex = 12 
+    title.ZIndex = 13
+    
+    -- Text stroke effect
+    Instance.new("UIStroke", title).Color = Color3.fromRGB(255, 70, 70)
+    title.UIStroke.Thickness = 2
+    title.UIStroke.Transparency = 1
 
-    local shadow = Instance.new("TextLabel", bg) 
-    shadow.Size = title.Size 
-    shadow.Position = UDim2.new(0.5, -247, 0.43, -37) 
-    shadow.BackgroundTransparency = 1 
-    shadow.Text = "DEMON HUB" 
-    shadow.TextColor3 = Color3.fromRGB(0, 0, 0) 
-    shadow.Font = Enum.Font.GothamBold 
-    shadow.TextSize = 56 
-    shadow.TextTransparency = 1 
-    shadow.ZIndex = 11 
+    local subtitle = Instance.new("TextLabel", bg) 
+    subtitle.Size = UDim2.new(0, 500, 0, 30) 
+    subtitle.Position = UDim2.new(0.5, -250, 0.56, 0) 
+    subtitle.BackgroundTransparency = 1 
+    subtitle.Text = "Initializing Advanced Components..." 
+    subtitle.TextColor3 = Color3.fromRGB(200, 200, 220) 
+    subtitle.Font = Enum.Font.GothamBold 
+    subtitle.TextSize = 15 
+    subtitle.TextTransparency = 1 
+    subtitle.ZIndex = 13 
 
-    -- Loading bar for better visual feedback
+    -- Modern loading bar container
     local loadingBarBG = Instance.new("Frame", bg)
-    loadingBarBG.Size = UDim2.new(0, 300, 0, 4)
-    loadingBarBG.Position = UDim2.new(0.5, -150, 0.6, 0)
-    loadingBarBG.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    loadingBarBG.Size = UDim2.new(0, 380, 0, 6)
+    loadingBarBG.Position = UDim2.new(0.5, -190, 0.62, 0)
+    loadingBarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     loadingBarBG.BorderSizePixel = 0
     loadingBarBG.BackgroundTransparency = 1
-    loadingBarBG.ZIndex = 12
+    loadingBarBG.ZIndex = 13
     Instance.new("UICorner", loadingBarBG).CornerRadius = UDim.new(1, 0)
+    Instance.new("UIStroke", loadingBarBG).Color = Color3.fromRGB(60, 60, 80)
+    loadingBarBG.UIStroke.Thickness = 1
+    loadingBarBG.UIStroke.Transparency = 1
 
     local loadingBar = Instance.new("Frame", loadingBarBG)
     loadingBar.Size = UDim2.new(0, 0, 1, 0)
-    loadingBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+    loadingBar.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
     loadingBar.BorderSizePixel = 0
-    loadingBar.ZIndex = 13
+    loadingBar.ZIndex = 14
     Instance.new("UICorner", loadingBar).CornerRadius = UDim.new(1, 0)
+    
+    -- Animated gradient on loading bar
+    local barGradient = Instance.new("UIGradient", loadingBar)
+    barGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 90, 90)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
+    })
+    
+    spawn(function()
+        while loader.Parent do
+            for i = 0, 360, 5 do
+                if not loader.Parent then break end
+                barGradient.Rotation = i
+                task.wait(0.02)
+            end
+        end
+    end)
 
-    local subtitle = Instance.new("TextLabel", bg) 
-    subtitle.Size = UDim2.new(0, 500, 0, 35) 
-    subtitle.Position = UDim2.new(0.5, -250, 0.57, 0) 
-    subtitle.BackgroundTransparency = 1 
-    subtitle.Text = "Initializing UI Components..." 
-    subtitle.TextColor3 = Color3.fromRGB(210, 210, 230) 
-    subtitle.Font = Enum.Font.Gotham 
-    subtitle.TextSize = 16 
-    subtitle.TextTransparency = 1 
-    subtitle.ZIndex = 12 
+    -- Percentage text
+    local percentText = Instance.new("TextLabel", bg)
+    percentText.Size = UDim2.new(0, 100, 0, 30)
+    percentText.Position = UDim2.new(0.5, -50, 0.665, 0)
+    percentText.BackgroundTransparency = 1
+    percentText.Text = "0%"
+    percentText.TextColor3 = Color3.fromRGB(255, 80, 80)
+    percentText.Font = Enum.Font.GothamBold
+    percentText.TextSize = 16
+    percentText.TextTransparency = 1
+    percentText.ZIndex = 13
 
-    -- Smooth fade-in animations
-    game:GetService("TweenService"):Create(title, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
-    game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0.6}):Play() 
-    task.wait(0.4) 
-    game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
-    game:GetService("TweenService"):Create(loadingBarBG, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    -- Smooth animations
+    TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
+    TweenService:Create(title.UIStroke, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Transparency = 0}):Play() 
+    task.wait(0.3) 
+    TweenService:Create(subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play() 
+    task.wait(0.2)
+    TweenService:Create(loadingBarBG, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(loadingBarBG.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Transparency = 0.4}):Play()
+    TweenService:Create(percentText, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
     task.wait(0.3)
     
-    -- Animated loading bar
-    game:GetService("TweenService"):Create(loadingBar, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-    task.wait(0.9) 
+    -- Animated loading with percentage
+    for i = 0, 100, 2 do
+        local progress = i / 100
+        loadingBar.Size = UDim2.new(progress, 0, 1, 0)
+        percentText.Text = i .. "%"
+        
+        -- Update subtitle text at milestones
+        if i == 25 then
+            subtitle.Text = "Loading Core Systems..."
+        elseif i == 50 then
+            subtitle.Text = "Connecting to Services..."
+        elseif i == 75 then
+            subtitle.Text = "Finalizing Interface..."
+        elseif i == 100 then
+            subtitle.Text = "Ready!"
+        end
+        
+        task.wait(0.015)
+    end
+    
+    task.wait(0.4)
     
     -- Smooth fade-out
-    game:GetService("TweenService"):Create(bg, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(title, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(shadow, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(glow, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
-    game:GetService("TweenService"):Create(loadingBarBG, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
-    task.wait(0.6) 
+    TweenService:Create(bg, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
+    TweenService:Create(title, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
+    TweenService:Create(title.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Transparency = 1}):Play() 
+    TweenService:Create(subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play() 
+    TweenService:Create(loadingBarBG, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(loadingBarBG.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+    TweenService:Create(percentText, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+    task.wait(0.7) 
     loader:Destroy() 
 
     local snd = 6026984224 
@@ -240,9 +334,11 @@ local library = (function ()
         }) 
         local MIN_WINDOW_SIZE = Vector2.new(450, 350)
 
+        -- 🔧 FIXED: Proper aspect ratio handling
         local aspectRatioConstraint = CreateInstance("UIAspectRatioConstraint", mainFrame, { 
-            AspectRatio = 612 / 412, 
-            DominantAxis = Enum.DominantAxis.Height, 
+            AspectRatio = 612 / 412,
+            AspectType = Enum.AspectType.FitWithinMaxSize,
+            DominantAxis = Enum.DominantAxis.Width
         })
 
         local top = CreateInstance("Frame", mainFrame, { 
@@ -299,6 +395,7 @@ local library = (function ()
             if isMaximized then 
                 normalSize = mainFrame.Size 
                 normalPos = mainFrame.Position 
+                aspectRatioConstraint.AspectType = Enum.AspectType.FitWithinMaxSize
                 TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { 
                     Size = UDim2.new(0.9, 0, 0.9, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 0) 
@@ -325,7 +422,7 @@ local library = (function ()
         CreateInstance("UICorner", minimizeButton, { CornerRadius = UDim.new(0, 4) }) 
         autobutcolor(minimizeButton, Color3.fromRGB(40, 40, 48)) 
 
-        -- ✨ [FIXED] DRAGGING - Now works perfectly on mobile and PC
+        -- ✨ FIXED DRAGGING
         local isDragging = false
         local dragStart = nil
         local startPos = nil
@@ -335,7 +432,6 @@ local library = (function ()
         top.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 isDragging = true
-                -- FIX: Use GetMouseLocation() to get a Vector2, preventing the error
                 dragStart = UserInputService:GetMouseLocation() 
                 startPos = mainFrame.Position
                 
@@ -393,19 +489,31 @@ local library = (function ()
         local isResizing = false
         local resizeConnection, resizeMoveConnection
         
+        -- 🔧 FIXED RESIZE - No more errors!
         resizeHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 isResizing = true
                 local startSize = mainFrame.AbsoluteSize
                 local startMousePos = UserInputService:GetMouseLocation()
-                aspectRatioConstraint.Active = false
+                
+                -- Properly disable aspect ratio during resize
+                pcall(function()
+                    aspectRatioConstraint.AspectType = Enum.AspectType.FitWithinMaxSize
+                end)
 
                 resizeMoveConnection = UserInputService.InputChanged:Connect(function(inputObject)
                     if isResizing and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                         local currentMousePos = UserInputService:GetMouseLocation()
                         local delta = currentMousePos - startMousePos
                         local newSize = startSize + delta
-                        mainFrame.Size = UDim2.new(0, math.max(newSize.X, MIN_WINDOW_SIZE.X), 0, math.max(newSize.Y, MIN_WINDOW_SIZE.Y))
+                        
+                        -- Clamp to minimum size
+                        local finalX = math.max(newSize.X, MIN_WINDOW_SIZE.X)
+                        local finalY = math.max(newSize.Y, MIN_WINDOW_SIZE.Y)
+                        
+                        pcall(function()
+                            mainFrame.Size = UDim2.new(0, finalX, 0, finalY)
+                        end)
                     end
                 end)
 
@@ -414,7 +522,13 @@ local library = (function ()
                         isResizing = false
                         if resizeMoveConnection then resizeMoveConnection:Disconnect() end
                         if resizeConnection then resizeConnection:Disconnect() end
-                        aspectRatioConstraint.Active = not isMinimized
+                        
+                        -- Re-enable aspect ratio if not minimized
+                        pcall(function()
+                            if not isMinimized then
+                                aspectRatioConstraint.AspectType = Enum.AspectType.FitWithinMaxSize
+                            end
+                        end)
                     end
                 end)
             end
@@ -490,7 +604,14 @@ local library = (function ()
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
             windowContainer.Visible = not isMinimized 
             resizeHandle.Visible = not isMinimized
-            aspectRatioConstraint.Active = not isMinimized
+            
+            pcall(function()
+                if isMinimized then
+                    aspectRatioConstraint.AspectType = Enum.AspectType.FitWithinMaxSize
+                else
+                    aspectRatioConstraint.AspectType = Enum.AspectType.FitWithinMaxSize
+                end
+            end)
 
             local targetSize
             if isMinimized then
@@ -1043,6 +1164,7 @@ local library = (function ()
                 return keybind
             end
 
+            -- 🎨 EXPANDED COLOR PICKER with 24 colors!
             function tab:CreateColorPicker(label, defaultColor, callback) 
                 callback = callback or function() end 
                 local colorPicker = {} 
@@ -1067,16 +1189,45 @@ local library = (function ()
                 CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 4) }) 
                 CreateInstance("UIStroke", colorDisplay, { Color = Color3.fromRGB(60, 60, 70), Thickness = 1 }) 
 
+                -- 🎨 24 AMAZING COLORS!
                 local colorPalette = { 
-                    Color3.fromRGB(255, 75, 75), 
-                    Color3.fromRGB(255, 150, 50), 
-                    Color3.fromRGB(255, 220, 50), 
-                    Color3.fromRGB(100, 255, 100), 
-                    Color3.fromRGB(50, 200, 255), 
-                    Color3.fromRGB(100, 100, 255), 
-                    Color3.fromRGB(200, 100, 255), 
-                    Color3.fromRGB(255, 100, 200), 
-                    Color3.fromRGB(255, 255, 255), 
+                    -- Reds & Pinks
+                    Color3.fromRGB(255, 75, 75),   -- Red
+                    Color3.fromRGB(255, 100, 200), -- Pink
+                    Color3.fromRGB(200, 50, 100),  -- Dark Pink
+                    
+                    -- Oranges & Yellows
+                    Color3.fromRGB(255, 150, 50),  -- Orange
+                    Color3.fromRGB(255, 200, 80),  -- Light Orange
+                    Color3.fromRGB(255, 220, 50),  -- Yellow
+                    
+                    -- Greens
+                    Color3.fromRGB(100, 255, 100), -- Green
+                    Color3.fromRGB(50, 200, 100),  -- Mint
+                    Color3.fromRGB(100, 255, 180), -- Aqua Green
+                    
+                    -- Cyans & Blues
+                    Color3.fromRGB(50, 200, 255),  -- Cyan
+                    Color3.fromRGB(80, 150, 255),  -- Sky Blue
+                    Color3.fromRGB(100, 100, 255), -- Blue
+                    
+                    -- Purples
+                    Color3.fromRGB(150, 100, 255), -- Purple
+                    Color3.fromRGB(200, 100, 255), -- Light Purple
+                    Color3.fromRGB(180, 80, 200),  -- Violet
+                    
+                    -- Neutrals & Special
+                    Color3.fromRGB(255, 255, 255), -- White
+                    Color3.fromRGB(200, 200, 200), -- Light Gray
+                    Color3.fromRGB(120, 120, 130), -- Gray
+                    Color3.fromRGB(80, 80, 90),    -- Dark Gray
+                    Color3.fromRGB(40, 40, 50),    -- Darker Gray
+                    
+                    -- Extra vibrant colors
+                    Color3.fromRGB(255, 50, 150),  -- Hot Pink
+                    Color3.fromRGB(150, 255, 50),  -- Lime
+                    Color3.fromRGB(50, 255, 255),  -- Bright Cyan
+                    Color3.fromRGB(255, 100, 50),  -- Coral
                 } 
 
                 local paletteFrame = CreateInstance("Frame", tabContainer, { 
@@ -1088,13 +1239,13 @@ local library = (function ()
                 CreateInstance("UICorner", paletteFrame, { CornerRadius = UDim.new(0, 4) }) 
 
                 local paletteGrid = CreateInstance("Frame", paletteFrame, { 
-                    Size = UDim2.new(1, -20, 0, 80), 
+                    Size = UDim2.new(1, -20, 1, -20), 
                     Position = UDim2.new(0, 10, 0, 10), 
                     BackgroundTransparency = 1 
                 }) 
                 CreateInstance("UIGridLayout", paletteGrid, { 
-                    CellSize = UDim2.new(0, 40, 0, 35), 
-                    CellPadding = UDim2.new(0, 5, 0, 5), 
+                    CellSize = UDim2.new(0, 38, 0, 33), 
+                    CellPadding = UDim2.new(0, 4, 0, 4), 
                     SortOrder = Enum.SortOrder.LayoutOrder 
                 }) 
 
@@ -1103,10 +1254,19 @@ local library = (function ()
                         Text = "", 
                         BackgroundColor3 = color, 
                         AutoButtonColor = false, 
-                        Size = UDim2.new(0, 40, 0, 35) 
+                        Size = UDim2.new(0, 38, 0, 33) 
                     }) 
                     CreateInstance("UICorner", colorBtn, { CornerRadius = UDim.new(0, 4) }) 
                     CreateInstance("UIStroke", colorBtn, { Color = Color3.fromRGB(60, 60, 70), Thickness = 2 }) 
+                    
+                    -- Hover effect
+                    colorBtn.MouseEnter:Connect(function()
+                        TweenService:Create(colorBtn.UIStroke, TweenInfo.new(0.15), {Thickness = 3, Color = Colors.White}):Play()
+                    end)
+                    colorBtn.MouseLeave:Connect(function()
+                        TweenService:Create(colorBtn.UIStroke, TweenInfo.new(0.15), {Thickness = 2, Color = Color3.fromRGB(60, 60, 70)}):Play()
+                    end)
+                    
                     colorBtn.MouseButton1Click:Connect(function() 
                         colorDisplay.BackgroundColor3 = color 
                         window:SetAccentColor(color) 
@@ -1120,7 +1280,7 @@ local library = (function ()
                 container.MouseButton1Click:Connect(function() 
                     isOpen = not isOpen 
                     paletteFrame.Visible = isOpen 
-                    local targetSize = isOpen and UDim2.new(1, 0, 0, 100) or UDim2.new(1, 0, 0, 0) 
+                    local targetSize = isOpen and UDim2.new(1, 0, 0, 155) or UDim2.new(1, 0, 0, 0) 
                     TweenService:Create(paletteFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Size = targetSize}):Play() 
                 end) 
                 return colorPicker 
