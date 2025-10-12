@@ -186,7 +186,7 @@ pcall(function()
 
     local subtitle = Instance.new("TextLabel", logoContainer) 
     subtitle.Size = UDim2.new(1, 0, 0, 30) 
-    subtitle.Position = UDim2.new(0.5, 0, 0, 90)
+    subtitle.Position = UDim2.new(0.5, 0, 0, 100)  -- Increased spacing from 90 to 100
     subtitle.AnchorPoint = Vector2.new(0.5, 0)
     subtitle.BackgroundTransparency = 1 
     subtitle.Text = "⚡ Initializing Systems..." 
@@ -199,7 +199,7 @@ pcall(function()
     -- Modern loading bar with glassmorphism
     local loadingBarContainer = Instance.new("Frame", bg)
     loadingBarContainer.Size = UDim2.new(0, 450, 0, 50)
-    loadingBarContainer.Position = UDim2.new(0.5, -225, 0.62, 0)
+    loadingBarContainer.Position = UDim2.new(0.5, -225, 0.65, 0)  -- Lowered from 0.62 to 0.65 for more spread
     loadingBarContainer.BackgroundTransparency = 1
     loadingBarContainer.ZIndex = 13
 
@@ -253,7 +253,7 @@ pcall(function()
 
     local percentText = Instance.new("TextLabel", loadingBarContainer)
     percentText.Size = UDim2.new(1, 0, 0, 25)
-    percentText.Position = UDim2.new(0, 0, 1, 5)
+    percentText.Position = UDim2.new(0, 0, 1, 15)  -- Increased from 5 to 15 for better spacing
     percentText.BackgroundTransparency = 1
     percentText.Text = "0%"
     percentText.TextColor3 = Color3.fromHSV(0.75, 0.7, 1)
@@ -265,7 +265,7 @@ pcall(function()
     -- Status indicators
     local statusText = Instance.new("TextLabel", bg)
     statusText.Size = UDim2.new(0, 400, 0, 20)
-    statusText.Position = UDim2.new(0.5, -200, 0.72, 0)
+    statusText.Position = UDim2.new(0.5, -200, 0.78, 0)  -- Lowered from 0.72 to 0.78 for spread
     statusText.BackgroundTransparency = 1
     statusText.Text = "⬤ Starting..."
     statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
@@ -325,14 +325,20 @@ pcall(function()
     
     task.wait(0.5)
     
-    -- Smooth fade-out
+    -- Smooth fade-out with error handling
     TweenService:Create(bg, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
     for _, child in ipairs(bg:GetDescendants()) do
-        if child:IsA("Frame") or child:IsA("TextLabel") then
-            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
-                BackgroundTransparency = 1,
-                TextTransparency = 1
-            }):Play()
+        pcall(function()
+            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+        end)
+        pcall(function()
+            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+        end)
+        pcall(function()
+            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+        end)
+        if child:IsA("UIStroke") then
+            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
         end
     end
     task.wait(0.8) 
@@ -626,12 +632,12 @@ local library = (function ()
             return btn
         end
 
-        local closeButton = createControlButton("✕", UDim2.new(1, -42, 0.5, -16), function()
+        local closeButton = createControlButton("✕", UDim2.new(1, -40, 0.5, -16), function()
             window:Destroy()
         end)
         
-        local maximizeButton = createControlButton("⬜", UDim2.new(1, -80, 0.5, -16), nil)
-        local minimizeButton = createControlButton("─", UDim2.new(1, -118, 0.5, -16), nil)
+        local maximizeButton = createControlButton("⬜", UDim2.new(1, -82, 0.5, -16), nil)
+        local minimizeButton = createControlButton("−", UDim2.new(1, -124, 0.5, -16), nil)  -- Changed symbol to "−" for better rendering
 
         -- Dragging system
         local isDragging = false
