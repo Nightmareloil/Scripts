@@ -1,7 +1,7 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v3.0
+Demon Hub UI Library - Complete Redesign v7
 ✨ Brand new modern aesthetic with glassmorphism
-✨ Dramatically enhanced cinematic loading screen
+✨ Dramatically fixed cinematic loading screen
 ✨ Smooth hover sound effects
 ✨ Advanced animations and transitions
 ✨ All original functionality preserved
@@ -778,7 +778,7 @@ local library = (function ()
             end 
         end)
 
-        --vvv-- MODIFICATION START: FULLY CORRECTED MINIMIZE FUNCTION --vvv--
+        --vvv-- MODIFICATION START: FINAL CORRECTED MINIMIZE FUNCTION --vvv--
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
@@ -792,7 +792,7 @@ local library = (function ()
             local targetSize
             if isMinimized then
                 -- Becoming Minimized
-                aspectRatioConstraint.Active = false -- <-- FIX: Use 'Active' instead of 'Enabled'
+                aspectRatioConstraint.Enabled = false -- <-- CORRECT FIX: Use 'Enabled'
 
                 if not isMaximized then
                     normalSize = mainFrame.Size
@@ -806,7 +806,7 @@ local library = (function ()
                 targetSize = UDim2.new(0, currentPixelWidth, 0, 48)
             else
                 -- Restoring from Minimized
-                aspectRatioConstraint.Active = true -- <-- FIX: Use 'Active' instead of 'Enabled'
+                aspectRatioConstraint.Enabled = true -- <-- CORRECT FIX: Use 'Enabled'
                 targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
