@@ -1,5 +1,5 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v7.2
+Demon Hub UI Library - Complete Redesign v4
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -189,7 +189,7 @@ pcall(function()
     subtitle.Position = UDim2.new(0.5, 0, 0, 100)
     subtitle.AnchorPoint = Vector2.new(0.5, 0)
     subtitle.BackgroundTransparency = 1 
-    subtitle.Text = "Initializing Systems..." -- MODIFICATION: Removed special character
+    subtitle.Text = "Initializing Systems..."
     subtitle.TextColor3 = Color3.fromHSV(0.75, 0.6, 1)
     subtitle.Font = Enum.Font.GothamBold 
     subtitle.TextSize = 16 
@@ -267,7 +267,7 @@ pcall(function()
     statusText.Size = UDim2.new(0, 400, 0, 20)
     statusText.Position = UDim2.new(0.5, -200, 0.78, 0)
     statusText.BackgroundTransparency = 1
-    statusText.Text = "* Starting..." -- MODIFICATION: Removed special character
+    statusText.Text = "* Starting..."
     statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
     statusText.Font = Enum.Font.Gotham
     statusText.TextSize = 13
@@ -299,7 +299,6 @@ pcall(function()
     task.wait(0.4)
     
     -- Loading stages with realistic timing
-    -- MODIFICATION: Removed special characters from stages table
     local stages = {
         {percent = 15, subtitle = "Loading Core Modules...", status = "* Initializing Framework"},
         {percent = 30, subtitle = "Building Components...", status = "* Creating Interface Elements"},
@@ -591,7 +590,7 @@ local library = (function ()
         local titleLabel = CreateInstance("TextLabel", top, { 
             TextColor3 = Colors.White, 
             BorderColor3 = Colors.Gray.Stroke, 
-            Text = title, -- MODIFICATION: Removed special character
+            Text = title,
             Font = Font, 
             BackgroundTransparency = 1, 
             Size = UDim2.new(1, -180, 1, 0), 
@@ -741,7 +740,6 @@ local library = (function ()
         }) 
         CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 12) })
 
-        -- MODIFICATION: Replaced resize handle text with frame-based icon
         local resizeHandle = CreateInstance("Frame", mainFrame, {
             Name = "ResizeHandle",
             Position = UDim2.new(1, 0, 1, 0),
@@ -783,7 +781,6 @@ local library = (function ()
             end 
         end)
 
-        --vvv-- MODIFICATION START: FINAL, DEFINITIVE MINIMIZE FIX --vvv--
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
@@ -796,9 +793,7 @@ local library = (function ()
             
             local targetSize
             if isMinimized then
-                -- Becoming Minimized
-                aspectRatioConstraint.Parent = nil -- <-- CORRECT FIX: Re-parent the constraint to disable it
-
+                aspectRatioConstraint.Parent = nil
                 if not isMaximized then
                     normalSize = mainFrame.Size
                     normalPos = mainFrame.Position
@@ -810,14 +805,12 @@ local library = (function ()
                 local currentPixelWidth = mainFrame.AbsoluteSize.X
                 targetSize = UDim2.new(0, currentPixelWidth, 0, 48)
             else
-                -- Restoring from Minimized
-                aspectRatioConstraint.Parent = mainFrame -- <-- CORRECT FIX: Re-parent it back to re-enable
+                aspectRatioConstraint.Parent = mainFrame
                 targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
         end)
-        --^^^-- MODIFICATION END --^^^--
 
         -- Resize functionality
         local isResizing = false
@@ -1054,6 +1047,7 @@ local library = (function ()
                 return textbox 
             end 
 
+            --vvv-- MODIFICATION START: SLIDER Z-INDEX FIX --vvv--
             function tab:CreateSlider(label, minvalue, maxvalue, default, callback, options)
                 options = options or {}
                 minvalue, maxvalue, default, callback = minvalue or 0, maxvalue or 100, default or minvalue, callback or function() end 
@@ -1096,7 +1090,8 @@ local library = (function ()
                         Text = tostring(default),
                         TextColor3 = Colors.White,
                         TextSize = 12,
-                        ClearTextOnFocus = false
+                        ClearTextOnFocus = false,
+                        ZIndex = 3 -- FIX: Set ZIndex to be higher than the slider bar
                     })
                     CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 6)})
                     CreateInstance("UIStroke", valueDisplay, {
@@ -1113,7 +1108,8 @@ local library = (function ()
                         Text = tostring(default), 
                         TextColor3 = Colors.White,
                         TextSize = 13, 
-                        TextXAlignment = Enum.TextXAlignment.Right 
+                        TextXAlignment = Enum.TextXAlignment.Right,
+                        ZIndex = 3 -- FIX: Set ZIndex to be higher than the slider bar
                     })
                 end
 
@@ -1121,7 +1117,8 @@ local library = (function ()
                     BackgroundColor3 = Colors.Gray.TogBox,
                     BackgroundTransparency = 0.2,
                     Position = UDim2.new(0, 4, 1, -14), 
-                    Size = UDim2.new(1, -8, 0, 10) 
+                    Size = UDim2.new(1, -8, 0, 10),
+                    ZIndex = 2 -- FIX: Set ZIndex to be lower than the number display
                 }) 
                 CreateInstance("UICorner", sliderBack, { CornerRadius = UDim.new(1, 0) })
                 CreateInstance("UIStroke", sliderBack, {
@@ -1194,7 +1191,8 @@ local library = (function ()
                     end
                 end)
                 return slider 
-            end 
+            end
+            --^^^-- MODIFICATION END --^^^--
 
             function tab:CreateToggle(label, default, callback) 
                 default = default or false; callback = callback or function () end 
