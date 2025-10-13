@@ -1,7 +1,7 @@
 --[[ 
-Demon Hub UI Library - Complete Redesign v7
+Demon Hub UI Library - Complete Redesign v7.2
 ✨ Brand new modern aesthetic with glassmorphism
-✨ Dramatically fixed cinematic loading screen
+✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
 ✨ Advanced animations and transitions
 ✨ All original functionality preserved
@@ -189,7 +189,7 @@ pcall(function()
     subtitle.Position = UDim2.new(0.5, 0, 0, 100)
     subtitle.AnchorPoint = Vector2.new(0.5, 0)
     subtitle.BackgroundTransparency = 1 
-    subtitle.Text = "⚡ Initializing Systems..." 
+    subtitle.Text = "Initializing Systems..." -- MODIFICATION: Removed special character
     subtitle.TextColor3 = Color3.fromHSV(0.75, 0.6, 1)
     subtitle.Font = Enum.Font.GothamBold 
     subtitle.TextSize = 16 
@@ -267,7 +267,7 @@ pcall(function()
     statusText.Size = UDim2.new(0, 400, 0, 20)
     statusText.Position = UDim2.new(0.5, -200, 0.78, 0)
     statusText.BackgroundTransparency = 1
-    statusText.Text = "⬤ Starting..."
+    statusText.Text = "* Starting..." -- MODIFICATION: Removed special character
     statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
     statusText.Font = Enum.Font.Gotham
     statusText.TextSize = 13
@@ -299,13 +299,14 @@ pcall(function()
     task.wait(0.4)
     
     -- Loading stages with realistic timing
+    -- MODIFICATION: Removed special characters from stages table
     local stages = {
-        {percent = 15, subtitle = "⚡ Loading Core Modules...", status = "⬤ Initializing Framework"},
-        {percent = 30, subtitle = "🔧 Building Components...", status = "⬤ Creating Interface Elements"},
-        {percent = 50, subtitle = "🌐 Connecting Services...", status = "⬤ Establishing Connections"},
-        {percent = 70, subtitle = "🎨 Rendering Interface...", status = "⬤ Applying Visual Styles"},
-        {percent = 85, subtitle = "✨ Finalizing Setup...", status = "⬤ Running Final Checks"},
-        {percent = 100, subtitle = "✅ Ready to Launch!", status = "⬤ Complete"}
+        {percent = 15, subtitle = "Loading Core Modules...", status = "* Initializing Framework"},
+        {percent = 30, subtitle = "Building Components...", status = "* Creating Interface Elements"},
+        {percent = 50, subtitle = "Connecting Services...", status = "* Establishing Connections"},
+        {percent = 70, subtitle = "Rendering Interface...", status = "* Applying Visual Styles"},
+        {percent = 85, subtitle = "Finalizing Setup...", status = "* Running Final Checks"},
+        {percent = 100, subtitle = "Ready to Launch!", status = "* Complete"}
     }
     
     for _, stage in ipairs(stages) do
@@ -590,7 +591,7 @@ local library = (function ()
         local titleLabel = CreateInstance("TextLabel", top, { 
             TextColor3 = Colors.White, 
             BorderColor3 = Colors.Gray.Stroke, 
-            Text = "✦ " .. title, 
+            Text = title, -- MODIFICATION: Removed special character
             Font = Font, 
             BackgroundTransparency = 1, 
             Size = UDim2.new(1, -180, 1, 0), 
@@ -740,19 +741,23 @@ local library = (function ()
         }) 
         CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 12) })
 
-        -- Resize handle
-        local resizeHandle = CreateInstance("TextLabel", mainFrame, {
+        -- MODIFICATION: Replaced resize handle text with frame-based icon
+        local resizeHandle = CreateInstance("Frame", mainFrame, {
             Name = "ResizeHandle",
-            Position = UDim2.new(1, -20, 1, -20),
+            Position = UDim2.new(1, 0, 1, 0),
             Size = UDim2.new(0, 20, 0, 20),
             AnchorPoint = Vector2.new(1, 1),
             BackgroundTransparency = 1,
-            Text = "⋰",
-            TextColor3 = Colors.Gray.Stroke,
-            Font = Font,
-            TextSize = 18,
             ZIndex = 100
         })
+        local resizeLine1 = CreateInstance("Frame", resizeHandle, {
+            BackgroundColor3 = Colors.Gray.Stroke, Size = UDim2.new(0, 8, 0, 1.5), Position = UDim2.new(1, -9, 1, -3), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = -45, BorderSizePixel = 0
+        })
+        local resizeLine2 = CreateInstance("Frame", resizeHandle, {
+            BackgroundColor3 = Colors.Gray.Stroke, Size = UDim2.new(0, 14, 0, 1.5), Position = UDim2.new(1, -7, 1, -7), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = -45, BorderSizePixel = 0
+        })
+        CreateInstance("UICorner", resizeLine1, {CornerRadius=UDim.new(1,0)})
+        CreateInstance("UICorner", resizeLine2, {CornerRadius=UDim.new(1,0)})
 
         -- Rewritten Maximize and Minimize Logic
         maximizeButton.MouseButton1Click:Connect(function() 
@@ -778,7 +783,7 @@ local library = (function ()
             end 
         end)
 
-        --vvv-- MODIFICATION START: FINAL CORRECTED MINIMIZE FUNCTION --vvv--
+        --vvv-- MODIFICATION START: FINAL, DEFINITIVE MINIMIZE FIX --vvv--
         minimizeButton.MouseButton1Click:Connect(function() 
             isMinimized = not isMinimized 
             state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened 
@@ -792,7 +797,7 @@ local library = (function ()
             local targetSize
             if isMinimized then
                 -- Becoming Minimized
-                aspectRatioConstraint.Enabled = false -- <-- CORRECT FIX: Use 'Enabled'
+                aspectRatioConstraint.Parent = nil -- <-- CORRECT FIX: Re-parent the constraint to disable it
 
                 if not isMaximized then
                     normalSize = mainFrame.Size
@@ -806,7 +811,7 @@ local library = (function ()
                 targetSize = UDim2.new(0, currentPixelWidth, 0, 48)
             else
                 -- Restoring from Minimized
-                aspectRatioConstraint.Enabled = true -- <-- CORRECT FIX: Use 'Enabled'
+                aspectRatioConstraint.Parent = mainFrame -- <-- CORRECT FIX: Re-parent it back to re-enable
                 targetSize = normalSize or UDim2.new(0, 650, 0, 450)
             end
             
