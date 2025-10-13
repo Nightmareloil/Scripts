@@ -1,359 +1,359 @@
---[[ 
-Demon Hub UI Library - Complete Redesign v4
-✨ Brand new modern aesthetic with glassmorphism
-✨ Dramatically enhanced cinematic loading screen
-✨ Smooth hover sound effects
-✨ Advanced animations and transitions
-✨ All original functionality preserved
-✨ Bug fixes and performance improvements
-
-Original Interface: Trix#2794 & Julman#1234 
-Redesigned by Claude
---]] 
-
----@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
-
--- 🔥 UI OVERRIDE SYSTEM
-pcall(function()
-    for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
-        if gui.Name:match("^lib_") or gui.Name == "DemonHubLoader" then
-            gui:Destroy()
-        end
-    end
-end)
-
--- ✨ CINEMATIC LOADING SCREEN WITH ADVANCED EFFECTS
-pcall(function() 
-    local TweenService = game:GetService("TweenService")
-    local loader = Instance.new("ScreenGui") 
-    loader.Name = "DemonHubLoader" 
-    loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling 
-    loader.Parent = game:GetService("CoreGui") 
-
-    local bg = Instance.new("Frame", loader) 
-    bg.Size = UDim2.new(1, 0, 1, 0) 
-    bg.BackgroundColor3 = Color3.fromRGB(5, 5, 10) 
-    bg.BorderSizePixel = 0 
-    bg.ZIndex = 10 
-
-    -- Dynamic gradient background
-    local gradient = Instance.new("UIGradient", bg) 
-    gradient.Color = ColorSequence.new({ 
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 5, 20)), 
-        ColorSequenceKeypoint.new(0.3, Color3.fromRGB(25, 10, 35)), 
-        ColorSequenceKeypoint.new(0.7, Color3.fromRGB(15, 20, 40)), 
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 5, 25)) 
-    }) 
-    gradient.Rotation = 135
-    
-    spawn(function()
-        while loader.Parent do
-            for i = 135, 495, 1 do
-                if not loader.Parent then break end
-                gradient.Rotation = i
-                task.wait(0.02)
-            end
-        end
-    end)
-
-    -- Animated background orbs with varied sizes
-    for i = 1, 5 do
-        local size = 150 + i * 70
-        local orb = Instance.new("Frame", bg) 
-        orb.Size = UDim2.new(0, size, 0, size) 
-        orb.Position = UDim2.new(math.random(20, 80) / 100, 0, math.random(20, 80) / 100, 0)
-        orb.BackgroundColor3 = Color3.fromHSV(0.7 + i * 0.05, 0.8, 1)
-        orb.BackgroundTransparency = 0.88 + i * 0.02
-        orb.BorderSizePixel = 0 
-        orb.ZIndex = 11 
-        Instance.new("UICorner", orb).CornerRadius = UDim.new(1, 0) 
-        
-        -- Blur effect simulation
-        for j = 1, 3 do
-            local blur = Instance.new("Frame", orb)
-            blur.Size = UDim2.new(1, j * 10, 1, j * 10)
-            blur.Position = UDim2.new(0.5, -j * 5, 0.5, -j * 5)
-            blur.AnchorPoint = Vector2.new(0.5, 0.5)
-            blur.BackgroundColor3 = orb.BackgroundColor3
-            blur.BackgroundTransparency = 0.95 + j * 0.01
-            blur.BorderSizePixel = 0
-            blur.ZIndex = 11
-            Instance.new("UICorner", blur).CornerRadius = UDim.new(1, 0)
-        end
-        
-        TweenService:Create(orb, TweenInfo.new(3 + i * 0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { 
-            BackgroundTransparency = 0.98,
-            Size = UDim2.new(0, size + 100, 0, size + 100),
-            Position = UDim2.new(orb.Position.X.Scale + (i % 2 == 0 and 0.05 or -0.05), 0, orb.Position.Y.Scale + 0.05, 0),
-            Rotation = i % 2 == 0 and 180 or -180
-        }):Play() 
-    end
-
-    -- Particle system with trails
-    for i = 1, 25 do
-        local particle = Instance.new("Frame", bg)
-        particle.Size = UDim2.new(0, math.random(1, 4), 0, math.random(1, 4))
-        particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
-        particle.BackgroundColor3 = Color3.fromHSV(0.6 + math.random() * 0.2, 0.9, 1)
-        particle.BackgroundTransparency = math.random(60, 90) / 100
-        particle.BorderSizePixel = 0
-        particle.ZIndex = 12
-        Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
-        
-        -- Trail effect
-        spawn(function()
-            while loader.Parent and particle.Parent do
-                local trail = particle:Clone()
-                trail.Parent = bg
-                trail.BackgroundTransparency = particle.BackgroundTransparency + 0.2
-                TweenService:Create(trail, TweenInfo.new(0.5), {
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(0, 1, 0, 1)
-                }):Play()
-                game:GetService("Debris"):AddItem(trail, 0.5)
-                task.wait(0.1)
-            end
-        end)
-        
-        TweenService:Create(particle, TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), {
-            Position = UDim2.new(math.random(), 0, math.random(), 0),
-            BackgroundTransparency = 0.95
-        }):Play()
-    end
-
-    -- Logo container with glow
-    local logoContainer = Instance.new("Frame", bg)
-    logoContainer.Size = UDim2.new(0, 400, 0, 150)
-    logoContainer.Position = UDim2.new(0.5, -200, 0.35, -75)
-    logoContainer.BackgroundTransparency = 1
-    logoContainer.ZIndex = 13
-
-    -- Animated logo glow
-    local logoGlow = Instance.new("Frame", logoContainer)
-    logoGlow.Size = UDim2.new(1, 60, 1, 60)
-    logoGlow.Position = UDim2.new(0.5, -230, 0.5, -105)
-    logoGlow.BackgroundColor3 = Color3.fromHSV(0.75, 0.9, 1)
-    logoGlow.BackgroundTransparency = 0.85
-    logoGlow.BorderSizePixel = 0
-    logoGlow.ZIndex = 12
-    Instance.new("UICorner", logoGlow).CornerRadius = UDim.new(1, 0)
-    Instance.new("UIGradient", logoGlow).Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHSV(0.7, 0.9, 1)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.8, 0.9, 1)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(0.7, 0.9, 1))
-    })
-    
-    TweenService:Create(logoGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-        BackgroundTransparency = 0.95,
-        Size = UDim2.new(1, 120, 1, 120),
-        Position = UDim2.new(0.5, -260, 0.5, -135)
-    }):Play()
-
-    local title = Instance.new("TextLabel", logoContainer) 
-    title.Size = UDim2.new(1, 0, 0, 80) 
-    title.Position = UDim2.new(0.5, 0, 0, 0)
-    title.AnchorPoint = Vector2.new(0.5, 0)
-    title.BackgroundTransparency = 1 
-    title.Text = "DEMON HUB" 
-    title.TextColor3 = Color3.fromRGB(255, 255, 255) 
-    title.Font = Enum.Font.GothamBold 
-    title.TextSize = 58 
-    title.TextTransparency = 1 
-    title.ZIndex = 14
-    
-    local titleStroke = Instance.new("UIStroke", title)
-    titleStroke.Color = Color3.fromHSV(0.75, 0.9, 1)
-    titleStroke.Thickness = 3
-    titleStroke.Transparency = 1
-    
-    local titleGradient = Instance.new("UIGradient", title)
-    titleGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHSV(0.7, 0.5, 1)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(0.8, 0.5, 1))
-    })
-    titleGradient.Rotation = 90
-    
-    spawn(function()
-        while loader.Parent do
-            for i = 0, 360, 2 do
-                if not loader.Parent then break end
-                titleGradient.Rotation = i
-                task.wait(0.03)
-            end
-        end
-    end)
-
-    local subtitle = Instance.new("TextLabel", logoContainer) 
-    subtitle.Size = UDim2.new(1, 0, 0, 30) 
-    subtitle.Position = UDim2.new(0.5, 0, 0, 100)
-    subtitle.AnchorPoint = Vector2.new(0.5, 0)
-    subtitle.BackgroundTransparency = 1 
-    subtitle.Text = "Initializing Systems..."
-    subtitle.TextColor3 = Color3.fromHSV(0.75, 0.6, 1)
-    subtitle.Font = Enum.Font.GothamBold 
-    subtitle.TextSize = 16 
-    subtitle.TextTransparency = 1 
-    subtitle.ZIndex = 14 
-
-    -- Modern loading bar with glassmorphism
-    local loadingBarContainer = Instance.new("Frame", bg)
-    loadingBarContainer.Size = UDim2.new(0, 450, 0, 50)
-    loadingBarContainer.Position = UDim2.new(0.5, -225, 0.65, 0)
-    loadingBarContainer.BackgroundTransparency = 1
-    loadingBarContainer.ZIndex = 13
-
-    local loadingBarBG = Instance.new("Frame", loadingBarContainer)
-    loadingBarBG.Size = UDim2.new(1, 0, 0, 8)
-    loadingBarBG.Position = UDim2.new(0, 0, 0.5, -4)
-    loadingBarBG.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    loadingBarBG.BackgroundTransparency = 0.3
-    loadingBarBG.BorderSizePixel = 0
-    loadingBarBG.ZIndex = 14
-    Instance.new("UICorner", loadingBarBG).CornerRadius = UDim.new(1, 0)
-    
-    local loadingBarStroke = Instance.new("UIStroke", loadingBarBG)
-    loadingBarStroke.Color = Color3.fromHSV(0.75, 0.5, 1)
-    loadingBarStroke.Thickness = 1.5
-    loadingBarStroke.Transparency = 0.5
-
-    local loadingBar = Instance.new("Frame", loadingBarBG)
-    loadingBar.Size = UDim2.new(0, 0, 1, 0)
-    loadingBar.BackgroundColor3 = Color3.fromHSV(0.75, 0.9, 1)
-    loadingBar.BorderSizePixel = 0
-    loadingBar.ZIndex = 15
-    Instance.new("UICorner", loadingBar).CornerRadius = UDim.new(1, 0)
-    
-    local barGradient = Instance.new("UIGradient", loadingBar)
-    barGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHSV(0.7, 0.9, 1)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.8, 1, 1)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(0.7, 0.9, 1))
-    })
-    
-    -- Shimmer effect
-    local shimmer = Instance.new("Frame", loadingBar)
-    shimmer.Size = UDim2.new(0.3, 0, 1, 0)
-    shimmer.Position = UDim2.new(-0.3, 0, 0, 0)
-    shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    shimmer.BackgroundTransparency = 0.7
-    shimmer.BorderSizePixel = 0
-    shimmer.ZIndex = 16
-    Instance.new("UICorner", shimmer).CornerRadius = UDim.new(1, 0)
-    
-    spawn(function()
-        while loader.Parent do
-            TweenService:Create(shimmer, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {
-                Position = UDim2.new(1, 0, 0, 0)
-            }):Play()
-            task.wait(1.5)
-            shimmer.Position = UDim2.new(-0.3, 0, 0, 0)
-        end
-    end)
-
-    local percentText = Instance.new("TextLabel", loadingBarContainer)
-    percentText.Size = UDim2.new(1, 0, 0, 25)
-    percentText.Position = UDim2.new(0, 0, 1, 15)
-    percentText.BackgroundTransparency = 1
-    percentText.Text = "0%"
-    percentText.TextColor3 = Color3.fromHSV(0.75, 0.7, 1)
-    percentText.Font = Enum.Font.GothamBold
-    percentText.TextSize = 18
-    percentText.TextTransparency = 1
-    percentText.ZIndex = 14
-
-    -- Status indicators
-    local statusText = Instance.new("TextLabel", bg)
-    statusText.Size = UDim2.new(0, 400, 0, 20)
-    statusText.Position = UDim2.new(0.5, -200, 0.78, 0)
-    statusText.BackgroundTransparency = 1
-    statusText.Text = "* Starting..."
-    statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
-    statusText.Font = Enum.Font.Gotham
-    statusText.TextSize = 13
-    statusText.TextTransparency = 1
-    statusText.ZIndex = 14
-
-    -- Entrance animations
-    TweenService:Create(title, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        TextTransparency = 0,
-        Position = title.Position
-    }):Play() 
-    TweenService:Create(titleStroke, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Transparency = 0
-    }):Play() 
-    
-    task.wait(0.3) 
-    TweenService:Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        TextTransparency = 0
-    }):Play() 
-    
-    task.wait(0.2)
-    TweenService:Create(percentText, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        TextTransparency = 0
-    }):Play()
-    TweenService:Create(statusText, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        TextTransparency = 0
-    }):Play()
-    
-    task.wait(0.4)
-    
-    -- Loading stages with realistic timing
-    local stages = {
-        {percent = 15, subtitle = "Loading Core Modules...", status = "* Initializing Framework"},
-        {percent = 30, subtitle = "Building Components...", status = "* Creating Interface Elements"},
-        {percent = 50, subtitle = "Connecting Services...", status = "* Establishing Connections"},
-        {percent = 70, subtitle = "Rendering Interface...", status = "* Applying Visual Styles"},
-        {percent = 85, subtitle = "Finalizing Setup...", status = "* Running Final Checks"},
-        {percent = 100, subtitle = "Ready to Launch!", status = "* Complete"}
-    }
-    
-    for _, stage in ipairs(stages) do
-        local startPercent = tonumber(percentText.Text:match("%d+")) or 0
-        for i = startPercent, stage.percent, 1 do
-            local progress = i / 100
-            TweenService:Create(loadingBar, TweenInfo.new(0.03), {
-                Size = UDim2.new(progress, 0, 1, 0)
-            }):Play()
-            percentText.Text = i .. "%"
-            task.wait(0.025)
-        end
-        subtitle.Text = stage.subtitle
-        statusText.Text = stage.status
-        task.wait(stage.percent == 100 and 0.3 or 0.15)
-    end
-    
-    task.wait(0.5)
-    
-    -- Smooth fade-out with error handling
-    TweenService:Create(bg, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
-    for _, child in ipairs(bg:GetDescendants()) do
-        pcall(function()
-            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
-        end)
-        pcall(function()
-            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
-        end)
-        pcall(function()
-            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
-        end)
-        if child:IsA("UIStroke") then
-            TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
-        end
-    end
-    task.wait(0.8) 
-    loader:Destroy() 
-
-    -- Success sound
-    local snd = Instance.new("Sound", workspace) 
-    snd.SoundId = "rbxassetid://6026984224"
-    snd.Name = "LoadComplete" 
-    snd.Volume = 0.8
-    snd:Play() 
-    snd.Ended:Connect(function() snd:Destroy() end) 
-end) 
-
 local library = (function () 
+    --[[ 
+    Demon Hub UI Library - Complete Redesign v4.2
+    ✨ Brand new modern aesthetic with glassmorphism
+    ✨ Dramatically enhanced cinematic loading screen
+    ✨ Smooth hover sound effects
+    ✨ Advanced animations and transitions
+    ✨ All original functionality preserved
+    ✨ Bug fixes and performance improvements
+
+    Original Interface: Trix#2794 & Julman#1234 
+    Redesigned by Claude
+    --]] 
+
+    ---@diagnostic disable: redefined-local, undefined-global, unused-local, param-type-mismatch, redundant-value, lowercase-global, undefined-field 
+
+    -- 🔥 UI OVERRIDE SYSTEM
+    pcall(function()
+        for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
+            if gui.Name:match("^lib_") or gui.Name == "DemonHubLoader" then
+                gui:Destroy()
+            end
+        end
+    end)
+
+    -- ✨ CINEMATIC LOADING SCREEN WITH ADVANCED EFFECTS
+    pcall(function() 
+        local TweenService = game:GetService("TweenService")
+        local loader = Instance.new("ScreenGui") 
+        loader.Name = "DemonHubLoader" 
+        loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling 
+        loader.Parent = game:GetService("CoreGui") 
+
+        local bg = Instance.new("Frame", loader) 
+        bg.Size = UDim2.new(1, 0, 1, 0) 
+        bg.BackgroundColor3 = Color3.fromRGB(5, 5, 10) 
+        bg.BorderSizePixel = 0 
+        bg.ZIndex = 10 
+
+        -- Dynamic gradient background
+        local gradient = Instance.new("UIGradient", bg) 
+        gradient.Color = ColorSequence.new({ 
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 5, 20)), 
+            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(25, 10, 35)), 
+            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(15, 20, 40)), 
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 5, 25)) 
+        }) 
+        gradient.Rotation = 135
+        
+        spawn(function()
+            while loader.Parent do
+                for i = 135, 495, 1 do
+                    if not loader.Parent then break end
+                    gradient.Rotation = i
+                    task.wait(0.02)
+                end
+            end
+        end)
+
+        -- Animated background orbs with varied sizes
+        for i = 1, 5 do
+            local size = 150 + i * 70
+            local orb = Instance.new("Frame", bg) 
+            orb.Size = UDim2.new(0, size, 0, size) 
+            orb.Position = UDim2.new(math.random(20, 80) / 100, 0, math.random(20, 80) / 100, 0)
+            orb.BackgroundColor3 = Color3.fromHSV(0.7 + i * 0.05, 0.8, 1)
+            orb.BackgroundTransparency = 0.88 + i * 0.02
+            orb.BorderSizePixel = 0 
+            orb.ZIndex = 11 
+            Instance.new("UICorner", orb).CornerRadius = UDim.new(1, 0) 
+            
+            -- Blur effect simulation
+            for j = 1, 3 do
+                local blur = Instance.new("Frame", orb)
+                blur.Size = UDim2.new(1, j * 10, 1, j * 10)
+                blur.Position = UDim2.new(0.5, -j * 5, 0.5, -j * 5)
+                blur.AnchorPoint = Vector2.new(0.5, 0.5)
+                blur.BackgroundColor3 = orb.BackgroundColor3
+                blur.BackgroundTransparency = 0.95 + j * 0.01
+                blur.BorderSizePixel = 0
+                blur.ZIndex = 11
+                Instance.new("UICorner", blur).CornerRadius = UDim.new(1, 0)
+            end
+            
+            TweenService:Create(orb, TweenInfo.new(3 + i * 0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { 
+                BackgroundTransparency = 0.98,
+                Size = UDim2.new(0, size + 100, 0, size + 100),
+                Position = UDim2.new(orb.Position.X.Scale + (i % 2 == 0 and 0.05 or -0.05), 0, orb.Position.Y.Scale + 0.05, 0),
+                Rotation = i % 2 == 0 and 180 or -180
+            }):Play() 
+        end
+
+        -- Particle system with trails
+        for i = 1, 25 do
+            local particle = Instance.new("Frame", bg)
+            particle.Size = UDim2.new(0, math.random(1, 4), 0, math.random(1, 4))
+            particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+            particle.BackgroundColor3 = Color3.fromHSV(0.6 + math.random() * 0.2, 0.9, 1)
+            particle.BackgroundTransparency = math.random(60, 90) / 100
+            particle.BorderSizePixel = 0
+            particle.ZIndex = 12
+            Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
+            
+            -- Trail effect
+            spawn(function()
+                while loader.Parent and particle.Parent do
+                    local trail = particle:Clone()
+                    trail.Parent = bg
+                    trail.BackgroundTransparency = particle.BackgroundTransparency + 0.2
+                    TweenService:Create(trail, TweenInfo.new(0.5), {
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(0, 1, 0, 1)
+                    }):Play()
+                    game:GetService("Debris"):AddItem(trail, 0.5)
+                    task.wait(0.1)
+                end
+            end)
+            
+            TweenService:Create(particle, TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), {
+                Position = UDim2.new(math.random(), 0, math.random(), 0),
+                BackgroundTransparency = 0.95
+            }):Play()
+        end
+
+        -- Logo container with glow
+        local logoContainer = Instance.new("Frame", bg)
+        logoContainer.Size = UDim2.new(0, 400, 0, 150)
+        logoContainer.Position = UDim2.new(0.5, -200, 0.35, -75)
+        logoContainer.BackgroundTransparency = 1
+        logoContainer.ZIndex = 13
+
+        -- Animated logo glow
+        local logoGlow = Instance.new("Frame", logoContainer)
+        logoGlow.Size = UDim2.new(1, 60, 1, 60)
+        logoGlow.Position = UDim2.new(0.5, -230, 0.5, -105)
+        logoGlow.BackgroundColor3 = Color3.fromHSV(0.75, 0.9, 1)
+        logoGlow.BackgroundTransparency = 0.85
+        logoGlow.BorderSizePixel = 0
+        logoGlow.ZIndex = 12
+        Instance.new("UICorner", logoGlow).CornerRadius = UDim.new(1, 0)
+        Instance.new("UIGradient", logoGlow).Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromHSV(0.7, 0.9, 1)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.8, 0.9, 1)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV(0.7, 0.9, 1))
+        })
+        
+        TweenService:Create(logoGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            BackgroundTransparency = 0.95,
+            Size = UDim2.new(1, 120, 1, 120),
+            Position = UDim2.new(0.5, -260, 0.5, -135)
+        }):Play()
+
+        local title = Instance.new("TextLabel", logoContainer) 
+        title.Size = UDim2.new(1, 0, 0, 80) 
+        title.Position = UDim2.new(0.5, 0, 0, 0)
+        title.AnchorPoint = Vector2.new(0.5, 0)
+        title.BackgroundTransparency = 1 
+        title.Text = "DEMON HUB" 
+        title.TextColor3 = Color3.fromRGB(255, 255, 255) 
+        title.Font = Enum.Font.GothamBold 
+        title.TextSize = 58 
+        title.TextTransparency = 1 
+        title.ZIndex = 14
+        
+        local titleStroke = Instance.new("UIStroke", title)
+        titleStroke.Color = Color3.fromHSV(0.75, 0.9, 1)
+        titleStroke.Thickness = 3
+        titleStroke.Transparency = 1
+        
+        local titleGradient = Instance.new("UIGradient", title)
+        titleGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromHSV(0.7, 0.5, 1)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV(0.8, 0.5, 1))
+        })
+        titleGradient.Rotation = 90
+        
+        spawn(function()
+            while loader.Parent do
+                for i = 0, 360, 2 do
+                    if not loader.Parent then break end
+                    titleGradient.Rotation = i
+                    task.wait(0.03)
+                end
+            end
+        end)
+
+        local subtitle = Instance.new("TextLabel", logoContainer) 
+        subtitle.Size = UDim2.new(1, 0, 0, 30) 
+        subtitle.Position = UDim2.new(0.5, 0, 0, 100)
+        subtitle.AnchorPoint = Vector2.new(0.5, 0)
+        subtitle.BackgroundTransparency = 1 
+        subtitle.Text = "Initializing Systems..."
+        subtitle.TextColor3 = Color3.fromHSV(0.75, 0.6, 1)
+        subtitle.Font = Enum.Font.GothamBold 
+        subtitle.TextSize = 16 
+        subtitle.TextTransparency = 1 
+        subtitle.ZIndex = 14 
+
+        -- Modern loading bar with glassmorphism
+        local loadingBarContainer = Instance.new("Frame", bg)
+        loadingBarContainer.Size = UDim2.new(0, 450, 0, 50)
+        loadingBarContainer.Position = UDim2.new(0.5, -225, 0.65, 0)
+        loadingBarContainer.BackgroundTransparency = 1
+        loadingBarContainer.ZIndex = 13
+
+        local loadingBarBG = Instance.new("Frame", loadingBarContainer)
+        loadingBarBG.Size = UDim2.new(1, 0, 0, 8)
+        loadingBarBG.Position = UDim2.new(0, 0, 0.5, -4)
+        loadingBarBG.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+        loadingBarBG.BackgroundTransparency = 0.3
+        loadingBarBG.BorderSizePixel = 0
+        loadingBarBG.ZIndex = 14
+        Instance.new("UICorner", loadingBarBG).CornerRadius = UDim.new(1, 0)
+        
+        local loadingBarStroke = Instance.new("UIStroke", loadingBarBG)
+        loadingBarStroke.Color = Color3.fromHSV(0.75, 0.5, 1)
+        loadingBarStroke.Thickness = 1.5
+        loadingBarStroke.Transparency = 0.5
+
+        local loadingBar = Instance.new("Frame", loadingBarBG)
+        loadingBar.Size = UDim2.new(0, 0, 1, 0)
+        loadingBar.BackgroundColor3 = Color3.fromHSV(0.75, 0.9, 1)
+        loadingBar.BorderSizePixel = 0
+        loadingBar.ZIndex = 15
+        Instance.new("UICorner", loadingBar).CornerRadius = UDim.new(1, 0)
+        
+        local barGradient = Instance.new("UIGradient", loadingBar)
+        barGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromHSV(0.7, 0.9, 1)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.8, 1, 1)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV(0.7, 0.9, 1))
+        })
+        
+        -- Shimmer effect
+        local shimmer = Instance.new("Frame", loadingBar)
+        shimmer.Size = UDim2.new(0.3, 0, 1, 0)
+        shimmer.Position = UDim2.new(-0.3, 0, 0, 0)
+        shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        shimmer.BackgroundTransparency = 0.7
+        shimmer.BorderSizePixel = 0
+        shimmer.ZIndex = 16
+        Instance.new("UICorner", shimmer).CornerRadius = UDim.new(1, 0)
+        
+        spawn(function()
+            while loader.Parent do
+                TweenService:Create(shimmer, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {
+                    Position = UDim2.new(1, 0, 0, 0)
+                }):Play()
+                task.wait(1.5)
+                shimmer.Position = UDim2.new(-0.3, 0, 0, 0)
+            end
+        end)
+
+        local percentText = Instance.new("TextLabel", loadingBarContainer)
+        percentText.Size = UDim2.new(1, 0, 0, 25)
+        percentText.Position = UDim2.new(0, 0, 1, 15)
+        percentText.BackgroundTransparency = 1
+        percentText.Text = "0%"
+        percentText.TextColor3 = Color3.fromHSV(0.75, 0.7, 1)
+        percentText.Font = Enum.Font.GothamBold
+        percentText.TextSize = 18
+        percentText.TextTransparency = 1
+        percentText.ZIndex = 14
+
+        -- Status indicators
+        local statusText = Instance.new("TextLabel", bg)
+        statusText.Size = UDim2.new(0, 400, 0, 20)
+        statusText.Position = UDim2.new(0.5, -200, 0.78, 0)
+        statusText.BackgroundTransparency = 1
+        statusText.Text = "* Starting..."
+        statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
+        statusText.Font = Enum.Font.Gotham
+        statusText.TextSize = 13
+        statusText.TextTransparency = 1
+        statusText.ZIndex = 14
+
+        -- Entrance animations
+        TweenService:Create(title, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            TextTransparency = 0,
+            Position = title.Position
+        }):Play() 
+        TweenService:Create(titleStroke, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Transparency = 0
+        }):Play() 
+        
+        task.wait(0.3) 
+        TweenService:Create(subtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            TextTransparency = 0
+        }):Play() 
+        
+        task.wait(0.2)
+        TweenService:Create(percentText, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            TextTransparency = 0
+        }):Play()
+        TweenService:Create(statusText, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            TextTransparency = 0
+        }):Play()
+        
+        task.wait(0.4)
+        
+        -- Loading stages with realistic timing
+        local stages = {
+            {percent = 15, subtitle = "Loading Core Modules...", status = "* Initializing Framework"},
+            {percent = 30, subtitle = "Building Components...", status = "* Creating Interface Elements"},
+            {percent = 50, subtitle = "Connecting Services...", status = "* Establishing Connections"},
+            {percent = 70, subtitle = "Rendering Interface...", status = "* Applying Visual Styles"},
+            {percent = 85, subtitle = "Finalizing Setup...", status = "* Running Final Checks"},
+            {percent = 100, subtitle = "Ready to Launch!", status = "* Complete"}
+        }
+        
+        for _, stage in ipairs(stages) do
+            local startPercent = tonumber(percentText.Text:match("%d+")) or 0
+            for i = startPercent, stage.percent, 1 do
+                local progress = i / 100
+                TweenService:Create(loadingBar, TweenInfo.new(0.03), {
+                    Size = UDim2.new(progress, 0, 1, 0)
+                }):Play()
+                percentText.Text = i .. "%"
+                task.wait(0.025)
+            end
+            subtitle.Text = stage.subtitle
+            statusText.Text = stage.status
+            task.wait(stage.percent == 100 and 0.3 or 0.15)
+        end
+        
+        task.wait(0.5)
+        
+        -- Smooth fade-out with error handling
+        TweenService:Create(bg, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play() 
+        for _, child in ipairs(bg:GetDescendants()) do
+            pcall(function()
+                TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+            end)
+            pcall(function()
+                TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
+            end)
+            pcall(function()
+                TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+            end)
+            if child:IsA("UIStroke") then
+                TweenService:Create(child, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {Transparency = 1}):Play()
+            end
+        end
+        task.wait(0.8) 
+        loader:Destroy() 
+
+        -- Success sound
+        local snd = Instance.new("Sound", workspace) 
+        snd.SoundId = "rbxassetid://6026984224"
+        snd.Name = "LoadComplete" 
+        snd.Volume = 0.8
+        snd:Play() 
+        snd.Ended:Connect(function() snd:Destroy() end) 
+    end) 
+
     local UserInputService = game:GetService("UserInputService") 
     local TweenService = game:GetService("TweenService") 
     local RunService = game:GetService("RunService")
@@ -451,7 +451,7 @@ local library = (function ()
     end 
 
     function library:CreateWindow(title) 
-        title = title or "Demon Hub 2025 | discord.gg/QjHVJd9Ku" 
+        title = title or "Demon Hub 2025 | discord.gg/QjHVJdj9Ku" 
         local parent = game.CoreGui 
         local state = library.WindowState.Opened 
         local window_id = math.random(1, 400) 
@@ -1047,7 +1047,6 @@ local library = (function ()
                 return textbox 
             end 
 
-            --vvv-- MODIFICATION START: SLIDER Z-INDEX FIX --vvv--
             function tab:CreateSlider(label, minvalue, maxvalue, default, callback, options)
                 options = options or {}
                 minvalue, maxvalue, default, callback = minvalue or 0, maxvalue or 100, default or minvalue, callback or function() end 
@@ -1091,7 +1090,7 @@ local library = (function ()
                         TextColor3 = Colors.White,
                         TextSize = 12,
                         ClearTextOnFocus = false,
-                        ZIndex = 3 -- FIX: Set ZIndex to be higher than the slider bar
+                        ZIndex = 3
                     })
                     CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 6)})
                     CreateInstance("UIStroke", valueDisplay, {
@@ -1109,7 +1108,7 @@ local library = (function ()
                         TextColor3 = Colors.White,
                         TextSize = 13, 
                         TextXAlignment = Enum.TextXAlignment.Right,
-                        ZIndex = 3 -- FIX: Set ZIndex to be higher than the slider bar
+                        ZIndex = 3
                     })
                 end
 
@@ -1118,7 +1117,7 @@ local library = (function ()
                     BackgroundTransparency = 0.2,
                     Position = UDim2.new(0, 4, 1, -14), 
                     Size = UDim2.new(1, -8, 0, 10),
-                    ZIndex = 2 -- FIX: Set ZIndex to be lower than the number display
+                    ZIndex = 2
                 }) 
                 CreateInstance("UICorner", sliderBack, { CornerRadius = UDim.new(1, 0) })
                 CreateInstance("UIStroke", sliderBack, {
@@ -1192,7 +1191,6 @@ local library = (function ()
                 end)
                 return slider 
             end
-            --^^^-- MODIFICATION END --^^^--
 
             function tab:CreateToggle(label, default, callback) 
                 default = default or false; callback = callback or function () end 
@@ -1750,5 +1748,4 @@ local library = (function ()
         return window 
     end 
     return library 
-end)() 
-return library
+end)()
