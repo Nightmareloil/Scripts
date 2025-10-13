@@ -1,7 +1,5 @@
--- Embedded UI Library (replaced loadstring for reliability)
--- [Full library code here - I'm placing it as is from previous improvements]
 --[[ 
-UI Library - Complete Redesign v4.5
+Demon Hub UI Library - Complete Redesign v4.5
 ✨ Brand new modern aesthetic with glassmorphism
 ✨ Dramatically enhanced cinematic loading screen
 ✨ Smooth hover sound effects
@@ -18,7 +16,7 @@ Redesigned by Claude
 -- 🔥 UI OVERRIDE SYSTEM
 pcall(function()
     for _, gui in ipairs(game:GetService("CoreGui"):GetChildren()) do
-        if gui.Name:match("^lib_") or gui.Name == "UILibraryLoader" then
+        if gui.Name:match("^lib_") or gui.Name == "DemonHubLoader" then
             gui:Destroy()
         end
     end
@@ -28,7 +26,7 @@ end)
 pcall(function() 
     local TweenService = game:GetService("TweenService")
     local loader = Instance.new("ScreenGui") 
-    loader.Name = "UILibraryLoader" 
+    loader.Name = "DemonHubLoader" 
     loader.ZIndexBehavior = Enum.ZIndexBehavior.Sibling 
     loader.Parent = game:GetService("CoreGui") 
 
@@ -58,8 +56,8 @@ pcall(function()
         end
     end)
 
-    -- Animated background orbs with varied sizes (reduced for performance)
-    for i = 1, 4 do
+    -- Animated background orbs with varied sizes
+    for i = 1, 5 do
         local size = 150 + i * 70
         local orb = Instance.new("Frame", bg) 
         orb.Size = UDim2.new(0, size, 0, size) 
@@ -92,7 +90,7 @@ pcall(function()
     end
 
     -- Particle system with trails (reduced count for performance)
-    for i = 1, 10 do
+    for i = 1, 15 do
         local particle = Instance.new("Frame", bg)
         particle.Size = UDim2.new(0, math.random(1, 4), 0, math.random(1, 4))
         particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
@@ -156,7 +154,7 @@ pcall(function()
     title.Position = UDim2.new(0.5, 0, 0, 0)
     title.AnchorPoint = Vector2.new(0.5, 0)
     title.BackgroundTransparency = 1 
-    title.Text = "UI LIBRARY" 
+    title.Text = "DEMON HUB" 
     title.TextColor3 = Color3.fromRGB(255, 255, 255) 
     title.Font = Enum.Font.GothamBold 
     title.TextSize = 58 
@@ -167,7 +165,6 @@ pcall(function()
     titleStroke.Color = Color3.fromHSV(0.75, 0.9, 1)
     titleStroke.Thickness = 3
     titleStroke.Transparency = 1
-    titleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual  -- For text
     
     local titleGradient = Instance.new("UIGradient", title)
     titleGradient.Color = ColorSequence.new({
@@ -219,7 +216,6 @@ pcall(function()
     loadingBarStroke.Color = Color3.fromHSV(0.75, 0.5, 1)
     loadingBarStroke.Thickness = 1.5
     loadingBarStroke.Transparency = 0.5
-    loadingBarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
     local loadingBar = Instance.new("Frame", loadingBarBG)
     loadingBar.Size = UDim2.new(0, 0, 1, 0)
@@ -454,7 +450,7 @@ local function CreateInstance(name, parent, props, childs)
 end 
 
 function library:CreateWindow(title) 
-    title = title or "UI Library" 
+    title = title or "Demon Hub 2025 | discord.gg/QjHVJdj9Ku" 
     local parent = game.CoreGui 
     local state = library.WindowState.Opened 
     local window_id = math.random(1, 400) 
@@ -543,8 +539,7 @@ function library:CreateWindow(title)
     local windowStroke = CreateInstance("UIStroke", mainFrame, {
         Color = Colors.Accent,
         Thickness = 1.5,
-        Transparency = 0.7,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        Transparency = 0.7
     })
     table.insert(colorChangeElements, windowStroke)
 
@@ -626,11 +621,10 @@ function library:CreateWindow(title)
             ZIndex = 3
         }) 
         CreateInstance("UICorner", btn, { CornerRadius = UDim.new(0, 8) })
-        local stroke = CreateInstance("UIStroke", btn, {
+        CreateInstance("UIStroke", btn, {
             Color = Colors.Gray.Stroke,
             Thickness = 1,
-            Transparency = 0.6,
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            Transparency = 0.6
         })
         autobutcolor(btn, Colors.Gray.Button) 
         if callback then
@@ -658,7 +652,7 @@ function library:CreateWindow(title)
         BorderSizePixel = 0,
         Visible = true -- Visible by default
     })
-    CreateInstance("UIStroke", maximizeIcon, { Color = Colors.White, Thickness = 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+    CreateInstance("UIStroke", maximizeIcon, { Color = Colors.White, Thickness = 1.5 })
 
     -- Create Restore icon (two overlapping squares)
     local restoreIcon = CreateInstance("Frame", maximizeButton, {
@@ -675,7 +669,7 @@ function library:CreateWindow(title)
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
     })
-    CreateInstance("UIStroke", restoreIconBack, { Color = Colors.White, Thickness = 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+    CreateInstance("UIStroke", restoreIconBack, { Color = Colors.White, Thickness = 1.5 })
     local restoreIconFront = CreateInstance("Frame", restoreIcon, {
         Size = UDim2.new(0, 10, 0, 10),
         Position = UDim2.new(0.5, 0, 0.5, -1),
@@ -683,7 +677,7 @@ function library:CreateWindow(title)
         BackgroundColor3 = Colors.Gray.Button, -- Hides the line behind it
         BorderSizePixel = 0
     })
-    CreateInstance("UIStroke", restoreIconFront, { Color = Colors.White, Thickness = 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+    CreateInstance("UIStroke", restoreIconFront, { Color = Colors.White, Thickness = 1.5 })
 
     -- State variables for window management
     local isMaximized = false
@@ -827,9 +821,6 @@ function library:CreateWindow(title)
             local startSize = mainFrame.AbsoluteSize
             local startMousePos = UserInputService:GetMouseLocation()
 
-            if resizeMoveConnection then resizeMoveConnection:Disconnect() end
-            if resizeConnection then resizeConnection:Disconnect() end
-
             resizeMoveConnection = UserInputService.InputChanged:Connect(function(inputObject)
                 if isResizing and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                     local currentMousePos = UserInputService:GetMouseLocation()
@@ -848,14 +839,8 @@ function library:CreateWindow(title)
             resizeConnection = UserInputService.InputEnded:Connect(function(inputObject)
                 if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                     isResizing = false
-                    if resizeMoveConnection then 
-                        resizeMoveConnection:Disconnect() 
-                        resizeMoveConnection = nil
-                    end
-                    if resizeConnection then 
-                        resizeConnection:Disconnect() 
-                        resizeConnection = nil
-                    end
+                    if resizeMoveConnection then resizeMoveConnection:Disconnect() end
+                    if resizeConnection then resizeConnection:Disconnect() end
                 end
             end)
         end
@@ -996,8 +981,7 @@ function library:CreateWindow(title)
             Name = "TabStroke",
             Color = Colors.Accent,
             Thickness = 1.2,
-            Transparency = _if(tabId == 1, 0.3, 0.8),
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            Transparency = _if(tabId == 1, 0.3, 0.8)
         })
         table.insert(colorChangeElements, tabStroke)
         autobutcolor(tabButton, _if(tabId == 1, Colors.Gray.Hover, Colors.Gray.DarkButton)) 
@@ -1021,11 +1005,10 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             }) 
             CreateInstance("UICorner", textBoxLabel, { CornerRadius = UDim.new(0, 10) })
-            local stroke = CreateInstance("UIStroke", textBoxLabel, {
+            CreateInstance("UIStroke", textBoxLabel, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             
             local textBoxInstance = CreateInstance("TextBox", textBoxLabel, { 
@@ -1045,18 +1028,17 @@ function library:CreateWindow(title)
                 ClearTextOnFocus = false, 
             }) 
             CreateInstance("UICorner", textBoxInstance, { CornerRadius = UDim.new(0, 8) })
-            local instanceStroke = CreateInstance("UIStroke", textBoxInstance, {
+            CreateInstance("UIStroke", textBoxInstance, {
                 Color = Colors.Accent,
                 Thickness = 1,
-                Transparency = 0.8,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.8
             })
             
             textBoxInstance.Focused:Connect(function()
-                TweenService:Create(instanceStroke, TweenInfo.new(0.2), {Transparency = 0.3}):Play()
+                TweenService:Create(textBoxInstance.UIStroke, TweenInfo.new(0.2), {Transparency = 0.3}):Play()
             end)
             textBoxInstance.FocusLost:Connect(function(enter)
-                TweenService:Create(instanceStroke, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
+                TweenService:Create(textBoxInstance.UIStroke, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
                 if enter then 
                     callback(textBoxInstance.Text, textbox) 
                 end 
@@ -1077,28 +1059,27 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             }) 
             CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 10) })
-            local containerStroke = CreateInstance("UIStroke", container, {
+            CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             
             local labelText = CreateInstance("TextLabel", container, { 
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 8, 0.5, 0),
-                AnchorPoint = Vector2.new(0, 0.5),
-                Size = UDim2.new(1, -160, 0, 24),
+                Position = UDim2.new(0, 8, 0, 0),
+                Size = UDim2.new(1, -16, 0, 24),
                 Font = Font,
                 Text = label,
                 TextColor3 = Colors.White,
                 TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Left
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Center
             }) 
             
             local valueDisplay
-            local valuePos = UDim2.new(1, -8, 0.5, 0)
-            local valueSize = UDim2.new(0, 140, 0, 24)
+            local valuePos = UDim2.new(1, -110, 1, -12)
+            local valueSize = UDim2.new(0, 100, 0, 24)
             if hasTextbox then
                 valueDisplay = CreateInstance("TextBox", container, {
                     BackgroundColor3 = Colors.Gray.TogBox,
@@ -1115,11 +1096,10 @@ function library:CreateWindow(title)
                     ZIndex = 3
                 })
                 CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 6)})
-                local valueStroke = CreateInstance("UIStroke", valueDisplay, {
+                CreateInstance("UIStroke", valueDisplay, {
                     Color = Colors.Accent,
                     Thickness = 1,
-                    Transparency = 0.7,
-                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                    Transparency = 0.7
                 })
             else
                 valueDisplay = CreateInstance("TextLabel", container, { 
@@ -1139,17 +1119,15 @@ function library:CreateWindow(title)
             local sliderBack = CreateInstance("Frame", container, { 
                 BackgroundColor3 = Colors.Gray.TogBox,
                 BackgroundTransparency = 0.2,
-                Position = UDim2.new(0, 8, 0.5, 0), 
-                AnchorPoint = Vector2.new(0, 0.5),
-                Size = UDim2.new(1, -160, 0, 8),
+                Position = UDim2.new(0, 8, 1, -12), 
+                Size = UDim2.new(1, -130, 0, 8),
                 ZIndex = 2
             }) 
             CreateInstance("UICorner", sliderBack, { CornerRadius = UDim.new(1, 0) })
-            local backStroke = CreateInstance("UIStroke", sliderBack, {
+            CreateInstance("UIStroke", sliderBack, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.7,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.7
             })
             
             local percentage = math.clamp((default - minvalue) / (maxvalue - minvalue), 0, 1) 
@@ -1197,9 +1175,6 @@ function library:CreateWindow(title)
                     local value = minvalue + (maxvalue - minvalue) * percent
                     setValue(value)
 
-                    if moveConnection then moveConnection:Disconnect() end
-                    if dragConnection then dragConnection:Disconnect() end
-
                     moveConnection = UserInputService.InputChanged:Connect(function(inputObject)
                         if isSliding and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                             local mousePos = UserInputService:GetMouseLocation()
@@ -1212,14 +1187,8 @@ function library:CreateWindow(title)
                     dragConnection = UserInputService.InputEnded:Connect(function(inputObject)
                          if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                             isSliding = false
-                            if moveConnection then 
-                                moveConnection:Disconnect() 
-                                moveConnection = nil
-                            end
-                            if dragConnection then 
-                                dragConnection:Disconnect() 
-                                dragConnection = nil
-                            end
+                            if moveConnection then moveConnection:Disconnect() end
+                            if dragConnection then dragConnection:Disconnect() end
                         end
                     end)
                 end
@@ -1242,11 +1211,10 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             }) 
             CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 10) })
-            local containerStroke = CreateInstance("UIStroke", mainToggleContainer, {
+            CreateInstance("UIStroke", mainToggleContainer, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             
             local toggleTrack = CreateInstance("Frame", mainToggleContainer, { 
@@ -1262,11 +1230,10 @@ function library:CreateWindow(title)
             CreateInstance("UIGradient", toggleTrack, { Color = _if(default, Colors.Gradients.Accent, ColorSequence.new(Color3.fromRGB(100,100,120)))})
             table.insert(colorChangeElements, toggleTrack:FindFirstChildOfClass("UIGradient"))
             CreateInstance("UICorner", toggleTrack, { CornerRadius = UDim.new(1, 0) })
-            local trackStroke = CreateInstance("UIStroke", toggleTrack, {
+            CreateInstance("UIStroke", toggleTrack, {
                 Color = default and Colors.Accent or Color3.fromRGB(80, 80, 100),
                 Thickness = 1.5,
-                Transparency = 0.5,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.5
             })
             
             local toggleThumb = CreateInstance("Frame", toggleTrack, { 
@@ -1278,11 +1245,10 @@ function library:CreateWindow(title)
                 ZIndex = 3 
             }) 
             CreateInstance("UICorner", toggleThumb, { CornerRadius = UDim.new(1, 0) }) 
-            local thumbStroke = CreateInstance("UIStroke", toggleThumb, { 
+            CreateInstance("UIStroke", toggleThumb, { 
                 Color = Color3.fromRGB(200, 200, 220), 
                 Transparency = 0.3, 
-                Thickness = 2,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Thickness = 2 
             })
             
             autobutcolor(mainToggleContainer, Colors.Gray.DarkButton) 
@@ -1299,7 +1265,7 @@ function library:CreateWindow(title)
                 
                 TweenService:Create(toggleTrack, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { BackgroundColor3 = targetColor }):Play() 
                 toggleTrack.UIGradient.Color = targetGradient
-                TweenService:Create(trackStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Color = targetStrokeColor }):Play()
+                TweenService:Create(toggleTrack.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Color = targetStrokeColor }):Play()
                 TweenService:Create(toggleThumb, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Position = targetPos }):Play() 
                 callback(boolValue.Value, toggle) 
             end) 
@@ -1321,11 +1287,10 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             }) 
             CreateInstance("UICorner", textLabel, { CornerRadius = UDim.new(0, 10) })
-            local labelStroke = CreateInstance("UIStroke", textLabel, {
+            CreateInstance("UIStroke", textLabel, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             CreateInstance("UIPadding", textLabel, {
                 PaddingTop = UDim.new(0, 6),
@@ -1380,8 +1345,7 @@ function library:CreateWindow(title)
             local btnStroke = CreateInstance("UIStroke", buttonContainer, {
                 Color = Colors.Accent,
                 Thickness = 1,
-                Transparency = 0.8,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.8
             })
             
             -- Icon indicator
@@ -1423,11 +1387,10 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             }) 
             CreateInstance("UICorner", dropdownLabel, { CornerRadius = UDim.new(0, 10) })
-            local labelStroke = CreateInstance("UIStroke", dropdownLabel, {
+            CreateInstance("UIStroke", dropdownLabel, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             autobutcolor(dropdownLabel, Colors.Gray.DarkButton) 
             
@@ -1468,11 +1431,10 @@ function library:CreateWindow(title)
                 ScrollBarImageTransparency = 0.3
             }) 
             CreateInstance("UICorner", dropdownValuesContainer, { CornerRadius = UDim.new(0, 10) })
-            local valuesStroke = CreateInstance("UIStroke", dropdownValuesContainer, {
+            CreateInstance("UIStroke", dropdownValuesContainer, {
                 Color = Colors.Accent,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             CreateInstance("UIListLayout", dropdownValuesContainer, { 
                 Padding = UDim.new(0, 6), 
@@ -1513,8 +1475,7 @@ function library:CreateWindow(title)
                     CreateInstance("UIStroke", nil, {
                         Color = Colors.Gray.Stroke,
                         Thickness = 1,
-                        Transparency = 0.7,
-                        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                        Transparency = 0.7
                     })
                 }) 
                 autobutcolor(btn, Colors.Gray.DropDownButton) 
@@ -1602,11 +1563,10 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             })
             CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 10)})
-            local containerStroke = CreateInstance("UIStroke", container, {
+            CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
 
             local keyButton = CreateInstance("TextButton", container, {
@@ -1625,8 +1585,7 @@ function library:CreateWindow(title)
             local keyStroke = CreateInstance("UIStroke", keyButton, {
                 Color = Colors.Accent,
                 Thickness = 1,
-                Transparency = 0.7,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.7
             })
             autobutcolor(keyButton, Colors.Gray.TogBox)
 
@@ -1656,9 +1615,7 @@ function library:CreateWindow(title)
                 end
             end)
             
-            window:OnDestroy(function() 
-                keypressConnection:Disconnect() 
-            end)
+            window:OnDestroy(function() keypressConnection:Disconnect() end)
             
             return keybind
         end
@@ -1678,11 +1635,10 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.3
             }) 
             CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 10) })
-            local containerStroke = CreateInstance("UIStroke", container, {
+            CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1,
-                Transparency = 0.6,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.6
             })
             autobutcolor(container, Colors.Gray.DarkButton) 
             
@@ -1693,11 +1649,10 @@ function library:CreateWindow(title)
                 BorderSizePixel = 0 
             }) 
             CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 8) }) 
-            local displayStroke = CreateInstance("UIStroke", colorDisplay, { 
+            CreateInstance("UIStroke", colorDisplay, { 
                 Color = Colors.White, 
                 Thickness = 2,
-                Transparency = 0.4,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.4
             })
 
             local colorPalette = { 
@@ -1719,11 +1674,10 @@ function library:CreateWindow(title)
                 ClipsDescendants = true 
             }) 
             CreateInstance("UICorner", paletteFrame, { CornerRadius = UDim.new(0, 10) })
-            local paletteStroke = CreateInstance("UIStroke", paletteFrame, {
+            CreateInstance("UIStroke", paletteFrame, {
                 Color = Colors.Accent,
                 Thickness = 1,
-                Transparency = 0.5,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                Transparency = 0.5
             })
 
             local paletteGrid = CreateInstance("Frame", paletteFrame, { 
@@ -1748,8 +1702,7 @@ function library:CreateWindow(title)
                 local colorStroke = CreateInstance("UIStroke", colorBtn, { 
                     Color = Color3.fromRGB(80, 80, 100), 
                     Thickness = 2,
-                    Transparency = 0.5,
-                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                    Transparency = 0.5
                 })
                 
                 colorBtn.MouseEnter:Connect(function()
@@ -1798,3 +1751,4 @@ function library:CreateWindow(title)
     end 
     return window 
 end 
+return library
