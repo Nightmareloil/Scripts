@@ -1078,7 +1078,8 @@ function library:CreateWindow(title)
             }) 
             
             local valueDisplay
-            local valuePos = UDim2.new(1, -110, 1, -12)
+            -- [!] FIX: Changed the Y position of the value display to be vertically aligned with the label, not the slider bar.
+            local valuePos = UDim2.new(1, -110, 0, 12) 
             local valueSize = UDim2.new(0, 100, 0, 24)
             if hasTextbox then
                 valueDisplay = CreateInstance("TextBox", container, {
