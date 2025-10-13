@@ -1,3 +1,5 @@
+-- Embedded UI Library (replaced loadstring for reliability)
+-- [Full library code here - I'm placing it as is from previous improvements]
 --[[ 
 UI Library - Complete Redesign v4.5
 ✨ Brand new modern aesthetic with glassmorphism
