@@ -47,9 +47,9 @@ pcall(function()
     gradient.Rotation = 135
     
     spawn(function()
-        while loader.Parent do
+        while loader and loader.Parent do
             for i = 135, 495, 1 do
-                if not loader.Parent then break end
+                if not loader or not loader.Parent then break end
                 gradient.Rotation = i
                 task.wait(0.02)
             end
@@ -102,7 +102,7 @@ pcall(function()
         
         -- Trail effect
         spawn(function()
-            while loader.Parent and particle.Parent do
+            while loader and loader.Parent and particle and particle.Parent do
                 local trail = particle:Clone()
                 trail.Parent = bg
                 trail.BackgroundTransparency = particle.BackgroundTransparency + 0.2
@@ -175,9 +175,9 @@ pcall(function()
     titleGradient.Rotation = 90
     
     spawn(function()
-        while loader.Parent do
+        while loader and loader.Parent do
             for i = 0, 360, 2 do
-                if not loader.Parent then break end
+                if not loader or not loader.Parent then break end
                 titleGradient.Rotation = i
                 task.wait(0.03)
             end
@@ -242,7 +242,7 @@ pcall(function()
     Instance.new("UICorner", shimmer).CornerRadius = UDim.new(1, 0)
     
     spawn(function()
-        while loader.Parent do
+        while loader and loader.Parent do
             TweenService:Create(shimmer, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {
                 Position = UDim2.new(1, 0, 0, 0)
             }):Play()
@@ -392,7 +392,6 @@ local function playHoverSound()
     local sound = Instance.new("Sound")
     sound.SoundId = "rbxassetid://10066942189"
     sound.Volume = 0.15
-    sound.PlayOnRemove = false
     sound.Parent = workspace
     sound:Play()
     game:GetService("Debris"):AddItem(sound, 1)
@@ -415,7 +414,7 @@ function autobutcolor(value, normalColor)
         }):Play() 
     end) 
     value.MouseLeave:Connect(function() 
-        TweenService:Create(value, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
+        TweenService:Create(value, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
             BackgroundColor3 = normalColor
         }):Play() 
     end)
@@ -528,11 +527,6 @@ function library:CreateWindow(title)
     })
     
     local MIN_WINDOW_SIZE = Vector2.new(500, 380)
-    local aspectRatioConstraint = CreateInstance("UIAspectRatioConstraint", mainFrame, { 
-        AspectRatio = 650 / 450,
-        AspectType = Enum.AspectType.FitWithinMaxSize,
-        DominantAxis = Enum.DominantAxis.Width
-    })
     
     CreateInstance("UICorner", mainFrame, { CornerRadius = UDim.new(0, 12) })
     
@@ -556,7 +550,7 @@ function library:CreateWindow(title)
     CreateInstance("UICorner", accentGlow, {CornerRadius = UDim.new(0, 14)})
     
     spawn(function()
-        while screen.Parent do
+        while screen and screen.Parent do
             TweenService:Create(accentGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
                 BackgroundTransparency = 0.96
             }):Play()
@@ -792,7 +786,6 @@ function library:CreateWindow(title)
         
         local targetSize
         if isMinimized then
-            aspectRatioConstraint.Parent = nil
             if not isMaximized then
                 normalSize = mainFrame.Size
                 normalPos = mainFrame.Position
@@ -804,7 +797,6 @@ function library:CreateWindow(title)
             local currentPixelWidth = mainFrame.AbsoluteSize.X
             targetSize = UDim2.new(0, currentPixelWidth, 0, 48)
         else
-            aspectRatioConstraint.Parent = mainFrame
             targetSize = normalSize or UDim2.new(0, 650, 0, 450)
         end
         
@@ -814,31 +806,38 @@ function library:CreateWindow(title)
     -- Resize functionality
     local isResizing = false
     local resizeConnection, resizeMoveConnection
+    local startAbsPos, startAbsSize, startMousePos
     
     resizeHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isResizing = true
-            local startSize = mainFrame.AbsoluteSize
-            local startMousePos = UserInputService:GetMouseLocation()
+            startAbsPos = mainFrame.AbsolutePosition
+            startAbsSize = mainFrame.AbsoluteSize
+            startMousePos = UserInputService:GetMouseLocation()
+            mainFrame.AnchorPoint = Vector2.new(0, 0)
+            mainFrame.Position = UDim2.new(0, startAbsPos.X, 0, startAbsPos.Y)
 
             resizeMoveConnection = UserInputService.InputChanged:Connect(function(inputObject)
                 if isResizing and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                     local currentMousePos = UserInputService:GetMouseLocation()
                     local delta = currentMousePos - startMousePos
-                    local newSize = startSize + delta
-                    
-                    local finalX = math.max(newSize.X, MIN_WINDOW_SIZE.X)
-                    local finalY = math.max(newSize.Y, MIN_WINDOW_SIZE.Y)
-                    
-                    pcall(function()
-                        mainFrame.Size = UDim2.new(0, finalX, 0, finalY)
-                    end)
+                    local newSizeX = math.max(startAbsSize.X + delta.X, MIN_WINDOW_SIZE.X)
+                    local newSizeY = math.max(startAbsSize.Y + delta.Y, MIN_WINDOW_SIZE.Y)
+                    mainFrame.Size = UDim2.new(0, newSizeX, 0, newSizeY)
                 end
             end)
 
             resizeConnection = UserInputService.InputEnded:Connect(function(inputObject)
                 if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                     isResizing = false
+                    local viewport = workspace.CurrentCamera.ViewportSize
+                    local newAbsSize = mainFrame.AbsoluteSize
+                    local newCenterX = startAbsPos.X + newAbsSize.X / 2
+                    local newCenterY = startAbsPos.Y + newAbsSize.Y / 2
+                    local newOffsetX = newCenterX - viewport.X / 2
+                    local newOffsetY = newCenterY - viewport.Y / 2
+                    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+                    mainFrame.Position = UDim2.new(0.5, newOffsetX, 0.5, newOffsetY)
                     if resizeMoveConnection then resizeMoveConnection:Disconnect() end
                     if resizeConnection then resizeConnection:Disconnect() end
                 end
@@ -929,13 +928,13 @@ function library:CreateWindow(title)
                 local targetColor = isSelected and Colors.Gray.Hover or Colors.Gray.DarkButton
                 local targetTextColor = isSelected and Colors.White or Color3.fromRGB(180, 180, 200)
                 
-                TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
+                TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
                     BackgroundColor3 = targetColor,
                     TextColor3 = targetTextColor
                 }):Play()
                 
                 if button:FindFirstChild("TabStroke") then
-                    TweenService:Create(button.TabStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
+                    TweenService:Create(button.TabStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
                         Transparency = isSelected and 0.3 or 0.8
                     }):Play()
                 end
@@ -1078,7 +1077,6 @@ function library:CreateWindow(title)
             }) 
             
             local valueDisplay
-            -- [!] FIX: Changed the Y position of the value display to be vertically aligned with the label, not the slider bar.
             local valuePos = UDim2.new(1, -110, 0, 12) 
             local valueSize = UDim2.new(0, 100, 0, 24)
             if hasTextbox then
@@ -1264,10 +1262,10 @@ function library:CreateWindow(title)
                 local targetPos = boolValue.Value and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 3, 0.5, 0) 
                 local targetStrokeColor = boolValue.Value and Colors.Accent or Color3.fromRGB(80, 80, 100)
                 
-                TweenService:Create(toggleTrack, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { BackgroundColor3 = targetColor }):Play() 
+                TweenService:Create(toggleTrack, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundColor3 = targetColor }):Play() 
                 toggleTrack.UIGradient.Color = targetGradient
-                TweenService:Create(toggleTrack.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Color = targetStrokeColor }):Play()
-                TweenService:Create(toggleThumb, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Position = targetPos }):Play() 
+                TweenService:Create(toggleTrack.UIStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Color = targetStrokeColor }):Play()
+                TweenService:Create(toggleThumb, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Position = targetPos }):Play() 
                 callback(boolValue.Value, toggle) 
             end) 
             return toggle 
@@ -1455,8 +1453,8 @@ function library:CreateWindow(title)
                 dropdownContainer:SetAttribute("IsOpen", isOpen)
                 dropdownValuesContainer.Visible = isOpen 
                 local targetSize = isOpen and UDim2.new(1, 0, 0, 172) or UDim2.new(1, 0, 0, 42) 
-                TweenService:Create(dropdownContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = targetSize}):Play()
-                TweenService:Create(dropdownArrow, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { Rotation = isOpen and 180 or 0 }):Play() 
+                TweenService:Create(dropdownContainer, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Size = targetSize}):Play()
+                TweenService:Create(dropdownArrow, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Rotation = isOpen and 180 or 0 }):Play() 
             end 
             dropdownLabel.MouseButton1Click:Connect(toggleDropdown) 
 
@@ -1734,7 +1732,7 @@ function library:CreateWindow(title)
                     window:SetAccentColor(color) 
                     callback(color) 
                     paletteFrame.Visible = false 
-                    TweenService:Create(paletteFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, 0)}):Play() 
+                    TweenService:Create(paletteFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, 0)}):Play() 
                 end) 
             end 
 
@@ -1743,7 +1741,7 @@ function library:CreateWindow(title)
                 isOpen = not isOpen 
                 paletteFrame.Visible = isOpen 
                 local targetSize = isOpen and UDim2.new(1, 0, 0, 190) or UDim2.new(1, 0, 0, 0) 
-                TweenService:Create(paletteFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = targetSize}):Play() 
+                TweenService:Create(paletteFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Size = targetSize}):Play() 
             end) 
             return colorPicker 
         end 
