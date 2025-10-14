@@ -346,7 +346,7 @@ pcall(function()
 
     -- Success sound
     local snd = Instance.new("Sound", workspace) 
-    snd.SoundId = "rbxassetid://6026984224"
+    snd.SoundId = "rbxassetid://74157121530043"
     snd.Name = "LoadComplete" 
     snd.Volume = 0.8
     snd:Play() 
