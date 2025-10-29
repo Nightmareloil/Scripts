@@ -619,6 +619,7 @@ function library:CreateWindow(title)
         playSound("Close", 0.2)
         window:Destroy()
     end)
+    closeButton.TextSize = 22
     
     local minimizeButton = createControlButton("─", UDim2.new(1, -134, 0.5, -18), nil)
     local maximizeButton = createControlButton("", UDim2.new(1, -89, 0.5, -18), nil)
