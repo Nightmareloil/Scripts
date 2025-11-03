@@ -372,7 +372,7 @@ local Colors = {
 -- PROFESSIONAL SOUND SYSTEM WITH WORKING IDS
 local Sounds = {
     Hover = "rbxassetid://10066931761",
-    Click = "rbxassetid://3398620867",
+    Click = "",
     Toggle = "rbxassetid://3398620867",
     Slide = "rbxassetid://3398620867",
     Open = "rbxassetid://3398620867",
