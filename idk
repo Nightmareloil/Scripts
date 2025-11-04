@@ -1,0 +1,544 @@
+-- Revamped Spinning Sword Ball Script (Local Only for Executor)
+-- Collects tools from the ground in Workspace.
+-- Disables pickup by setting Enabled = false, CanTouch = false, etc.
+-- Uses BodyPosition for orbiting and BodyAngularVelocity for spinning, with client ownership for replication.
+-- Fixed errors in rotation modes by handling small tool counts (e.g., division by zero in wings).
+-- Added more styles: Butterfly Wings, Vortex, Shield Circle, Aura Ring.
+-- Improved fluency: Adjusted speeds, radii, added smooth transitions, reduced flinging by setting Massless = true and lower D/P.
+-- Fixed bug where tools drop: Continuously set NetworkOwner and monitor parent.
+-- Keys: Z toggle spin, C cycle mode.
+-- No X key.
+-- Wing mode integrates flying/sprinting states.
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local torso = character:WaitForChild("HumanoidRootPart")
+
+-- Check if typing in textbox
+local focused = false
+UserInputService.TextBoxFocused:Connect(function()
+    focused = true
+end)
+UserInputService.TextBoxFocusReleased:Connect(function()
+    focused = false
+end)
+
+-- Collect tools from Workspace (ground)
+local tools = {}
+local function collectTools()
+    tools = {}
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Tool") and obj.Parent == Workspace then
+            table.insert(tools, obj)
+        end
+    end
+end
+collectTools()
+if #tools == 0 then
+    warn("No tools found in Workspace!")
+    return
+end
+
+-- Configuration
+local CONFIG = {
+    baseRadius = 15,
+    radiusVariation = 5,
+    orbitSpeed = 0.8,  -- Slower for fluency
+    verticalOffset = 2,
+    verticalVariation = 1.5,
+    spinSpeed = 6,  -- Adjusted spin
+    updateInterval = 1/60,
+    bodyPosition = {
+        maxForce = Vector3.new(12000, 12000, 12000),  -- Lower for less flinging
+        p = 6000,
+        d = 600  -- Lower damping
+    },
+    teleportDistanceThreshold = 100,
+    teleportTweenTime = 0.5,
+    wingAngle = 0.5,
+    wingValue = 0.5
+}
+
+-- Humanoid optimization
+local function updateHumanoidScales()
+    local heightScale = humanoid.BodyHeightScale.Value
+    local depthScale = humanoid.BodyDepthScale.Value
+    local widthScale = humanoid.BodyWidthScale.Value
+    local hipHeight = humanoid.HipHeight
+    local swordLength = 5.5
+    local gripTilt = 0.0075545907
+    local backDepth = 0.5 * depthScale + 0.5
+    local shoulderHeight = (hipHeight / 2) * heightScale
+    return heightScale, depthScale, widthScale, hipHeight, swordLength, gripTilt, backDepth, shoulderHeight
+end
+
+local heightScale, depthScale, widthScale, hipHeight, swordLength, gripTilt, backDepth, shoulderHeight = updateHumanoidScales()
+
+-- State
+local animated = true
+local flying = false
+local sprinting = false
+
+UserInputService.InputBegan:Connect(function(input)
+    if focused then return end
+    if input.KeyCode == Enum.KeyCode.LeftShift and animated and currentRotationMode == 9 then
+        sprinting = not sprinting
+        humanoid.WalkSpeed = sprinting and 30 or 8
+        CONFIG.wingAngle = sprinting and 1.57 or 0.5
+        CONFIG.wingValue = sprinting and 0.7 or 0.5
+    end
+end)
+
+humanoid.StateChanged:Connect(function(old, new)
+    if animated and currentRotationMode == 9 then
+        if new == Enum.HumanoidStateType.Freefall then
+            flying = true
+            CONFIG.wingAngle = 1.57
+            CONFIG.wingValue = 0.7
+            workspace.Gravity = 50
+            humanoid.WalkSpeed = 70
+        elseif new == Enum.HumanoidStateType.Landed then
+            flying = false
+            workspace.Gravity = 196.2
+            humanoid.WalkSpeed = sprinting and 30 or 8
+            CONFIG.wingAngle = 0.5
+            CONFIG.wingValue = 0.5
+        end
+    end
+end)
+
+-- Rotation Modes
+local rotationModes = {
+    -- 1: Perfect Sphere (improved with smooth distribution)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local phi = math.acos(1 - 2 * index / total)
+        local theta = math.pi * (1 + 5^0.5) * index + t * 0.8
+        local r = data.radius + math.sin(t * 0.5) * 2  -- Gentle pulse
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 2: Rotating Rings (added layer rotation)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local layer = math.floor((index - 1) / (total / 3))
+        local phi = (layer / 3) * math.pi + t * 0.3  -- Slow layer spin
+        local theta = ((index - 1) % (total / 3)) * (2 * math.pi / (total / 3)) + t * 1.5
+        local r = data.radius
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 3: Spiral Sphere (smoother spiral)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local tt = index / total
+        local phi = math.acos(1 - 2 * tt) + t * 0.4
+        local theta = 4 * math.pi * tt + t * 1.8
+        local r = data.radius + math.cos(tt * math.pi) * 3  -- Vary radius along spiral
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 4: Chaotic Orbit (added bounds)
+    function(data, t, torsoPos)
+        local phi = math.sin(t + data.index * 0.5) * math.pi
+        local theta = math.cos(t * 1.3 + data.index * 0.3) * 2 * math.pi + t
+        local r = data.radius
+        phi = math.abs(phi) % math.pi  -- Bound phi
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 5: DNA Double Helix (added twist)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local tt = (index / total) * 4 * math.pi + t * 1.5
+        local helixNum = (index % 2) * math.pi + t * 0.2  -- Slow twist
+        local phi = math.pi / 2
+        local theta = tt + helixNum
+        local yOffset = math.sin(tt) * 2
+        local r = data.radius
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height + yOffset
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 6: Pulsing Sphere (smoother pulse)
+    function(data, t, torsoPos)
+        local phi = math.acos(1 - 2 * data.index / data.total)
+        local theta = math.pi * (1 + 5^0.5) * data.index + t * 0.7
+        local pulse = 1 + math.sin(t * 2.5) * 0.25  -- Gentler pulse
+        local r = data.radius * pulse
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 7: Figure-8 Orbit (added vertical variation)
+    function(data, t, torsoPos)
+        local total = data.total
+        local tt = (data.index / total) * 2 * math.pi + t * 1.2
+        local phi = math.pi / 2 + math.sin(tt * 1.8) * 0.4
+        local theta = tt
+        local r = data.radius + math.cos(tt) * 2  -- Vary r
+        local x = r * math.sin(phi) * math.cos(theta)
+        local y = r * math.cos(phi) + data.height
+        local z = r * math.sin(phi) * math.sin(theta)
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 8: Tornado (smoother height)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local height = ((index / total) - 0.5) * 2 + math.sin(t * 0.5) * 0.2  -- Gentle bob
+        local rad = (1 - math.abs(height)) * data.radius
+        local theta = (index / total) * 4 * math.pi + t * 2.5
+        local x = math.cos(theta) * rad
+        local z = math.sin(theta) * rad
+        local y = height * data.radius + data.height
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 9: Cool Wings (fixed division by zero, handle small counts)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local half = math.floor(total / 2)
+        if half == 0 then half = 1 end  -- Fix div zero
+        local flap = math.sin(t * 3) * 0.15  -- Smoother flap
+        local x, y, z
+        if index <= half then
+            local wingIndex = math.max(1, index)  -- Min 1
+            local angle = ((CONFIG.wingAngle / half) * wingIndex) + CONFIG.wingValue + flap
+            x = -3.5 * widthScale + 1.7 * widthScale
+            y = shoulderHeight + data.height
+            z = -backDepth
+        else
+            local wingIndex = math.max(1, index - half)
+            local angle = -((CONFIG.wingAngle / half) * wingIndex) - CONFIG.wingValue - flap
+            x = 3.5 * widthScale - 1.7 * widthScale
+            y = shoulderHeight + data.height
+            z = -backDepth
+        end
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 10: Ninja Star on Back (added pulse)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local angle = (index - 1) / total * 2 * math.pi + t * 4  -- Slower spin
+        local r = (swordLength / 2 + 0.5) * heightScale + math.sin(t * 2) * 1  -- Pulse
+        local x = math.cos(angle) * r * widthScale
+        local y = shoulderHeight + data.height
+        local z = -backDepth
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 11: Halo Above Head (added bob)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local theta = (index - 1) / total * 2 * math.pi + t * 1.2
+        local r = data.radius * 0.6
+        local x = math.cos(theta) * r
+        local y = (hipHeight + 2) * heightScale + data.height + math.sin(t) * 0.5  -- Bob
+        local z = math.sin(theta) * r
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 12: Shield Wall in Front (added sway)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local cols = math.ceil(math.sqrt(total))
+        local row = math.floor((index - 1) / cols)
+        local col = (index - 1) % cols
+        local spacing = swordLength * 0.8
+        local x = (col - cols / 2) * spacing * widthScale + math.sin(t + row) * 0.5  -- Sway
+        local y = (row - math.sqrt(total) / 2) * spacing + hipHeight / 2 + data.height
+        local z = data.radius * 0.5
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 13: Crown Around Head (added tilt variation)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local theta = (index - 1) / total * 2 * math.pi + t * 0.4
+        local r = (swordLength / 2 + 1) * heightScale * 0.8
+        local x = math.cos(theta) * r
+        local y = (hipHeight + 1.5) * heightScale + data.height + math.sin(t + index * 0.5) * 0.3  -- Individual bob
+        local z = math.sin(theta) * r
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 14: Tail Trailing Behind (smoother wave)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local tt = (index / total) * data.radius
+        local wave = math.sin(t * 1.5 + index * 0.4) * 0.4  -- Smoother
+        local x = wave * widthScale
+        local y = shoulderHeight - tt * 0.5 + data.height
+        local z = -backDepth - tt
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 15: Butterfly Wings (layered wings)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local layers = 2
+        local perLayer = math.floor(total / layers)
+        local layer = math.floor((index - 1) / perLayer) + 1
+        local layerIndex = (index - 1) % perLayer + 1
+        local half = math.floor(perLayer / 2)
+        if half == 0 then half = 1 end
+        local flap = math.sin(t * 3.5) * 0.25 * layer  -- Different flap per layer
+        local x, y, z
+        if layerIndex <= half then
+            local wingIndex = math.max(1, layerIndex)
+            local angle = ((CONFIG.wingAngle / half) * wingIndex) + CONFIG.wingValue + flap
+            x = -3.5 * widthScale * layer + 1.7 * widthScale
+            y = shoulderHeight + data.height + (layer - 1) * 0.5
+            z = -backDepth - (layer - 1) * 0.3
+        else
+            local wingIndex = math.max(1, layerIndex - half)
+            local angle = -((CONFIG.wingAngle / half) * wingIndex) - CONFIG.wingValue - flap
+            x = 3.5 * widthScale * layer - 1.7 * widthScale
+            y = shoulderHeight + data.height + (layer - 1) * 0.5
+            z = -backDepth - (layer - 1) * 0.3
+        end
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 16: Vortex (spiral inward)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local theta = (index / total) * 6 * math.pi + t * 2
+        local r = data.radius * (1 - (index / total) * 0.5)  -- Inward spiral
+        local x = math.cos(theta) * r
+        local z = math.sin(theta) * r
+        local y = data.height + (index / total) * 10  -- Height increase
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 17: Shield Circle (flat circle in front with rotation)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local theta = (index - 1) / total * 2 * math.pi + t * 1.5
+        local r = data.radius * 0.8
+        local x = math.cos(theta) * r
+        local y = data.height + hipHeight / 2
+        local z = math.sin(theta) * r + data.radius * 0.5  -- In front
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+    
+    -- 18: Aura Ring (horizontal ring around body with glow effect simulation via bob)
+    function(data, t, torsoPos)
+        local total = data.total
+        local index = data.index
+        local theta = (index - 1) / total * 2 * math.pi + t
+        local r = data.radius
+        local x = math.cos(theta) * r
+        local y = data.height + math.sin(t + theta) * 1.5  -- Bob for glow feel
+        local z = math.sin(theta) * r
+        return torsoPos + Vector3.new(x, y, z)
+    end,
+}
+
+local modeNames = {
+    "Perfect Sphere",
+    "Rotating Rings",
+    "Spiral Sphere",
+    "Chaotic Orbit",
+    "DNA Double Helix",
+    "Pulsing Sphere",
+    "Figure-8 Orbit",
+    "Tornado Spiral",
+    "Cool Wings",
+    "Ninja Star on Back",
+    "Halo Above Head",
+    "Shield Wall in Front",
+    "Crown Around Head",
+    "Tail Trailing Behind",
+    "Butterfly Wings",
+    "Vortex",
+    "Shield Circle",
+    "Aura Ring"
+}
+
+local currentRotationMode = 1
+local spinEnabled = true
+
+-- Disable pickup completely
+local function disableToolPickup(tool)
+    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+        local handle = tool.Handle
+        tool.Enabled = false
+        handle.CanCollide = false
+        handle.CanTouch = false
+        tool.CanBeDropped = false
+        handle.Massless = true  -- Prevent flinging
+        pcall(function()
+            tool.RequiresHandle = false
+        end)
+        pcall(function()
+            handle:SetNetworkOwner(player)
+        end)
+        tool.Equipped:Connect(function()
+            task.wait()
+            if tool.Parent == character then
+                tool.Parent = Workspace
+            end
+        end)
+        tool.Changed:Connect(function(prop)
+            if prop == "Parent" and tool.Parent == character then
+                task.wait()
+                tool.Parent = Workspace
+            end
+        end)
+    end
+end
+
+-- Initialize tools
+local toolData = {}
+local function initializeTools()
+    toolData = {}
+    for i, tool in ipairs(tools) do
+        disableToolPickup(tool)
+        local handle = tool.Handle
+        if handle then
+            local bp = Instance.new("BodyPosition", handle)
+            bp.MaxForce = CONFIG.bodyPosition.maxForce
+            bp.P = CONFIG.bodyPosition.p
+            bp.D = CONFIG.bodyPosition.d
+            
+            local bav = Instance.new("BodyAngularVelocity", handle)
+            bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bav.AngularVelocity = Vector3.new(0, CONFIG.spinSpeed, 0)
+            
+            local baseAngle = (i - 1) * (2 * math.pi / #tools)
+            local radius = CONFIG.baseRadius + (i % 3) * CONFIG.radiusVariation
+            local height = CONFIG.verticalOffset + math.sin(i) * CONFIG.verticalVariation
+            
+            toolData[tool] = {
+                index = i,
+                total = #tools,
+                angle = baseAngle,
+                radius = radius,
+                height = height,
+                bodyPosition = bp,
+                bodyAngularVelocity = bav,
+                teleporting = false
+            }
+            
+            local t = os.clock() * CONFIG.orbitSpeed
+            local targetPos = rotationModes[currentRotationMode](toolData[tool], t, torso.Position)
+            bp.Position = targetPos
+        end
+    end
+end
+initializeTools()
+
+-- Continuous protection against pickup and ownership
+RunService.Heartbeat:Connect(function()
+    for tool, data in pairs(toolData) do
+        if tool.Parent == character then
+            tool.Parent = Workspace
+        end
+        local handle = tool:FindFirstChild("Handle")
+        if handle then
+            pcall(function()
+                handle:SetNetworkOwner(player)
+            end)
+        end
+    end
+end)
+
+-- Update loop
+local lastUpdate = 0
+RunService.Heartbeat:Connect(function(deltaTime)
+    local now = os.clock()
+    if now - lastUpdate < CONFIG.updateInterval then return end
+    lastUpdate = now
+    
+    for tool, data in pairs(toolData) do
+        if tool.Parent and tool:FindFirstChild("Handle") and data.bodyPosition and not data.teleporting then
+            local success, err = pcall(function()
+                local t = now * CONFIG.orbitSpeed
+                local targetPos = rotationModes[currentRotationMode](data, t, torso.Position)
+                data.bodyPosition.Position = targetPos
+                
+                if spinEnabled then
+                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, CONFIG.spinSpeed, 0)
+                else
+                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+                end
+            end)
+            
+            if not success then
+                warn("Error in rotation mode " .. currentRotationMode .. ": " .. tostring(err))
+            end
+        else
+            if not tool.Parent or not tool:FindFirstChild("Handle") then
+                if data.bodyPosition then pcall(function() data.bodyPosition:Destroy() end) end
+                if data.bodyAngularVelocity then pcall(function() data.bodyAngularVelocity:Destroy() end) end
+                toolData[tool] = nil
+            end
+        end
+    end
+end)
+
+-- Input handling
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+    
+    if input.KeyCode == Enum.KeyCode.Z then
+        spinEnabled = not spinEnabled
+        
+    elseif input.KeyCode == Enum.KeyCode.C then
+        currentRotationMode = currentRotationMode % #rotationModes + 1
+        if currentRotationMode ~= 9 then
+            animated = true
+            flying = false
+            sprinting = false
+            humanoid.WalkSpeed = 16
+            workspace.Gravity = 196.2
+        end
+    end
+end)
+
+-- Handle respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoid = character:WaitForChild("Humanoid")
+    torso = character:WaitForChild("HumanoidRootPart")
+    collectTools()
+    initializeTools()
+end)
