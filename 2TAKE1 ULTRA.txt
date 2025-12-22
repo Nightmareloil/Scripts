@@ -34,7 +34,7 @@ local FARM_CONFIG = {
 }
 local Sounds = {}
 local soundIds = {
-    hover = "rbxassetid://72181695922",
+    hover = "rbxassetid://7218169592",
     click = "rbxassetid://7212399604",
     open = "rbxassetid://6655851046",
     close = "rbxassetid://2767090",
@@ -935,141 +935,97 @@ local function executeSequentially(targetList, actionFunction, actionName)
  
     notification(string.format("'%s' finished: %d/%d successful.", actionName, successCount, #targetList), 3, "success")
 end
--- Reverse Damage System
+
+
+-- Reverse Damage System (Improved)
 local CONFIG = {
-    ATTACK_COOLDOWN = 0.2, -- Slight reduction
-    CLEANUP_INTERVAL = 0.1,
-    PROXIMITY_RANGE = 4
+    ATTACK_COOLDOWN = 0.15,  -- Faster retaliation
+    CLEANUP_INTERVAL = 0.2,
+    PROXIMITY_RANGE = 6,     -- Slightly increased for better detection
+    HEALTH_CHECK_INTERVAL = 0.1  -- New: throttle checks
 }
-local attackerHistory = {}
-local lastHealth = 0
-local function getPlayerName(player)
-    return player and (player.DisplayName or player.Name) or "Unknown"
-end
-local function cleanupHistory()
-    local currentTime = time()
-    for attacker, data in pairs(attackerHistory) do
-        if currentTime - data.timestamp > 8 then
-            attackerHistory[attacker] = nil
-        end
-    end
-end
-local function retaliate(attacker, method)
-    if not attacker or not attacker.Character then return false end
-    local currentTime = time()
-    local lastAttack = attackerHistory[attacker]
- 
-    if lastAttack and currentTime - lastAttack.timestamp < CONFIG.ATTACK_COOLDOWN then
-        return false
-    end
-    attackerHistory[attacker] = {timestamp = currentTime}
-    local playerName = getPlayerName(attacker)
- 
-    playSound("combat")
-    pcall(function() killPlayerWithVerification(attacker) end)
-    notification("Eliminated " .. playerName .. " (" .. method .. ")", 3, "combat")
- 
-    return true
-end
-local function findNearbyAttackers()
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return {}
-    end
- 
-    local playerPos = player.Character.HumanoidRootPart.Position
-    local nearby = {}
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                local distance = (p.Character.HumanoidRootPart.Position - playerPos).Magnitude
-                if distance <= CONFIG.PROXIMITY_RANGE then
-                    local tool = p.Character:FindFirstChildOfClass("Tool") or p.Backpack:FindFirstChildOfClass("Tool")
-                    if tool then
-                        table.insert(nearby, {player = p, distance = distance})
-                    end
-                end
-            end
-        end
-    end
- 
-    table.sort(nearby, function(a, b) return a.distance < b.distance end)
-    return nearby
-end
-local function setupCreatorMonitoring()
-    if not player.Character then return nil end
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return nil end
-    return humanoid.ChildAdded:Connect(function(child)
-        if not State.reverseDmg or child.Name ~= "creator" then return end
-        if child:IsA("ObjectValue") and child.Value and child.Value:IsA("Player") then
-            local attacker = child.Value
-            if attacker ~= player then
-                task.spawn(retaliate, attacker, "Direct Hit")
-            end
-            task.spawn(function()
-                task.wait(0.05)
-                if child and child.Parent then
-                    child:Destroy()
-                end
-            end)
-        end
-    end)
-end
+
+-- In setupMainMonitoring (replace the entire function)
 local function setupMainMonitoring()
     if not player.Character then return nil end
     local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return nil end
     lastHealth = humanoid.Health
+    
+    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return nil end
+    
     local lastCheck = 0
     return Services.Run.Heartbeat:Connect(function()
-        if not State.reverseDmg or not player.Character then return end
+        if not State.reverseDmg or not player.Character or not rootPart.Parent then return end
         local currentTime = time()
-        if currentTime - lastCheck < 0.08 then return end -- Reduced check interval
+        if currentTime - lastCheck < CONFIG.HEALTH_CHECK_INTERVAL then return end
         lastCheck = currentTime
+        
         local currentHumanoid = player.Character:FindFirstChildOfClass("Humanoid")
         if not currentHumanoid then return end
+        
         local currentHealth = currentHumanoid.Health
-        local nearby = findNearbyAttackers()
-        if currentHealth ~= lastHealth and (currentHealth < lastHealth or State.godMode) then
-            if #nearby > 0 then
-                task.spawn(retaliate, nearby[1].player, "Health Drop")
+        local playerPos = rootPart.Position
+        
+        -- Find nearby armed players once per check
+        local nearbyArmed = {}
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local pRoot = p.Character.HumanoidRootPart
+                local distance = (pRoot.Position - playerPos).Magnitude
+                if distance <= CONFIG.PROXIMITY_RANGE then
+                    local tool = p.Character:FindFirstChildOfClass("Tool") or (p.Backpack and p.Backpack:FindFirstChildOfClass("Tool"))
+                    if tool then
+                        table.insert(nearbyArmed, {player = p, distance = distance})
+                    end
+                end
             end
         end
-        for _, data in ipairs(nearby) do
-            if data.player.Character:FindFirstChildOfClass("Tool") and data.distance <= 6 then
-                task.spawn(retaliate, data.player, "Armed Proximity")
-                break
+        
+        -- Retaliate on proximity
+        if #nearbyArmed > 0 then
+            table.sort(nearbyArmed, function(a, b) return a.distance < b.distance end)
+            retaliate(nearbyArmed[1].player, "Armed Proximity")
+        end
+        
+        -- Retaliate on health drop
+        if currentHealth < lastHealth then
+            if #nearbyArmed > 0 then
+                retaliate(nearbyArmed[1].player, "Health Drop")
             end
         end
-     
+        
         lastHealth = currentHealth
     end)
 end
-local function setupReverseDamage()
-    for _, connection in pairs(Data.connections or {}) do
-        if typeof(connection) == "RBXScriptConnection" then
-            connection:Disconnect()
-        elseif typeof(connection) == "thread" then
-            task.cancel(connection)
-        end
+
+-- Improved retaliate (uses multi-tool spam for faster kills)
+local function retaliate(attacker, method)
+    if not attacker or not attacker.Character then return false end
+    local currentTime = time()
+    local lastAttack = attackerHistory[attacker]
+    if lastAttack and currentTime - lastAttack.timestamp < CONFIG.ATTACK_COOLDOWN then
+        return false
     end
-    Data.connections = Data.connections or {}
-    attackerHistory = {}
-    if not State.reverseDmg or not player.Character then
-        notification("Reverse Damage: OFF", 2, "info")
-        return
-    end
-    Data.connections.reverseDmgCreator = setupCreatorMonitoring()
-    Data.connections.reverseDmgMain = setupMainMonitoring()
-    Data.connections.reverseDmgCleanup = task.spawn(function()
-        while State.reverseDmg do
-            task.wait(CONFIG.CLEANUP_INTERVAL)
-            cleanupHistory()
+    attackerHistory[attacker] = {timestamp = currentTime}
+    
+    local playerName = getPlayerName(attacker)
+    playSound("combat")
+    
+    -- Faster/more reliable kill: spam all tools
+    task.spawn(function()
+        for i = 1, 4 do  -- Multiple attempts
+            spamAttackWithAllMyTools(attacker)
+            task.wait(0.08)
         end
     end)
-    notification("Reverse Damage: ON", 2, "success")
+    
+    notification("Reversed on " .. playerName .. " (" .. method .. ")", 3, "combat")
+    return true
 end
+if Data.connections.reverseDmgMain then Data.connections.reverseDmgMain:Disconnect() end
+
 -- Loop Kill System
 local function startLoopKill(targets, sourcePlayer)
     if State.loopKillActive then stopLoopKill() end
@@ -1085,7 +1041,7 @@ local function startLoopKill(targets, sourcePlayer)
                 task.spawn(killPlayer, target)
             end
         end
-        task.wait(0.1)
+        task.wait(0)
     end)
  
     table.insert(State.loopKillConnections, connection)
