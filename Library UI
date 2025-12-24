@@ -28,7 +28,7 @@ pcall(function()
         ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 0, 5))
     })
     gradient.Rotation = 45
-   
+  
     spawn(function()
         while loader and loader.Parent do
             for i = 45, 405, 2 do
@@ -49,7 +49,7 @@ pcall(function()
         orb.BorderSizePixel = 0
         orb.ZIndex = 11
         Instance.new("UICorner", orb).CornerRadius = UDim.new(1, 0)
-       
+      
         local blur = Instance.new("Frame", orb)
         blur.Size = UDim2.new(1, 25, 1, 25)
         blur.Position = UDim2.new(0.5, -12.5, 0.5, -12.5)
@@ -59,7 +59,7 @@ pcall(function()
         blur.BorderSizePixel = 0
         blur.ZIndex = 11
         Instance.new("UICorner", blur).CornerRadius = UDim.new(1, 0)
-       
+      
         TweenService:Create(orb, TweenInfo.new(4.5 + i * 0.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
             BackgroundTransparency = 0.96,
             Size = UDim2.new(0, size + 120, 0, size + 120),
@@ -75,7 +75,7 @@ pcall(function()
         particle.BorderSizePixel = 0
         particle.ZIndex = 12
         Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
-       
+      
         spawn(function()
             while loader and loader.Parent and particle and particle.Parent do
                 local trail = particle:Clone()
@@ -88,7 +88,7 @@ pcall(function()
                 task.wait(0.1)
             end
         end)
-       
+      
         TweenService:Create(particle, TweenInfo.new(math.random(6, 12), Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), {
             Position = UDim2.new(math.random(), 0, math.random(), 0),
             BackgroundTransparency = 0.94
@@ -108,7 +108,7 @@ pcall(function()
     logoGlow.BorderSizePixel = 0
     logoGlow.ZIndex = 12
     Instance.new("UICorner", logoGlow).CornerRadius = UDim.new(1, 0)
-   
+  
     TweenService:Create(logoGlow, TweenInfo.new(2.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
         BackgroundTransparency = 0.94,
         Size = UDim2.new(1, 160, 1, 160),
@@ -125,12 +125,12 @@ pcall(function()
     title.TextSize = 68
     title.TextTransparency = 1
     title.ZIndex = 14
-   
+  
     local titleStroke = Instance.new("UIStroke", title)
     titleStroke.Color = Color3.fromRGB(255, 0, 0)
     titleStroke.Thickness = 4
     titleStroke.Transparency = 1
-   
+  
     local titleGradient = Instance.new("UIGradient", title)
     titleGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 60, 60)),
@@ -138,7 +138,7 @@ pcall(function()
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 60, 60))
     })
     titleGradient.Rotation = 90
-   
+  
     spawn(function()
         while loader and loader.Parent do
             for i = 0, 360, 4 do
@@ -173,7 +173,7 @@ pcall(function()
     loadingBarBG.BorderSizePixel = 0
     loadingBarBG.ZIndex = 14
     Instance.new("UICorner", loadingBarBG).CornerRadius = UDim.new(1, 0)
-   
+  
     local loadingBarStroke = Instance.new("UIStroke", loadingBarBG)
     loadingBarStroke.Color = Color3.fromRGB(255, 0, 0)
     loadingBarStroke.Thickness = 2
@@ -184,14 +184,14 @@ pcall(function()
     loadingBar.BorderSizePixel = 0
     loadingBar.ZIndex = 15
     Instance.new("UICorner", loadingBar).CornerRadius = UDim.new(1, 0)
-   
+  
     local barGradient = Instance.new("UIGradient", loadingBar)
     barGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(210, 0, 0)),
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 60, 60)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
     })
-   
+  
     local shimmer = Instance.new("Frame", loadingBar)
     shimmer.Size = UDim2.new(0.38, 0, 1, 0)
     shimmer.Position = UDim2.new(-0.38, 0, 0, 0)
@@ -200,7 +200,7 @@ pcall(function()
     shimmer.BorderSizePixel = 0
     shimmer.ZIndex = 16
     Instance.new("UICorner", shimmer).CornerRadius = UDim.new(1, 0)
-   
+  
     spawn(function()
         while loader and loader.Parent do
             TweenService:Create(shimmer, TweenInfo.new(1.1, Enum.EasingStyle.Linear), {
@@ -237,12 +237,12 @@ pcall(function()
     TweenService:Create(titleStroke, TweenInfo.new(1.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Transparency = 0
     }):Play()
-   
+  
     task.wait(0.45)
     TweenService:Create(subtitle, TweenInfo.new(0.75, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         TextTransparency = 0
     }):Play()
-   
+  
     task.wait(0.28)
     TweenService:Create(percentText, TweenInfo.new(0.65, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         TextTransparency = 0
@@ -250,9 +250,9 @@ pcall(function()
     TweenService:Create(statusText, TweenInfo.new(0.65, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         TextTransparency = 0
     }):Play()
-   
+  
     task.wait(0.55)
-   
+  
     -- Enhanced loading stages
     local stages = {
         {percent = 18, subtitle = "Inferno Edition • Loading Core Systems...", status = "► Initializing Framework"},
@@ -261,7 +261,7 @@ pcall(function()
         {percent = 87, subtitle = "Inferno Edition • Finalizing Setup...", status = "► Optimizing Performance"},
         {percent = 100, subtitle = "Inferno Edition • System Ready!", status = "► Launch Complete"}
     }
-   
+  
     for _, stage in ipairs(stages) do
         local startPercent = tonumber(percentText.Text:match("%d+")) or 0
         for i = startPercent, stage.percent, 1 do
@@ -276,9 +276,9 @@ pcall(function()
         statusText.Text = stage.status
         task.wait(stage.percent == 100 and 0.35 or 0.1)
     end
-   
+  
     task.wait(0.45)
-   
+  
     -- Smooth exit animation
     TweenService:Create(bg, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
     for _, child in ipairs(bg:GetDescendants()) do
@@ -395,12 +395,12 @@ function library:CreateWindow(title)
     local state = library.WindowState.Opened
     local window_id = math.random(1, 9999)
     local window = {}
-   
+  
     local screen = CreateInstance("ScreenGui", parent, {
         Name = "DemonHub_" .. window_id,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
-   
+  
     local destructionHooks = {}
     function window:OnDestroy(func)
         table.insert(destructionHooks, func)
@@ -415,13 +415,13 @@ function library:CreateWindow(title)
     function window:GetTitle()
         return title
     end
-   
+  
     local colorChangeElements = {}
     function window:SetAccentColor(newColor)
         Colors.Accent = newColor
         local h, s, v = newColor:ToHSV()
         Colors.Secondary = Color3.fromHSV(h, math.min(s * 1.25, 1), v * 0.58)
-       
+      
         Colors.Gray.Stroke = Color3.fromRGB(
             math.max(newColor.R * 255 * 0.35, 20),
             math.max(newColor.G * 255 * 0.35, 5),
@@ -462,7 +462,7 @@ function library:CreateWindow(title)
             math.max(newColor.G * 255 * 0.28, 3),
             math.max(newColor.B * 255 * 0.28, 3)
         )
-       
+      
         Colors.Gradients.Accent = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.fromRGB(
                 math.max(newColor.R * 255 - 55, 0),
@@ -476,7 +476,7 @@ function library:CreateWindow(title)
             )),
             ColorSequenceKeypoint.new(1, newColor)
         })
-       
+      
         for _, element in pairs(colorChangeElements) do
             if element and element.Parent then
                 if element:IsA("ScrollingFrame") then
@@ -504,7 +504,7 @@ function library:CreateWindow(title)
         Active = true,
         ClipsDescendants = true
     })
-   
+  
     local glassEffect = CreateInstance("Frame", mainFrame, {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundColor3 = Color3.fromRGB(20, 2, 2),
@@ -512,11 +512,11 @@ function library:CreateWindow(title)
         BorderSizePixel = 0,
         ZIndex = 0
     })
-   
+  
     local MIN_WINDOW_SIZE = Vector2.new(520, 400)
-   
+  
     CreateInstance("UICorner", mainFrame, { CornerRadius = UDim.new(0, 18) })
-   
+  
     local windowStroke = CreateInstance("UIStroke", mainFrame, {
         Color = Colors.Accent,
         Thickness = 2.2,
@@ -533,7 +533,7 @@ function library:CreateWindow(title)
         ZIndex = -1
     })
     CreateInstance("UICorner", accentGlow, {CornerRadius = UDim.new(0, 20)})
-   
+  
     spawn(function()
         local count = 0
         while screen and screen.Parent and count < 100 do
@@ -551,7 +551,7 @@ function library:CreateWindow(title)
         BackgroundTransparency = 0.12
     })
     CreateInstance("UICorner", top, { CornerRadius = UDim.new(0, 18) })
-   
+  
     local topAccent = CreateInstance("Frame", top, {
         Size = UDim2.new(1, 0, 0, 2.8),
         Position = UDim2.new(0, 0, 1, -2.8),
@@ -563,7 +563,7 @@ function library:CreateWindow(title)
         Color = Colors.Gradients.Accent,
         Rotation = 90
     })
-   
+  
     local titleLabel = CreateInstance("TextLabel", top, {
         TextColor3 = Colors.White,
         BorderColor3 = Colors.Gray.Stroke,
@@ -575,7 +575,7 @@ function library:CreateWindow(title)
         TextSize = 18,
         TextXAlignment = Enum.TextXAlignment.Left
     })
-   
+  
     CreateInstance("UIGradient", titleLabel, {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
@@ -610,17 +610,17 @@ function library:CreateWindow(title)
     end
     local closeButton = createControlButton("×", UDim2.new(1, -46, 0.5, -19), function()
         playSound("Close", 0.22)
-       
+      
         -- Smooth close animation
         TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 680, 0, 0),
             BackgroundTransparency = 1
         }):Play()
-       
+      
         TweenService:Create(windowStroke, TweenInfo.new(0.35), {
             Transparency = 1
         }):Play()
-       
+      
         for _, child in ipairs(mainFrame:GetDescendants()) do
             pcall(function()
                 if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
@@ -633,12 +633,12 @@ function library:CreateWindow(title)
                 end
             end)
         end
-       
+      
         task.wait(0.35)
         window:Destroy()
     end)
     closeButton.TextSize = 24
-   
+  
     local minimizeButton = createControlButton("─", UDim2.new(1, -140, 0.5, -19), nil)
     local maximizeButton = createControlButton("", UDim2.new(1, -93, 0.5, -19), nil)
     local maximizeIcon = CreateInstance("Frame", maximizeButton, {
@@ -682,16 +682,16 @@ function library:CreateWindow(title)
     local startPos = nil
     local dragConnection = nil
     local releaseConnection = nil
-   
+  
     top.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = true
             dragStart = UserInputService:GetMouseLocation()
             startPos = mainFrame.Position
-           
+          
             if dragConnection then dragConnection:Disconnect() end
             if releaseConnection then releaseConnection:Disconnect() end
-           
+          
             dragConnection = UserInputService.InputChanged:Connect(function(inputObject)
                 if isDragging and (inputObject.UserInputType == Enum.UserInputType.MouseMovement or inputObject.UserInputType == Enum.UserInputType.Touch) then
                     local mousePos = UserInputService:GetMouseLocation()
@@ -704,7 +704,7 @@ function library:CreateWindow(title)
                     )
                 end
             end)
-           
+          
             releaseConnection = UserInputService.InputEnded:Connect(function(inputObject)
                 if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
                     isDragging = false
@@ -771,13 +771,13 @@ function library:CreateWindow(title)
         playSound("Toggle", 0.17)
         isMinimized = not isMinimized
         state = isMinimized and library.WindowState.Minimized or library.WindowState.Opened
-       
+      
         local shouldBeVisible = not isMinimized
         windowContainer.Visible = shouldBeVisible
         resizeHandle.Visible = shouldBeVisible
         glassEffect.Visible = shouldBeVisible
         accentGlow.Visible = shouldBeVisible
-       
+      
         local targetSize
         if isMinimized then
             if not isMaximized then
@@ -793,13 +793,13 @@ function library:CreateWindow(title)
         else
             targetSize = normalSize or UDim2.new(0, 680, 0, 480)
         end
-       
+      
         TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), { Size = targetSize }):Play()
     end)
     local isResizing = false
     local resizeConnection, resizeMoveConnection
     local startAbsPos, startAbsSize, startMousePos
-   
+  
     resizeHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isResizing = true
@@ -838,22 +838,34 @@ function library:CreateWindow(title)
     local opened = true
     function window:Hide()
         opened = false
-        screen.Enabled = false
+        -- FIXED: Do not disable screen, otherwise the mobile toggle button also disappears
+        -- screen.Enabled = false 
+        
         -- Smooth hide animation
         TweenService:Create(mainFrame, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
             Size = UDim2.new(0, mainFrame.AbsoluteSize.X, 0, 0)
         }):Play()
+
+        -- Make sure mainFrame is actually hidden to clicks after animation
+        task.delay(0.28, function()
+            if not opened then
+                mainFrame.Visible = false
+            end
+        end)
     end
     function window:Show()
+        -- FIXED: Make sure frame is visible before animating
         screen.Enabled = true
+        mainFrame.Visible = true
         opened = true
+        
         -- Smooth show animation
         mainFrame.Size = UDim2.new(0, mainFrame.AbsoluteSize.X, 0, 0)
         TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = normalSize or UDim2.new(0, 680, 0, 480)
         }):Play()
     end
-   
+  
     -- Support for both Left and Right Control keys
     local handler = UserInputService.InputBegan:Connect(function (input)
         if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
@@ -864,7 +876,7 @@ function library:CreateWindow(title)
             end
         end
     end)
-   
+  
     window:OnDestroy(function ()
         pcall(function() handler:Disconnect() end)
         if dragConnection then pcall(function() dragConnection:Disconnect() end) end
@@ -877,7 +889,8 @@ function library:CreateWindow(title)
         local mobileToggle = Instance.new("TextButton", screen)
         mobileToggle.Name = "MobileToggle"
         mobileToggle.Size = UDim2.new(0, 60, 0, 60)
-        mobileToggle.Position = UDim2.new(0.5, 0, 0.5, 0)
+        -- FIXED: Changed position to be at the top of the screen (0.12) like Delta, instead of center (0.5)
+        mobileToggle.Position = UDim2.new(0.5, 0, 0.12, 0)
         mobileToggle.AnchorPoint = Vector2.new(0.5, 0.5)
         mobileToggle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         mobileToggle.Text = "D"
@@ -886,14 +899,11 @@ function library:CreateWindow(title)
         mobileToggle.TextSize = 32
         mobileToggle.ZIndex = 1000
         mobileToggle.AutoButtonColor = false
-
         Instance.new("UICorner", mobileToggle).CornerRadius = UDim.new(1, 0)
-
         local glowStroke = Instance.new("UIStroke", mobileToggle)
         glowStroke.Color = Color3.fromRGB(255, 0, 0)
         glowStroke.Thickness = 4
         glowStroke.Transparency = 0.5
-
         -- Pulse glow animation
         spawn(function()
             while mobileToggle and mobileToggle.Parent do
@@ -903,7 +913,6 @@ function library:CreateWindow(title)
                 task.wait(3)
             end
         end)
-
         -- Draggable functionality
         local dragging = false
         local dragStart, startPos
@@ -925,7 +934,6 @@ function library:CreateWindow(title)
                 dragging = false
             end
         end)
-
         -- Toggle UI visibility
         local uiVisible = true
         mobileToggle.MouseButton1Click:Connect(function()
@@ -934,13 +942,12 @@ function library:CreateWindow(title)
                 window:Show()
             else
                 window:Hide()
-                -- Snap back to center with animation
+                -- Snap back to top center with animation (matching start position)
                 TweenService:Create(mobileToggle, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(0.5, 0, 0.5, 0)
+                    Position = UDim2.new(0.5, 0, 0.12, 0)
                 }):Play()
             end
         end)
-
         -- Ensure button stays on top when UI hidden
         window:OnDestroy(function()
             if mobileToggle then mobileToggle:Destroy() end
@@ -997,12 +1004,12 @@ function library:CreateWindow(title)
                 local isSelected = (button.Name == "Tab" .. id)
                 local targetColor = isSelected and Colors.Gray.Hover or Colors.Gray.DarkButton
                 local targetTextColor = isSelected and Colors.White or Color3.fromRGB(210, 190, 190)
-               
+              
                 TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
                     BackgroundColor3 = targetColor,
                     TextColor3 = targetTextColor
                 }):Play()
-               
+              
                 if button:FindFirstChild("TabStroke") then
                     TweenService:Create(button.TabStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
                         Transparency = isSelected and 0.22 or 0.72
@@ -1055,7 +1062,7 @@ function library:CreateWindow(title)
         tabButton.MouseButton1Click:Connect(function()
             changeTab(tabId)
         end)
-       
+      
         -- Paragraph Component
         function tab:CreateParagraph(title, content)
             local paragraph = CreateInstance("Frame", tabContainer, {
@@ -1076,7 +1083,7 @@ function library:CreateWindow(title)
                 PaddingRight = UDim.new(0, 15),
                 PaddingBottom = UDim.new(0, 13)
             })
-           
+          
             local titleLabel = CreateInstance("TextLabel", paragraph, {
                 Size = UDim2.new(1, 0, 0, 24),
                 BackgroundTransparency = 1,
@@ -1087,7 +1094,7 @@ function library:CreateWindow(title)
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top
             })
-           
+          
             local contentLabel = CreateInstance("TextLabel", paragraph, {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 28),
@@ -1101,10 +1108,10 @@ function library:CreateWindow(title)
                 TextYAlignment = Enum.TextYAlignment.Top,
                 TextWrapped = true
             })
-           
+          
             return {}
         end
-       
+      
         -- Info Card Component
         function tab:CreateInfoCard(title, description, iconText)
             iconText = iconText or "ℹ"
@@ -1119,7 +1126,7 @@ function library:CreateWindow(title)
                 Thickness = 1.6,
                 Transparency = 0.58
             })
-           
+          
             local icon = CreateInstance("TextLabel", card, {
                 Size = UDim2.new(0, 52, 0, 52),
                 Position = UDim2.new(0, 10, 0.5, -26),
@@ -1132,7 +1139,7 @@ function library:CreateWindow(title)
                 BorderSizePixel = 0
             })
             CreateInstance("UICorner", icon, {CornerRadius = UDim.new(0, 9)})
-           
+          
             local titleLabel = CreateInstance("TextLabel", card, {
                 Size = UDim2.new(1, -76, 0, 28),
                 Position = UDim2.new(0, 70, 0, 13),
@@ -1143,7 +1150,7 @@ function library:CreateWindow(title)
                 TextSize = 15,
                 TextXAlignment = Enum.TextXAlignment.Left
             })
-           
+          
             local descLabel = CreateInstance("TextLabel", card, {
                 Size = UDim2.new(1, -76, 0, 22),
                 Position = UDim2.new(0, 70, 0, 41),
@@ -1154,16 +1161,16 @@ function library:CreateWindow(title)
                 TextSize = 13,
                 TextXAlignment = Enum.TextXAlignment.Left
             })
-           
+          
             return {}
         end
-       
+      
         -- Chip/Tag Component
         function tab:CreateChip(labelText, chips, callback)
             callback = callback or function() end
             local chip = {}
             local selectedChip = nil
-           
+          
             local container = CreateInstance("Frame", tabContainer, {
                 Size = UDim2.new(1, 0, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
@@ -1182,7 +1189,7 @@ function library:CreateWindow(title)
                 PaddingRight = UDim.new(0, 15),
                 PaddingBottom = UDim.new(0, 13)
             })
-           
+          
             local label = CreateInstance("TextLabel", container, {
                 Size = UDim2.new(1, 0, 0, 24),
                 BackgroundTransparency = 1,
@@ -1192,7 +1199,7 @@ function library:CreateWindow(title)
                 TextSize = 15,
                 TextXAlignment = Enum.TextXAlignment.Left
             })
-           
+          
             local chipsContainer = CreateInstance("Frame", container, {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 30),
@@ -1205,7 +1212,7 @@ function library:CreateWindow(title)
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Wraps = true
             })
-           
+          
             for _, chipName in ipairs(chips) do
                 local chipButton = CreateInstance("TextButton", chipsContainer, {
                     Size = UDim2.new(0, 0, 0, 34),
@@ -1228,11 +1235,11 @@ function library:CreateWindow(title)
                     PaddingLeft = UDim.new(0, 13),
                     PaddingRight = UDim.new(0, 13)
                 })
-               
+              
                 chipButton.MouseButton1Click:Connect(function()
                     playClickSound()
                     selectedChip = chipName
-                   
+                  
                     for _, btn in ipairs(chipsContainer:GetChildren()) do
                         if btn:IsA("TextButton") then
                             local isSelected = (btn.Text:gsub(" ", "") == chipName)
@@ -1248,10 +1255,10 @@ function library:CreateWindow(title)
                             end
                         end
                     end
-                   
+                  
                     callback(chipName, chip)
                 end)
-               
+              
                 chipButton.MouseEnter:Connect(function()
                     playHoverSound()
                     if chipButton.Text:gsub(" ", "") ~= selectedChip then
@@ -1260,7 +1267,7 @@ function library:CreateWindow(title)
                         }):Play()
                     end
                 end)
-               
+              
                 chipButton.MouseLeave:Connect(function()
                     if chipButton.Text:gsub(" ", "") ~= selectedChip then
                         TweenService:Create(chipButton, TweenInfo.new(0.13), {
@@ -1269,10 +1276,10 @@ function library:CreateWindow(title)
                     end
                 end)
             end
-           
+          
             return chip
         end
-       
+      
         function tab:CreateTextbox(label, callback, placeholder)
             local callback = callback or function (_) end
             local placeholder = placeholder or "Type here..."
@@ -1294,7 +1301,7 @@ function library:CreateWindow(title)
                 Thickness = 1.3,
                 Transparency = 0.52
             })
-           
+          
             local textBoxInstance = CreateInstance("TextBox", textBoxLabel, {
                 TextWrapped = true,
                 TextColor3 = Colors.White,
@@ -1317,7 +1324,7 @@ function library:CreateWindow(title)
                 Thickness = 1.3,
                 Transparency = 0.72
             })
-           
+          
             textBoxInstance.Focused:Connect(function()
                 playSound("Click", 0.13)
                 TweenService:Create(textBoxInstance.UIStroke, TweenInfo.new(0.17), {Transparency = 0.22}):Play()
@@ -1336,7 +1343,7 @@ function library:CreateWindow(title)
             minvalue, maxvalue, default, callback = minvalue or 0, maxvalue or 100, default or minvalue, callback or function() end
             local supportFloats = options.floats and (type(options.floats) == "number" and options.floats or 2)
             local hasTextbox = options.textbox or false
-           
+          
             local slider = {}
             local container = CreateInstance("Frame", tabContainer, {
                 Size = UDim2.new(1, 0, 0, 54),
@@ -1349,7 +1356,7 @@ function library:CreateWindow(title)
                 Thickness = 1.3,
                 Transparency = 0.52
             })
-           
+          
             local labelText = CreateInstance("TextLabel", container, {
                 BackgroundTransparency = 1,
                 Position = UDim2.new(0, 11, 0, 0),
@@ -1361,7 +1368,7 @@ function library:CreateWindow(title)
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Center
             })
-           
+          
             local valueDisplay
             local valuePos = UDim2.new(1, -125, 0, 14)
             local valueSize = UDim2.new(0, 115, 0, 28)
@@ -1413,7 +1420,7 @@ function library:CreateWindow(title)
                 Thickness = 1.3,
                 Transparency = 0.62
             })
-           
+          
             local percentage = math.clamp((default - minvalue) / (maxvalue - minvalue), 0, 1)
             local sliderFill = CreateInstance("Frame" , sliderBack, {
                 Name = "SliderFill",
@@ -1447,7 +1454,7 @@ function library:CreateWindow(title)
             end
             local isSliding = false
             local dragConnection, moveConnection
-           
+          
             sliderBack.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     isSliding = true
@@ -1495,7 +1502,7 @@ function library:CreateWindow(title)
                 Thickness = 1.3,
                 Transparency = 0.52
             })
-           
+          
             local toggleTrack = CreateInstance("Frame", mainToggleContainer, {
                 Name = "Toggle",
                 Position = UDim2.new(1, -17, 0.5, 0),
@@ -1514,7 +1521,7 @@ function library:CreateWindow(title)
                 Thickness = 2,
                 Transparency = 0.42
             })
-           
+          
             local toggleThumb = CreateInstance("Frame", toggleTrack, {
                 Size = UDim2.new(0, 24, 0, 24),
                 Position = default and UDim2.new(1, -27, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
@@ -1529,7 +1536,7 @@ function library:CreateWindow(title)
                 Transparency = 0.22,
                 Thickness = 2.4
             })
-           
+          
             autobutcolor(mainToggleContainer, Colors.Gray.DarkButton)
             local boolValue = CreateInstance("BoolValue", mainToggleContainer, {
                 Name = "State",
@@ -1538,12 +1545,12 @@ function library:CreateWindow(title)
             mainToggleContainer.MouseButton1Click:Connect(function ()
                 boolValue.Value = not boolValue.Value
                 playSound("Toggle", 0.18)
-               
+              
                 local targetColor = boolValue.Value and Colors.Accent or Color3.fromRGB(130, 110, 110)
                 local targetGradient = boolValue.Value and Colors.Gradients.Accent or ColorSequence.new(Color3.fromRGB(130,110,110))
                 local targetPos = boolValue.Value and UDim2.new(1, -27, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
                 local targetStrokeColor = boolValue.Value and Colors.Accent or Color3.fromRGB(110, 90, 90)
-               
+              
                 TweenService:Create(toggleTrack, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundColor3 = targetColor }):Play()
                 toggleTrack.UIGradient.Color = targetGradient
                 TweenService:Create(toggleTrack.UIStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Color = targetStrokeColor }):Play()
@@ -1576,7 +1583,7 @@ function library:CreateWindow(title)
                 PaddingTop = UDim.new(0, 9),
                 PaddingLeft = UDim.new(0, 7)
             })
-           
+          
             if description and #description > 0 then
                 CreateInstance("TextLabel", textLabel, {
                     TextColor3 = Color3.fromRGB(210, 190, 190),
@@ -1592,7 +1599,7 @@ function library:CreateWindow(title)
             end
             return {}
         end
-       
+      
         function tab:CreateSeparator()
             local sep = CreateInstance("Frame", tabContainer, {
                 Size = UDim2.new(1, 0, 0, 3),
@@ -1626,7 +1633,7 @@ function library:CreateWindow(title)
                 Thickness = 1.3,
                 Transparency = 0.72
             })
-           
+          
             CreateInstance("TextLabel", buttonContainer, {
                 Text = "→",
                 TextColor3 = Colors.Accent,
@@ -1636,7 +1643,7 @@ function library:CreateWindow(title)
                 Position = UDim2.new(1, -36, 0.5, -11),
                 Size = UDim2.new(0, 24, 0, 22)
             })
-           
+          
             autobutcolor(buttonContainer, Colors.Gray.DarkButton)
             buttonContainer.MouseButton1Click:Connect(function()
                 callback()
@@ -1670,7 +1677,7 @@ function library:CreateWindow(title)
                 Transparency = 0.52
             })
             autobutcolor(dropdownLabel, Colors.Gray.DarkButton)
-           
+          
             local dropdownArrow = CreateInstance("TextLabel", dropdownLabel, {
                 Text = "▼",
                 TextColor3 = Colors.Accent,
@@ -1799,19 +1806,19 @@ function library:CreateWindow(title)
         table.sort(names)
         return names
     end
-    
+   
     local dropdown = tab:CreateDropdown(text, getPlayerNames(), callback)
-    
+   
     local function updateDropdown()
         local currentPlayers = getPlayerNames()
         dropdown:SetOptions(currentPlayers)
     end
-    
+   
     -- Store connections for proper cleanup
     local connections = {}
     connections.playerAdded = game.Players.PlayerAdded:Connect(updateDropdown)
     connections.playerRemoving = game.Players.PlayerRemoving:Connect(updateDropdown)
-    
+   
     -- Cleanup function
     local function cleanup()
         for _, connection in pairs(connections) do
@@ -1820,25 +1827,25 @@ function library:CreateWindow(title)
             end
         end
     end
-    
+   
     -- Register cleanup with window
     if window and window.OnDestroy then
         window:OnDestroy(cleanup)
     end
-    
+   
     -- Add cleanup method to dropdown for manual cleanup if needed
     dropdown.Cleanup = cleanup
-    
+   
     return dropdown
 end
         function tab:CreateKeybind(label, defaultKey, callback)
             defaultKey = defaultKey or "..."
             callback = callback or function() end
-           
+          
             local keybind = {}
             local key = defaultKey
             local isSettingKey = false
-           
+          
             local container = CreateInstance("TextLabel", tabContainer, {
                 TextColor3 = Colors.White,
                 Text = " " .. label,
@@ -1880,7 +1887,7 @@ end
                 playSound("Click", 0.16)
                 TweenService:Create(keyStroke, TweenInfo.new(0.17), {Transparency = 0.18}):Play()
             end)
-           
+          
             keyButton.MouseButton2Click:Connect(function()
                 isSettingKey = false
                 key = "..."
@@ -1901,9 +1908,9 @@ end
                     end
                 end
             end)
-           
+          
             window:OnDestroy(function() pcall(function() keypressConnection:Disconnect() end) end)
-           
+          
             return keybind
         end
         function tab:CreateColorPicker(label, defaultColor, callback)
@@ -1927,7 +1934,7 @@ end
                 Transparency = 0.52
             })
             autobutcolor(container, Colors.Gray.DarkButton)
-           
+          
             local colorDisplay = CreateInstance("Frame", container, {
                 Size = UDim2.new(0, 42, 0, 30),
                 Position = UDim2.new(1, -52, 0.5, -15),
@@ -1986,7 +1993,7 @@ end
                     Thickness = 2.4,
                     Transparency = 0.42
                 })
-               
+              
                 colorBtn.MouseEnter:Connect(function()
                     playHoverSound()
                     TweenService:Create(colorStroke, TweenInfo.new(0.13), {
@@ -2008,7 +2015,7 @@ end
                         Size = UDim2.new(0, 47, 0, 42)
                     }):Play()
                 end)
-               
+              
                 colorBtn.MouseButton1Click:Connect(function()
                     playClickSound()
                     colorDisplay.BackgroundColor3 = color
