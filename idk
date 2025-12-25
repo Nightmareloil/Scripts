@@ -1,12 +1,12 @@
--- Enhanced Spinning Sword Ball Script with 40 Rotation Modes
--- Improved performance, spinning mechanics, and visual effects
+-- Enhanced Spinning Sword Ball Script with 40 UNIQUE Modes
+-- Ultra-robust pickup prevention for both player and others
+-- Fixed network ownership issues when players get close
 -- Keys: Z toggle spin, C cycle mode, V increase spin speed, B decrease spin speed
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -44,17 +44,18 @@ local CONFIG = {
     verticalVariation = 1.5,
     spinSpeed = 8,
     minSpinSpeed = 2,
-    maxSpinSpeed = 25,
+    maxSpinSpeed = 30,
     spinSpeedIncrement = 2,
-    updateInterval = 1/60,
+    updateInterval = 1/120, -- Higher update rate for smoothness
     bodyPosition = {
-        maxForce = Vector3.new(15000, 15000, 15000),
-        p = 8000,
-        d = 800
+        maxForce = Vector3.new(50000, 50000, 50000), -- Much stronger forces
+        p = 25000, -- Higher P for more responsive positioning
+        d = 2000 -- Higher damping
     },
     transitionSpeed = 2,
     wingAngle = 0.5,
-    wingValue = 0.5
+    wingValue = 0.5,
+    ownershipUpdateRate = 0.1 -- Update ownership every 0.1 seconds
 }
 
 -- Humanoid scales
@@ -77,15 +78,14 @@ local flying = false
 local sprinting = false
 local spinEnabled = true
 local currentRotationMode = 1
-local modeTransition = 0
 
--- Performance optimization: Cache math functions
-local sin, cos, abs, floor, ceil, sqrt, pi, acos, atan2 = 
-    math.sin, math.cos, math.abs, math.floor, math.ceil, math.sqrt, math.pi, math.acos, math.atan2
+-- Cache math functions
+local sin, cos, abs, floor, ceil, sqrt, pi, acos, atan2, min, max = 
+    math.sin, math.cos, math.abs, math.floor, math.ceil, math.sqrt, math.pi, math.acos, math.atan2, math.min, math.max
 
--- 40 Enhanced Rotation Modes with smooth animations
+-- 40 COMPLETELY UNIQUE Rotation Modes
 local rotationModes = {
-    -- 1: Perfect Sphere (Golden Ratio Distribution)
+    -- 1: Fibonacci Golden Sphere
     function(data, t, torsoPos)
         local phi = acos(1 - 2 * data.index / data.total)
         local theta = pi * (1 + sqrt(5)) * data.index + t * 0.8
@@ -97,61 +97,36 @@ local rotationModes = {
         )
     end,
     
-    -- 2: Rotating Rings (Three Layers)
+    -- 2: Saturn's Rings (Multiple flat rotating rings)
     function(data, t, torsoPos)
-        local layer = floor((data.index - 1) / (data.total / 3))
-        local phi = (layer / 3) * pi + t * 0.3
-        local theta = ((data.index - 1) % (data.total / 3)) * (2 * pi / (data.total / 3)) + t * 1.5
+        local rings = 5
+        local ring = (data.index - 1) % rings
+        local theta = ((data.index - 1) / rings) * 2 * pi + t * (ring + 1) * 0.5
+        local r = data.radius * (0.6 + ring * 0.15)
         return torsoPos + Vector3.new(
-            data.radius * sin(phi) * cos(theta),
-            data.radius * cos(phi) + data.height,
-            data.radius * sin(phi) * sin(theta)
+            cos(theta) * r,
+            data.height + ring * 0.5,
+            sin(theta) * r
         )
     end,
     
-    -- 3: Spiral Galaxy
+    -- 3: Ascending Spiral Staircase
     function(data, t, torsoPos)
-        local tt = data.index / data.total
-        local theta = 6 * pi * tt + t * 1.5
-        local r = data.radius * (0.3 + 0.7 * tt)
-        local y = sin(tt * pi * 2) * 5
+        local theta = (data.index / data.total) * 8 * pi + t * 2
+        local height = (data.index / data.total) * 20
+        local r = data.radius * (1 - (data.index / data.total) * 0.3)
         return torsoPos + Vector3.new(
-            r * cos(theta),
-            y + data.height,
-            r * sin(theta)
+            cos(theta) * r,
+            height + data.height,
+            sin(theta) * r
         )
     end,
     
-    -- 4: Chaotic Orbit
+    -- 4: Electron Cloud Chaos
     function(data, t, torsoPos)
-        local phi = sin(t + data.index * 0.5) * pi
-        local theta = cos(t * 1.3 + data.index * 0.3) * 2 * pi + t
-        phi = abs(phi) % pi
-        return torsoPos + Vector3.new(
-            data.radius * sin(phi) * cos(theta),
-            data.radius * cos(phi) + data.height,
-            data.radius * sin(phi) * sin(theta)
-        )
-    end,
-    
-    -- 5: DNA Double Helix
-    function(data, t, torsoPos)
-        local tt = (data.index / data.total) * 4 * pi + t * 1.5
-        local helixNum = (data.index % 2) * pi + t * 0.2
-        local yOffset = sin(tt) * 2
-        return torsoPos + Vector3.new(
-            data.radius * cos(tt + helixNum),
-            yOffset + data.height,
-            data.radius * sin(tt + helixNum)
-        )
-    end,
-    
-    -- 6: Pulsing Sphere
-    function(data, t, torsoPos)
-        local phi = acos(1 - 2 * data.index / data.total)
-        local theta = pi * (1 + sqrt(5)) * data.index + t * 0.7
-        local pulse = 1 + sin(t * 2.5) * 0.25
-        local r = data.radius * pulse
+        local phi = sin(t * 1.5 + data.index) * pi
+        local theta = cos(t * 2 + data.index * 0.7) * 2 * pi
+        local r = data.radius * (0.7 + sin(t + data.index) * 0.3)
         return torsoPos + Vector3.new(
             r * sin(phi) * cos(theta),
             r * cos(phi) + data.height,
@@ -159,286 +134,516 @@ local rotationModes = {
         )
     end,
     
-    -- 7: Figure-8 Lemniscate
+    -- 5: Triple DNA Helix
     function(data, t, torsoPos)
-        local tt = (data.index / data.total) * 2 * pi + t * 1.2
-        local scale = data.radius / (1 + sin(tt)^2)
+        local strand = data.index % 3
+        local tt = (data.index / data.total) * 6 * pi + t * 1.5
+        local offset = strand * (2 * pi / 3)
+        local r = data.radius * 0.5
         return torsoPos + Vector3.new(
-            scale * cos(tt),
-            sin(tt * 2) * 3 + data.height,
-            scale * sin(tt) * cos(tt)
+            r * cos(tt + offset),
+            (data.index / data.total) * 15 + data.height,
+            r * sin(tt + offset)
         )
     end,
     
-    -- 8: Tornado Vortex
+    -- 6: Breathing Sphere (Smooth pulse)
     function(data, t, torsoPos)
-        local height = ((data.index / data.total) - 0.5) * 2 + sin(t * 0.5) * 0.2
-        local rad = (1 - abs(height)) * data.radius
-        local theta = (data.index / data.total) * 4 * pi + t * 2.5
+        local phi = acos(1 - 2 * data.index / data.total)
+        local theta = pi * (1 + sqrt(5)) * data.index
+        local pulse = 1 + sin(t * 3) * 0.4
+        local r = data.radius * pulse
+        return torsoPos + Vector3.new(
+            r * sin(phi) * cos(theta),
+            r * cos(phi) + data.height + sin(t * 2) * 2,
+            r * sin(phi) * sin(theta)
+        )
+    end,
+    
+    -- 7: Infinity Loop Dance
+    function(data, t, torsoPos)
+        local tt = (data.index / data.total) * 4 * pi + t * 1.5
+        local scale = data.radius / (1 + sin(tt)^2 + 0.1)
+        return torsoPos + Vector3.new(
+            scale * cos(tt) * 2,
+            data.height + sin(tt * 3) * 3,
+            scale * sin(tt) * cos(tt) * 2
+        )
+    end,
+    
+    -- 8: Cyclone Tornado
+    function(data, t, torsoPos)
+        local height = ((data.index / data.total) - 0.5) * 25
+        local rad = data.radius * (1 - abs(height / 25) * 0.7)
+        local theta = (data.index / data.total) * 10 * pi + t * 3 + height * 0.5
         return torsoPos + Vector3.new(
             cos(theta) * rad,
-            height * data.radius + data.height,
+            height + data.height,
             sin(theta) * rad
         )
     end,
     
-    -- 9: Cool Wings
+    -- 9: Phoenix Wings
     function(data, t, torsoPos)
         local half = floor(data.total / 2)
         if half == 0 then half = 1 end
-        local flap = sin(t * 3) * 0.15
+        local flap = sin(t * 4) * 0.3
         local isLeft = data.index <= half
         local wingIndex = isLeft and data.index or (data.index - half)
-        wingIndex = math.max(1, wingIndex)
-        local angle = ((CONFIG.wingAngle / half) * wingIndex) + CONFIG.wingValue + flap
-        angle = isLeft and angle or -angle
-        local x = isLeft and (-3.5 * widthScale + 1.7 * widthScale) or (3.5 * widthScale - 1.7 * widthScale)
-        return torsoPos + Vector3.new(x, shoulderHeight + data.height, -backDepth)
-    end,
-    
-    -- 10: Ninja Star Spinner
-    function(data, t, torsoPos)
-        local angle = (data.index - 1) / data.total * 2 * pi + t * 4
-        local r = (swordLength / 2 + 0.5) * heightScale + sin(t * 2) * 1
+        wingIndex = max(1, wingIndex)
+        
+        local curve = (wingIndex / half) ^ 1.5
+        local spread = curve * 8 * widthScale
+        local lift = sin(curve * pi) * 4 + flap * 2
+        
+        local x = isLeft and -spread or spread
         return torsoPos + Vector3.new(
-            cos(angle) * r * widthScale,
-            shoulderHeight + data.height,
-            -backDepth
+            x,
+            shoulderHeight + data.height + lift,
+            -backDepth - curve * 2
         )
     end,
     
-    -- 11: Halo Above Head
+    -- 10: Shuriken Spinner (Behind back)
     function(data, t, torsoPos)
-        local theta = (data.index - 1) / data.total * 2 * pi + t * 1.2
-        local r = data.radius * 0.6
+        local angle = (data.index - 1) / data.total * 2 * pi + t * 6
+        local r = data.radius * 0.4 + sin(t * 3) * 1.5
+        return torsoPos + Vector3.new(
+            cos(angle) * r,
+            shoulderHeight + data.height + sin(angle * 3 + t) * 0.5,
+            -backDepth - 2
+        )
+    end,
+    
+    -- 11: Divine Halo
+    function(data, t, torsoPos)
+        local layers = 2
+        local layer = floor((data.index - 1) / (data.total / layers))
+        local theta = ((data.index - 1) % (data.total / layers)) / (data.total / layers) * 2 * pi + t * 1.5
+        local r = data.radius * 0.5 * (1 + layer * 0.3)
         return torsoPos + Vector3.new(
             cos(theta) * r,
-            (hipHeight + 2) * heightScale + data.height + sin(t) * 0.5,
+            (hipHeight + 3) * heightScale + data.height + sin(t * 2) * 0.8 + layer * 0.5,
             sin(theta) * r
         )
     end,
     
-    -- 12: Shield Wall Formation
+    -- 12: Fortress Wall Grid
     function(data, t, torsoPos)
         local cols = ceil(sqrt(data.total))
         local row = floor((data.index - 1) / cols)
         local col = (data.index - 1) % cols
-        local spacing = swordLength * 0.8
+        local spacing = 3
+        local wave = sin(t * 2 + row * 0.5 + col * 0.5) * 0.8
         return torsoPos + Vector3.new(
-            (col - cols / 2) * spacing * widthScale + sin(t + row) * 0.5,
-            (row - sqrt(data.total) / 2) * spacing + hipHeight / 2 + data.height,
-            data.radius * 0.5
+            (col - cols / 2) * spacing,
+            (row - cols / 2) * spacing + data.height + wave,
+            data.radius * 0.7
         )
     end,
     
-    -- 13: Crown Formation
+    -- 13: Royal Crown Jewels
     function(data, t, torsoPos)
-        local theta = (data.index - 1) / data.total * 2 * pi + t * 0.4
-        local r = (swordLength / 2 + 1) * heightScale * 0.8
+        local points = 8
+        local layer = floor((data.index - 1) / points)
+        local theta = ((data.index - 1) % points) / points * 2 * pi + t * 0.5
+        local r = (3 + layer) * heightScale
+        local height = (hipHeight + 2.5 + layer * 0.8) * heightScale
         return torsoPos + Vector3.new(
             cos(theta) * r,
-            (hipHeight + 1.5) * heightScale + data.height + sin(t + data.index * 0.5) * 0.3,
+            height + data.height + sin(theta * 3 + t * 2) * 0.5,
             sin(theta) * r
         )
     end,
     
-    -- 14: Dragon Tail Trail
+    -- 14: Serpent Tail Undulation
     function(data, t, torsoPos)
-        local tt = (data.index / data.total) * data.radius
-        local wave = sin(t * 1.5 + data.index * 0.4) * 0.4
+        local segment = (data.index / data.total)
+        local length = data.radius * 1.5
+        local wave = sin(t * 2 - segment * 4 * pi) * 2
+        local sway = cos(t * 2 - segment * 4 * pi) * 1.5
         return torsoPos + Vector3.new(
-            wave * widthScale,
-            shoulderHeight - tt * 0.5 + data.height,
-            -backDepth - tt
+            sway,
+            shoulderHeight + data.height - segment * length * 0.5 + wave,
+            -backDepth - segment * length
         )
     end,
     
-    -- 15: Butterfly Wings (Dual Layer)
+    -- 15: Dragonfly Wings (Four wings)
     function(data, t, torsoPos)
-        local layers = 2
-        local perLayer = floor(data.total / layers)
-        local layer = floor((data.index - 1) / perLayer) + 1
-        local layerIndex = (data.index - 1) % perLayer + 1
-        local half = floor(perLayer / 2)
-        if half == 0 then half = 1 end
-        local flap = sin(t * 3.5) * 0.25 * layer
-        local isLeft = layerIndex <= half
-        local wingIndex = isLeft and layerIndex or (layerIndex - half)
-        wingIndex = math.max(1, wingIndex)
-        local angle = ((CONFIG.wingAngle / half) * wingIndex) + CONFIG.wingValue + flap
-        angle = isLeft and angle or -angle
-        local x = isLeft and (-3.5 * widthScale * layer + 1.7 * widthScale) or (3.5 * widthScale * layer - 1.7 * widthScale)
+        local wingsPerSide = floor(data.total / 4)
+        if wingsPerSide == 0 then wingsPerSide = 1 end
+        
+        local quadrant = floor((data.index - 1) / wingsPerSide)
+        local wingPos = ((data.index - 1) % wingsPerSide) / max(wingsPerSide - 1, 1)
+        
+        local flap = sin(t * 5) * 0.4
+        local angle = (quadrant * pi / 2) + flap
+        local dist = (2 + wingPos * 4) * widthScale
+        
         return torsoPos + Vector3.new(
-            x,
-            shoulderHeight + data.height + (layer - 1) * 0.5,
-            -backDepth - (layer - 1) * 0.3
+            cos(angle) * dist,
+            shoulderHeight + data.height + sin(wingPos * pi) * 2,
+            sin(angle) * dist - backDepth
         )
     end,
     
-    -- 16: Inward Vortex Spiral
+    -- 16: Black Hole Accretion Disk
     function(data, t, torsoPos)
-        local theta = (data.index / data.total) * 6 * pi + t * 2
-        local r = data.radius * (1 - (data.index / data.total) * 0.5)
+        local spiralSpeed = data.index / data.total
+        local theta = spiralSpeed * 10 * pi + t * (2 + spiralSpeed * 3)
+        local r = data.radius * (0.3 + spiralSpeed * 0.7)
+        local tilt = sin(theta) * 2
         return torsoPos + Vector3.new(
             cos(theta) * r,
-            data.height + (data.index / data.total) * 10,
+            data.height + tilt,
             sin(theta) * r
         )
     end,
     
-    -- 17: Shield Circle Defense
+    -- 17: Gladiator Shield Dome
     function(data, t, torsoPos)
-        local theta = (data.index - 1) / data.total * 2 * pi + t * 1.5
-        local r = data.radius * 0.8
+        local phi = acos(1 - data.index / data.total)
+        local theta = sqrt(data.total) * phi + t * 0.8
+        local r = data.radius * 0.9
         return torsoPos + Vector3.new(
-            cos(theta) * r,
+            r * sin(phi) * cos(theta),
             data.height + hipHeight / 2,
-            sin(theta) * r + data.radius * 0.5
+            r * sin(phi) * sin(theta) + data.radius * 0.3
         )
     end,
     
-    -- 18: Aura Ring Glow
+    -- 18: Energy Aura Waves
     function(data, t, torsoPos)
-        local theta = (data.index - 1) / data.total * 2 * pi + t
-        return torsoPos + Vector3.new(
-            cos(theta) * data.radius,
-            data.height + sin(t + theta) * 1.5,
-            sin(theta) * data.radius
-        )
-    end,
-    
-    -- 19: Cube Formation
-    function(data, t, torsoPos)
-        local side = ceil(data.total^(1/3))
-        local idx = data.index - 1
-        local x = (idx % side) - side/2
-        local y = floor(idx / side) % side - side/2
-        local z = floor(idx / (side * side)) - side/2
-        local spacing = data.radius * 0.3
-        return torsoPos + Vector3.new(
-            x * spacing + sin(t + x) * 0.3,
-            y * spacing + data.height + sin(t + y) * 0.3,
-            z * spacing + sin(t + z) * 0.3
-        )
-    end,
-    
-    -- 20: Orbital Rings (Multiple)
-    function(data, t, torsoPos)
-        local rings = 3
-        local ring = (data.index - 1) % rings
-        local perRing = ceil(data.total / rings)
-        local theta = ((data.index - 1) / perRing) * 2 * pi + t * (ring + 1)
-        local r = data.radius * (0.5 + ring * 0.25)
+        local wave = floor((data.index - 1) / (data.total / 3))
+        local theta = ((data.index - 1) % (data.total / 3)) / (data.total / 3) * 2 * pi + t * (wave + 1)
+        local r = data.radius * (0.6 + wave * 0.2)
+        local wobble = sin(t * 3 + theta * 2) * 1.5
         return torsoPos + Vector3.new(
             cos(theta) * r,
-            data.height + ring * 2,
+            data.height + wobble,
             sin(theta) * r
         )
     end,
     
-    -- 21: Star Burst Pattern
+    -- 19: Tesseract Hypercube
     function(data, t, torsoPos)
-        local angle = (data.index / data.total) * 2 * pi
-        local pulse = 1 + sin(t * 3) * 0.3
-        local r = data.radius * pulse * (0.5 + (data.index % 2) * 0.5)
+        local cubeSize = ceil(data.total^(1/3))
+        local idx = data.index - 1
+        local x = (idx % cubeSize) / cubeSize - 0.5
+        local y = floor(idx / cubeSize) % cubeSize / cubeSize - 0.5
+        local z = floor(idx / (cubeSize * cubeSize)) / cubeSize - 0.5
+        
+        local rotation = t * 0.5
+        local xr = x * cos(rotation) - z * sin(rotation)
+        local zr = x * sin(rotation) + z * cos(rotation)
+        
+        local scale = data.radius
+        return torsoPos + Vector3.new(
+            xr * scale * 2,
+            y * scale * 2 + data.height,
+            zr * scale * 2
+        )
+    end,
+    
+    -- 20: Orbital Moon System
+    function(data, t, torsoPos)
+        local moons = 4
+        local moon = floor((data.index - 1) / (data.total / moons))
+        local orbit = ((data.index - 1) % (data.total / moons)) / (data.total / moons) * 2 * pi
+        local theta = orbit + t * (moon + 1) * 0.7
+        local phi = sin(t * 0.5 + moon) * 0.5
+        local r = data.radius * (0.8 + moon * 0.15)
+        
+        return torsoPos + Vector3.new(
+            cos(theta) * cos(phi) * r,
+            sin(phi) * r + data.height,
+            sin(theta) * cos(phi) * r
+        )
+    end,
+    
+    -- 21: Supernova Explosion
+    function(data, t, torsoPos)
+        local angle = (data.index / data.total) * 2 * pi + sin(t + data.index) * 0.3
+        local pulse = 1 + sin(t * 4) * 0.5
+        local burst = (1 + sin(t * 2 + data.index * 0.5) * 0.3)
+        local r = data.radius * pulse * burst
+        local height = sin(angle * 5 + t * 3) * 4
+        
         return torsoPos + Vector3.new(
             cos(angle) * r,
-            data.height + sin(angle * 5 + t) * 2,
+            data.height + height,
             sin(angle) * r
         )
     end,
     
-    -- 22: Wave Ripple
+    -- 22: Ocean Wave Ripples
     function(data, t, torsoPos)
-        local theta = (data.index / data.total) * 2 * pi
-        local wave = sin(data.index * 0.5 - t * 2) * 3
+        local ring = floor(data.index / 8)
+        local theta = ((data.index - 1) % 8) / 8 * 2 * pi
+        local r = (ring + 1) * 3
+        local wave = sin(ring * 0.5 - t * 3) * 4
+        
         return torsoPos + Vector3.new(
-            cos(theta) * data.radius,
+            cos(theta) * r,
             data.height + wave,
-            sin(theta) * data.radius
-        )
-    end,
-    
-    -- 23: Double Helix Twist
-    function(data, t, torsoPos)
-        local strand = data.index % 2
-        local tt = (data.index / data.total) * 6 * pi + t
-        local offset = strand * pi
-        return torsoPos + Vector3.new(
-            cos(tt + offset) * data.radius * 0.6,
-            (data.index / data.total) * 15 + data.height,
-            sin(tt + offset) * data.radius * 0.6
-        )
-    end,
-    
-    -- 24: Hourglass Shape
-    function(data, t, torsoPos)
-        local theta = (data.index / data.total) * 4 * pi + t
-        local height = ((data.index / data.total) - 0.5) * 15
-        local r = data.radius * (1 - abs(height / 10))
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            height + data.height,
             sin(theta) * r
         )
     end,
     
-    -- 25: Infinity Symbol (3D)
+    -- 23: Quantum Entanglement
     function(data, t, torsoPos)
-        local tt = (data.index / data.total) * 2 * pi + t
-        local scale = data.radius / (1 + sin(tt)^2)
+        local pair = floor((data.index - 1) / 2)
+        local isPrimary = (data.index - 1) % 2 == 0
+        local theta = pair / ceil(data.total / 2) * 2 * pi + t * 1.5
+        local offset = isPrimary and 0 or pi
+        local r = data.radius * 0.7
+        local entangle = sin(t * 4 + pair) * 0.3
+        
         return torsoPos + Vector3.new(
-            scale * cos(tt) * 1.5,
-            data.height + sin(tt * 2) * 2,
-            scale * sin(tt) * cos(tt)
+            cos(theta + offset) * r,
+            data.height + (isPrimary and entangle or -entangle) * 5,
+            sin(theta + offset) * r
         )
     end,
     
-    -- 26: Pyramid Formation
+    -- 24: Time Vortex Funnel
     function(data, t, torsoPos)
-        local layer = floor(sqrt(data.index))
-        local inLayer = data.index - layer * layer
-        local layerSize = layer * 2 + 1
-        local x = (inLayer % layerSize) - layer
-        local z = floor(inLayer / layerSize) - layer
-        return torsoPos + Vector3.new(
-            x * 2 + sin(t) * 0.3,
-            -layer * 2 + data.height,
-            z * 2 + cos(t) * 0.3
-        )
-    end,
-    
-    -- 27: Orbiting Satellites
-    function(data, t, torsoPos)
-        local orbit = floor((data.index - 1) / 4)
-        local pos = (data.index - 1) % 4
-        local theta = pos * pi / 2 + t * (orbit + 1)
-        local r = data.radius + orbit * 3
+        local depth = (data.index / data.total)
+        local theta = depth * 12 * pi + t * 2
+        local r = data.radius * (1 - depth * 0.7) * (1 + sin(t * 3) * 0.2)
+        local y = (depth - 0.5) * 20
+        
         return torsoPos + Vector3.new(
             cos(theta) * r,
-            data.height + sin(t + orbit) * 2,
+            y + data.height,
             sin(theta) * r
         )
     end,
     
-    -- 28: Lotus Flower Bloom
+    -- 25: Klein Bottle Flow
     function(data, t, torsoPos)
-        local layer = floor(data.index / 8)
-        local theta = ((data.index - 1) % 8) * pi / 4 + t * 0.5
-        local r = data.radius * (0.3 + layer * 0.3)
+        local u = (data.index / data.total) * 2 * pi + t * 0.8
+        local v = ((data.index - 1) % 4) / 4 * 2 * pi
+        local r = 4 * (1 - cos(u) / 2)
+        
+        return torsoPos + Vector3.new(
+            6 * cos(u) * (1 + sin(u)) + r * cos(u) * cos(v),
+            r * sin(v) + data.height,
+            16 * sin(u) + r * sin(u) * cos(v)
+        ) * 0.3
+    end,
+    
+    -- 26: Aztec Temple Steps
+    function(data, t, torsoPos)
+        local steps = 6
+        local step = floor((data.index - 1) / (data.total / steps))
+        local pos = ((data.index - 1) % (data.total / steps)) / (data.total / steps) * 4 * pi
+        local stepSize = 2.5
+        local radius = data.radius - step * stepSize
+        
+        return torsoPos + Vector3.new(
+            cos(pos + t * 0.5) * radius,
+            -step * stepSize + data.height + sin(pos * 2 + t) * 0.5,
+            sin(pos + t * 0.5) * radius
+        )
+    end,
+    
+    -- 27: Gyroscope Multi-Axis
+    function(data, t, torsoPos)
+        local axis = floor((data.index - 1) / (data.total / 3))
+        local theta = ((data.index - 1) % (data.total / 3)) / (data.total / 3) * 2 * pi + t * (axis + 1)
+        local r = data.radius * 0.8
+        
+        if axis == 0 then -- XY plane
+            return torsoPos + Vector3.new(cos(theta) * r, sin(theta) * r + data.height, 0)
+        elseif axis == 1 then -- XZ plane
+            return torsoPos + Vector3.new(cos(theta) * r, data.height, sin(theta) * r)
+        else -- YZ plane
+            return torsoPos + Vector3.new(0, cos(theta) * r + data.height, sin(theta) * r)
+        end
+    end,
+    
+    -- 28: Blooming Lotus Petals
+    function(data, t, torsoPos)
+        local petals = 8
+        local layers = ceil(data.total / petals)
+        local layer = floor((data.index - 1) / petals)
+        local petal = (data.index - 1) % petals
+        
+        local theta = petal / petals * 2 * pi + layer * 0.3
         local bloom = sin(t * 2) * 0.5 + 0.5
+        local r = data.radius * (0.3 + layer * 0.2) * bloom
+        
         return torsoPos + Vector3.new(
-            cos(theta) * r * bloom,
-            data.height + layer * 2,
-            sin(theta) * r * bloom
+            cos(theta) * r,
+            data.height + layer * 1.5 + sin(t * 3 + theta) * 0.5,
+            sin(theta) * r
         )
     end,
     
-    -- 29: Magnetic Field Lines
+    -- 29: Aurora Borealis Waves
     function(data, t, torsoPos)
-        local phi = (data.index / data.total) * pi
-        local theta = t + data.index * 0.5
-        local r = data.radius * sin(phi)
+        local wave = (data.index / data.total) * 4 * pi
+        local x = (data.index / data.total - 0.5) * data.radius * 2
+        local z = sin(wave + t * 2) * data.radius * 0.8
+        local y = cos(wave * 2 + t * 3) * 5
+        
+        return torsoPos + Vector3.new(x, y + data.height, z)
+    end,
+    
+    -- 30: Mandala Pattern
+    function(data, t, torsoPos)
+        local rings = 5
+        local ring = floor((data.index - 1) / (data.total / rings))
+        local theta = ((data.index - 1) % (data.total / rings)) / (data.total / rings) * 2 * pi + t * 0.3
+        local r = (ring + 1) * data.radius / rings
+        local petal = sin(theta * 6) * 0.3 + 1
+        
+        return torsoPos + Vector3.new(
+            cos(theta) * r * petal,
+            data.height + sin(ring * t) * 0.8,
+            sin(theta) * r * petal
+        )
+    end,
+    
+    -- 31: Celtic Knot Weave
+    function(data, t, torsoPos)
+        local u = (data.index / data.total) * 4 * pi + t * 0.7
+        local weave = floor((data.index - 1) % 4)
+        local offset = weave * pi / 2
+        local r = data.radius * 0.6
+        
+        local x = r * sin(u) * (2 + cos(u / 2))
+        local y = r * cos(u) * (2 + cos(u / 2))
+        local z = r * sin(u / 2 + offset) * 2
+        
+        return torsoPos + Vector3.new(x * 0.5, z + data.height, y * 0.5)
+    end,
+    
+    -- 32: Plasma Ball Tendrils
+    function(data, t, torsoPos)
+        local tendrils = 6
+        local tendril = floor((data.index - 1) / (data.total / tendrils))
+        local segment = ((data.index - 1) % (data.total / tendrils)) / (data.total / tendrils)
+        
+        local theta = tendril / tendrils * 2 * pi + t
+        local r = segment * data.radius * (1 + sin(t * 3 + tendril) * 0.3)
+        local arc = sin(segment * pi) * 3
+        
+        return torsoPos + Vector3.new(
+            cos(theta) * r,
+            data.height + arc,
+            sin(theta) * r
+        )
+    end,
+    
+    -- 33: Hexagonal Honeycomb
+    function(data, t, torsoPos)
+        local hexSize = 2.5
+        local cols = ceil(sqrt(data.total * 2 / sqrt(3)))
+        local row = floor((data.index - 1) / cols)
+        local col = (data.index - 1) % cols
+        
+        local x = col * hexSize * 1.5
+        local z = row * hexSize * sqrt(3)
+        if col % 2 == 1 then z = z + hexSize * sqrt(3) / 2 end
+        
+        x = x - cols * hexSize * 0.75
+        z = z - row * hexSize * sqrt(3) / 2
+        
+        return torsoPos + Vector3.new(
+            x + sin(t + row) * 0.3,
+            data.height + hipHeight + sin(t * 2 + col) * 0.5,
+            z + data.radius * 0.5
+        )
+    end,
+    
+    -- 34: Penrose Triangle Paradox
+    function(data, t, torsoPos)
+        local sides = 3
+        local side = floor((data.index - 1) / (data.total / sides))
+        local pos = ((data.index - 1) % (data.total / sides)) / (data.total / sides)
+        
+        local angle = side / sides * 2 * pi + t * 0.5
+        local r = data.radius * 0.7
+        local twist = pos * pi + t
+        
+        return torsoPos + Vector3.new(
+            cos(angle) * r + cos(twist) * 2,
+            data.height + sin(angle) * r + pos * 8 - 4,
+            sin(angle) * r + sin(twist) * 2
+        )
+    end,
+    
+    -- 35: Nebula Gas Cloud
+    function(data, t, torsoPos)
+        local cluster = floor(data.index / 10)
+        local phi = sin(t * 0.7 + data.index * 0.3 + cluster) * pi
+        local theta = cos(t * 0.5 + data.index * 0.4 + cluster) * 2 * pi
+        local r = data.radius * (0.5 + sin(t * 2 + data.index) * 0.5)
+        
+        return torsoPos + Vector3.new(
+            r * sin(phi) * cos(theta),
+            r * cos(phi) + data.height + sin(t + cluster) * 2,
+            r * sin(phi) * sin(theta)
+        )
+    end,
+    
+    -- 36: Crystal Lattice Structure
+    function(data, t, torsoPos)
+        local gridSize = ceil(data.total^(1/3))
+        local idx = data.index - 1
+        local x = (idx % gridSize) / gridSize - 0.5
+        local y = floor(idx / gridSize) % gridSize / gridSize - 0.5
+        local z = floor(idx / (gridSize * gridSize)) / gridSize - 0.5
+        
+        local pulse = sin(t * 2 + (x + y + z) * 5) * 0.3 + 1
+        local scale = data.radius * 1.5
+        
+        return torsoPos + Vector3.new(
+            x * scale * pulse,
+            y * scale * pulse + data.height,
+            z * scale * pulse
+        )
+    end,
+    
+    -- 37: Spiraling Rose Petals
+    function(data, t, torsoPos)
+        local k = 7
+        local theta = (data.index / data.total) * 6 * pi + t
+        local r = data.radius * abs(cos(k * theta / 2)) * 0.8
+        local height = sin(theta * 2) * 3
+        
+        return torsoPos + Vector3.new(
+            r * cos(theta),
+            data.height + height,
+            r * sin(theta)
+        )
+    end,
+    
+    -- 38: Möbius Strip Path
+    function(data, t, torsoPos)
+        local u = (data.index / data.total) * 4 * pi + t * 0.8
+        local width = ((data.index - 1) % 3 - 1) * 0.5
+        local r = data.radius * 0.6
+        
+        local x = (r + width * cos(u / 2)) * cos(u)
+        local y = (r + width * cos(u / 2)) * sin(u)
+        local z = width * sin(u / 2) * 4
+        
+        return torsoPos + Vector3.new(x, z + data.height, y)
+    end,
+    
+    -- 39: Electromagnetic Field Lines
+    function(data, t, torsoPos)
+        local fieldLine = floor((data.index - 1) / 8)
+        local segment = ((data.index - 1) % 8) / 8
+        
+        local theta = fieldLine / ceil(data.total / 8) * 2 * pi + t * 0.5
+        local phi = segment * pi
+        local r = data.radius * sin(phi) * (1 + cos(t * 2) * 0.2)
+        
         return torsoPos + Vector3.new(
             r * cos(theta),
             data.radius * cos(phi) + data.height,
@@ -446,126 +651,14 @@ local rotationModes = {
         )
     end,
     
-    -- 30: Spirograph Pattern
+    -- 40: Quantum Probability Cloud
     function(data, t, torsoPos)
-        local R, r, d = data.radius, data.radius * 0.3, data.radius * 0.5
-        local tt = (data.index / data.total) * 10 * pi + t
-        local x = (R - r) * cos(tt) + d * cos(((R - r) / r) * tt)
-        local z = (R - r) * sin(tt) - d * sin(((R - r) / r) * tt)
-        return torsoPos + Vector3.new(x, data.height + sin(tt) * 2, z)
-    end,
-    
-    -- 31: Trefoil Knot
-    function(data, t, torsoPos)
-        local tt = (data.index / data.total) * 2 * pi + t * 0.8
-        local x = sin(tt) + 2 * sin(2 * tt)
-        local y = cos(tt) - 2 * cos(2 * tt)
-        local z = -sin(3 * tt)
-        local scale = data.radius * 0.3
-        return torsoPos + Vector3.new(x * scale, y * scale + data.height, z * scale)
-    end,
-    
-    -- 32: Mobius Strip
-    function(data, t, torsoPos)
-        local u = (data.index / data.total) * 2 * pi + t
-        local v = (data.index % 2) * 2 - 1
-        local r = data.radius * 0.5
-        local x = (r + v * cos(u/2)) * cos(u)
-        local y = (r + v * cos(u/2)) * sin(u)
-        local z = v * sin(u/2) * 3
-        return torsoPos + Vector3.new(x, z + data.height, y)
-    end,
-    
-    -- 33: Torus Knot
-    function(data, t, torsoPos)
-        local tt = (data.index / data.total) * 2 * pi + t
-        local p, q = 3, 2
-        local r = data.radius * 0.5
-        local R = data.radius
-        local x = (R + r * cos(q * tt)) * cos(p * tt)
-        local y = (R + r * cos(q * tt)) * sin(p * tt)
-        local z = r * sin(q * tt)
-        return torsoPos + Vector3.new(x, z + data.height, y)
-    end,
-    
-    -- 34: Fibonacci Spiral
-    function(data, t, torsoPos)
-        local golden = (1 + sqrt(5)) / 2
-        local theta = data.index * 2 * pi / golden + t
-        local r = sqrt(data.index) * 1.5
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + data.index * 0.3,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 35: Sphere Packing
-    function(data, t, torsoPos)
-        local layer = floor(sqrt(data.index / pi))
-        local phi = acos(1 - 2 * data.index / data.total)
-        local theta = sqrt(data.total * pi) * phi + t
-        local r = data.radius + layer * 2
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            r * cos(phi) + data.height,
-            r * sin(phi) * sin(theta)
-        )
-    end,
-    
-    -- 36: Cylindrical Helix
-    function(data, t, torsoPos)
-        local theta = (data.index / data.total) * 8 * pi + t * 2
-        local height = (data.index / data.total) * 15
-        return torsoPos + Vector3.new(
-            cos(theta) * data.radius,
-            height + data.height,
-            sin(theta) * data.radius
-        )
-    end,
-    
-    -- 37: Rose Curve
-    function(data, t, torsoPos)
-        local k = 5
-        local theta = (data.index / data.total) * 2 * pi + t
-        local r = data.radius * cos(k * theta)
-        return torsoPos + Vector3.new(
-            r * cos(theta),
-            data.height + sin(theta * 3) * 2,
-            r * sin(theta)
-        )
-    end,
-    
-    -- 38: Cardioid Shape
-    function(data, t, torsoPos)
-        local theta = (data.index / data.total) * 2 * pi + t * 0.8
-        local a = data.radius * 0.5
-        local r = 2 * a * (1 + cos(theta))
-        return torsoPos + Vector3.new(
-            r * cos(theta),
-            data.height + sin(theta * 2) * 3,
-            r * sin(theta)
-        )
-    end,
-    
-    -- 39: Lissajous Curves
-    function(data, t, torsoPos)
-        local a, b = 3, 4
-        local tt = (data.index / data.total) * 2 * pi + t
-        return torsoPos + Vector3.new(
-            data.radius * sin(a * tt),
-            data.height + data.radius * sin(b * tt + pi/2),
-            data.radius * cos(tt) * 0.5
-        )
-    end,
-    
-    -- 40: Atomic Orbit Model
-    function(data, t, torsoPos)
-        local orbit = floor((data.index - 1) / 6)
-        local pos = (data.index - 1) % 6
-        local theta = pos * pi / 3 + t * (orbit + 1) * 1.5
-        local phi = orbit * pi / 4
-        local r = data.radius + orbit * 2
+        local shell = floor(sqrt(data.index))
+        local offset = data.index - shell * shell
+        local theta = offset * 2.4 + t * (shell * 0.3 + 0.5)
+        local phi = shell * 0.8 + sin(t + offset) * 0.4
+        local r = data.radius * (0.4 + shell * 0.15) * (1 + sin(t * 3 + data.index) * 0.2)
+        
         return torsoPos + Vector3.new(
             r * sin(phi) * cos(theta),
             r * cos(phi) + data.height,
@@ -574,18 +667,18 @@ local rotationModes = {
     end,
 }
 
--- Mode names for all 40 patterns
+-- Mode names
 local modeNames = {
-    "Perfect Sphere", "Rotating Rings", "Spiral Galaxy", "Chaotic Orbit",
-    "DNA Double Helix", "Pulsing Sphere", "Figure-8 Lemniscate", "Tornado Vortex",
-    "Cool Wings", "Ninja Star Spinner", "Halo Above Head", "Shield Wall Formation",
-    "Crown Formation", "Dragon Tail Trail", "Butterfly Wings", "Inward Vortex Spiral",
-    "Shield Circle Defense", "Aura Ring Glow", "Cube Formation", "Orbital Rings",
-    "Star Burst Pattern", "Wave Ripple", "Double Helix Twist", "Hourglass Shape",
-    "Infinity Symbol", "Pyramid Formation", "Orbiting Satellites", "Lotus Flower Bloom",
-    "Magnetic Field Lines", "Spirograph Pattern", "Trefoil Knot", "Mobius Strip",
-    "Torus Knot", "Fibonacci Spiral", "Sphere Packing", "Cylindrical Helix",
-    "Rose Curve", "Cardioid Shape", "Lissajous Curves", "Atomic Orbit Model"
+    "Fibonacci Golden Sphere", "Saturn's Rings", "Ascending Spiral Staircase", "Electron Cloud Chaos",
+    "Triple DNA Helix", "Breathing Sphere", "Infinity Loop Dance", "Cyclone Tornado",
+    "Phoenix Wings", "Shuriken Spinner", "Divine Halo", "Fortress Wall Grid",
+    "Royal Crown Jewels", "Serpent Tail Undulation", "Dragonfly Wings", "Black Hole Accretion Disk",
+    "Gladiator Shield Dome", "Energy Aura Waves", "Tesseract Hypercube", "Orbital Moon System",
+    "Supernova Explosion", "Ocean Wave Ripples", "Quantum Entanglement", "Time Vortex Funnel",
+    "Klein Bottle Flow", "Aztec Temple Steps", "Gyroscope Multi-Axis", "Blooming Lotus Petals",
+    "Aurora Borealis Waves", "Mandala Pattern", "Celtic Knot Weave", "Plasma Ball Tendrils",
+    "Hexagonal Honeycomb", "Penrose Triangle Paradox", "Nebula Gas Cloud", "Crystal Lattice Structure",
+    "Spiraling Rose Petals", "Möbius Strip Path", "Electromagnetic Field Lines", "Quantum Probability Cloud"
 }
 
 -- Display current mode
@@ -600,43 +693,88 @@ local function displayMode()
     })
 end
 
--- Disable tool pickup
+-- ULTRA ROBUST TOOL PICKUP PREVENTION
 local function disableToolPickup(tool)
-    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-        local handle = tool.Handle
-        tool.Enabled = false
-        handle.CanCollide = false
-        handle.CanTouch = false
-        tool.CanBeDropped = false
-        handle.Massless = true
-        
-        pcall(function() tool.RequiresHandle = false end)
-        pcall(function() handle:SetNetworkOwner(player) end)
-        
-        tool.Equipped:Connect(function()
+    if not tool:IsA("Tool") then return end
+    
+    local handle = tool:FindFirstChild("Handle")
+    if not handle then return end
+    
+    -- Nuclear option: Disable EVERYTHING
+    tool.Enabled = false
+    tool.CanBeDropped = false
+    tool.ManualActivationOnly = true
+    
+    pcall(function() tool.RequiresHandle = false end)
+    pcall(function() tool.Grip = CFrame.new(0, 0, 0) end)
+    
+    -- Handle properties
+    handle.CanCollide = false
+    handle.CanTouch = false
+    handle.CanQuery = false
+    handle.Massless = true
+    handle.Locked = true
+    
+    -- Force network ownership immediately and continuously
+    pcall(function()
+        handle:SetNetworkOwner(player)
+    end)
+    
+    -- Prevent ALL parent changes to character
+    local function forceWorkspace()
+        if tool.Parent == character or handle.Parent == character then
             task.wait()
-            if tool.Parent == character then
-                tool.Parent = Workspace
-            end
-        end)
-        
-        tool.Changed:Connect(function(prop)
-            if prop == "Parent" and tool.Parent == character then
-                task.wait()
-                tool.Parent = Workspace
-            end
-        end)
+            tool.Parent = Workspace
+            pcall(function()
+                handle:SetNetworkOwner(player)
+            end)
+        end
+    end
+    
+    -- Multiple event connections for redundancy
+    tool.AncestryChanged:Connect(forceWorkspace)
+    tool.Changed:Connect(function(prop)
+        if prop == "Parent" then
+            forceWorkspace()
+        end
+    end)
+    
+    handle.AncestryChanged:Connect(forceWorkspace)
+    
+    -- Block equipped event
+    tool.Equipped:Connect(function()
+        forceWorkspace()
+    end)
+    
+    -- Block activation
+    tool.Activated:Connect(function()
+        forceWorkspace()
+    end)
+    
+    -- Disable TouchTransmitters (prevents other players from touching/picking up)
+    for _, obj in pairs(handle:GetDescendants()) do
+        if obj:IsA("TouchTransmitter") then
+            obj:Destroy()
+        end
+    end
+    for _, obj in pairs(tool:GetDescendants()) do
+        if obj:IsA("TouchTransmitter") then
+            obj:Destroy()
+        end
     end
 end
 
--- Initialize tools with optimized physics
+-- Initialize tools with enhanced protection
 local toolData = {}
+local lastOwnershipUpdate = 0
+
 local function initializeTools()
     toolData = {}
     for i, tool in ipairs(tools) do
         disableToolPickup(tool)
         local handle = tool.Handle
         if handle then
+            -- Create physics bodies with MUCH stronger forces
             local bp = Instance.new("BodyPosition", handle)
             bp.MaxForce = CONFIG.bodyPosition.maxForce
             bp.P = CONFIG.bodyPosition.p
@@ -658,59 +796,96 @@ local function initializeTools()
                 height = height,
                 bodyPosition = bp,
                 bodyAngularVelocity = bav,
-                lastPos = handle.Position
+                tool = tool,
+                handle = handle
             }
             
+            -- Set initial position
             local t = os.clock() * CONFIG.orbitSpeed
             local targetPos = rotationModes[currentRotationMode](toolData[tool], t, torso.Position)
             bp.Position = targetPos
+            
+            -- Force ownership immediately
+            pcall(function()
+                handle:SetNetworkOwner(player)
+            end)
         end
     end
 end
 initializeTools()
 displayMode()
 
--- Continuous ownership and parent protection
+-- AGGRESSIVE ownership and parent protection (runs every frame)
 RunService.Heartbeat:Connect(function()
+    local now = os.clock()
+    
     for tool, data in pairs(toolData) do
-        if tool.Parent == character then
+        -- Force parent to workspace ALWAYS
+        if tool.Parent ~= Workspace then
             tool.Parent = Workspace
         end
-        local handle = tool:FindFirstChild("Handle")
-        if handle then
-            pcall(function() handle:SetNetworkOwner(player) end)
+        
+        local handle = data.handle
+        if handle and handle.Parent then
+            -- Update network ownership more frequently when detecting issues
+            if now - lastOwnershipUpdate > CONFIG.ownershipUpdateRate then
+                pcall(function()
+                    handle:SetNetworkOwner(player)
+                end)
+            end
+            
+            -- If handle somehow got parented to character, force it back
+            if handle.Parent == character or tool.Parent == character then
+                tool.Parent = Workspace
+                pcall(function()
+                    handle:SetNetworkOwner(player)
+                end)
+            end
         end
+    end
+    
+    if now - lastOwnershipUpdate > CONFIG.ownershipUpdateRate then
+        lastOwnershipUpdate = now
     end
 end)
 
--- Optimized update loop
+-- Optimized update loop with enhanced positioning
 local lastUpdate = 0
 RunService.Heartbeat:Connect(function()
     local now = os.clock()
     if now - lastUpdate < CONFIG.updateInterval then return end
     lastUpdate = now
     
+    local torsoPos = torso.Position
+    
     for tool, data in pairs(toolData) do
-        if tool.Parent and tool:FindFirstChild("Handle") and data.bodyPosition then
+        if tool.Parent == Workspace and data.handle and data.handle.Parent and data.bodyPosition then
             local success = pcall(function()
                 local t = now * CONFIG.orbitSpeed
-                local targetPos = rotationModes[currentRotationMode](data, t, torso.Position)
+                local targetPos = rotationModes[currentRotationMode](data, t, torsoPos)
+                
+                -- Update position with stronger force
                 data.bodyPosition.Position = targetPos
                 
-                -- Enhanced spin with variable speed
+                -- Enhanced 3-axis spinning
                 if spinEnabled then
-                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(
-                        sin(t + data.index) * CONFIG.spinSpeed * 0.3,
-                        CONFIG.spinSpeed,
-                        cos(t + data.index) * CONFIG.spinSpeed * 0.3
-                    )
+                    local spinX = sin(t * 0.8 + data.index * 0.5) * CONFIG.spinSpeed * 0.3
+                    local spinY = CONFIG.spinSpeed
+                    local spinZ = cos(t * 0.8 + data.index * 0.5) * CONFIG.spinSpeed * 0.3
+                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(spinX, spinY, spinZ)
                 else
                     data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
                 end
-                
-                data.lastPos = targetPos
             end)
+            
+            if not success then
+                -- If update fails, re-establish ownership
+                pcall(function()
+                    data.handle:SetNetworkOwner(player)
+                end)
+            end
         else
+            -- Clean up invalid tools
             if not tool.Parent or not tool:FindFirstChild("Handle") then
                 if data.bodyPosition then pcall(function() data.bodyPosition:Destroy() end) end
                 if data.bodyAngularVelocity then pcall(function() data.bodyAngularVelocity:Destroy() end) end
@@ -732,7 +907,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         currentRotationMode = currentRotationMode % #rotationModes + 1
         displayMode()
         
-        if currentRotationMode ~= 9 then
+        if currentRotationMode ~= 9 and currentRotationMode ~= 15 then
             animated = true
             flying = false
             sprinting = false
@@ -741,11 +916,11 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         end
         
     elseif input.KeyCode == Enum.KeyCode.V then
-        CONFIG.spinSpeed = math.min(CONFIG.spinSpeed + CONFIG.spinSpeedIncrement, CONFIG.maxSpinSpeed)
+        CONFIG.spinSpeed = min(CONFIG.spinSpeed + CONFIG.spinSpeedIncrement, CONFIG.maxSpinSpeed)
         displayMode()
         
     elseif input.KeyCode == Enum.KeyCode.B then
-        CONFIG.spinSpeed = math.max(CONFIG.spinSpeed - CONFIG.spinSpeedIncrement, CONFIG.minSpinSpeed)
+        CONFIG.spinSpeed = max(CONFIG.spinSpeed - CONFIG.spinSpeedIncrement, CONFIG.minSpinSpeed)
         displayMode()
     end
 end)
@@ -756,16 +931,20 @@ player.CharacterAdded:Connect(function(newCharacter)
     humanoid = character:WaitForChild("Humanoid")
     torso = character:WaitForChild("HumanoidRootPart")
     heightScale, depthScale, widthScale, hipHeight, swordLength, backDepth, shoulderHeight = updateHumanoidScales()
-    wait(1)
+    task.wait(1)
     collectTools()
     initializeTools()
     displayMode()
 end)
 
+print("=================================")
 print("Enhanced Sword Ball Script Loaded!")
-print("40 Rotation Modes Available")
+print("40 COMPLETELY UNIQUE Modes")
+print("Ultra-Robust Pickup Prevention")
+print("=================================")
 print("Controls:")
-print("Z - Toggle Spin On/Off")
-print("C - Cycle Through Modes")
-print("V - Increase Spin Speed")
-print("B - Decrease Spin Speed")
+print("Z - Toggle Spin")
+print("C - Next Mode (1-40)")
+print("V - Increase Speed")
+print("B - Decrease Speed")
+print("=================================")
