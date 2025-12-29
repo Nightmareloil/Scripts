@@ -96,24 +96,181 @@ local function canExecuteInput(inputId, cooldownType)
     end
     return false
 end
--- Optimized UI Scaling
+-- Improved UI Scaling with Device-Specific Adjustments
 local UIScale = {
-    userScale = 1.0, minScale = 0.9, maxScale = 1.7,
-    baseReferenceSize = 1440, cached = {scale = nil, mobile = nil}
+    userScale = 1.1,
+    -- Different scaling limits for mobile vs desktop
+    desktop = {
+        minScale = 0.75,
+        maxScale = 1.5,
+        baseReferenceSize = 1080  -- Reference height for desktop (1920x1080)
+    },
+    mobile = {
+        minScale = 0.80,  -- Smaller minimum for mobile
+        maxScale = 0.95,  -- Lower maximum to prevent oversized UI
+        baseReferenceSize = 1980  -- Reference height for mobile devices
+    },
+    tablet = {
+        minScale = 0.65,
+        maxScale = 1.2,
+        baseReferenceSize = 1366  -- Reference for tablets
+    },
+    cached = {scale = nil, mobile = nil, deviceType = nil}
 }
-local function getOptimizedScaleFactor()
-    if UIScale.cached.scale then return UIScale.cached.scale, UIScale.cached.mobile end
+
+local function detectDeviceType()
     local viewport = workspace.CurrentCamera.ViewportSize
-    local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
-    local screenHeight = viewport.Y
-    local baseScale = screenHeight / UIScale.baseReferenceSize
-    local finalScale = math.clamp(baseScale * UIScale.userScale, UIScale.minScale, UIScale.maxScale)
-    UIScale.cached.scale, UIScale.cached.mobile = finalScale, isMobile
-    return finalScale, isMobile
+    local hasTouch = Services.UIS.TouchEnabled
+    local hasKeyboard = Services.UIS.KeyboardEnabled
+    local hasMouse = Services.UIS.MouseEnabled
+    local hasGamepad = Services.UIS.GamepadEnabled
+    
+    -- Detect device type
+    if hasTouch and not hasKeyboard and not hasMouse then
+        -- Pure touch device (phone/tablet)
+        local screenWidth = viewport.X
+        local screenHeight = viewport.Y
+        local aspectRatio = screenWidth / screenHeight
+        
+        -- Tablets typically have aspect ratios closer to 4:3 or 16:10
+        -- Phones are usually 16:9 or taller
+        if screenWidth >= 768 or (aspectRatio > 0.65 and aspectRatio < 0.8) then
+            return "tablet"
+        else
+            return "mobile"
+        end
+    else
+        -- Desktop (has keyboard/mouse or gamepad)
+        return "desktop"
+    end
 end
-local scaleFactor, isMobile = getOptimizedScaleFactor()
-local function S(offset) return math.max(1, math.floor(offset * scaleFactor + 0.5)) end
-local function updateUIScale() UIScale.cached = {scale = nil, mobile = nil}; scaleFactor, isMobile = getOptimizedScaleFactor() end
+
+local function getOptimizedScaleFactor()
+    -- Return cached values if available
+    if UIScale.cached.scale and UIScale.cached.deviceType then 
+        return UIScale.cached.scale, UIScale.cached.deviceType == "mobile", UIScale.cached.deviceType
+    end
+    
+    local viewport = workspace.CurrentCamera.ViewportSize
+    local deviceType = detectDeviceType()
+    
+    -- Get device-specific settings
+    local deviceSettings = UIScale[deviceType]
+    local screenHeight = viewport.Y
+    local screenWidth = viewport.X
+    
+    -- Calculate base scale using screen height
+    local baseScale = screenHeight / deviceSettings.baseReferenceSize
+    
+    -- Apply additional adjustments for very small or large screens
+    if deviceType == "mobile" then
+        -- For mobile, also consider width to handle landscape mode
+        if screenWidth > screenHeight then
+            -- Landscape mode - use width-based scaling
+            baseScale = math.min(baseScale, screenWidth / 2560) * 0.85
+        else
+            -- Portrait mode - reduce scale further for narrow screens
+            if screenWidth < 400 then
+                baseScale = baseScale * 0.8
+            end
+        end
+    elseif deviceType == "tablet" then
+        -- Tablets get slightly better scaling
+        if screenWidth > screenHeight then
+            baseScale = baseScale * 0.9
+        end
+    end
+    
+    -- Apply user scale and clamp to device-specific limits
+    local finalScale = baseScale * UIScale.userScale
+    finalScale = math.clamp(finalScale, deviceSettings.minScale, deviceSettings.maxScale)
+    
+    -- Cache the results
+    UIScale.cached.scale = finalScale
+    UIScale.cached.mobile = (deviceType == "mobile")
+    UIScale.cached.deviceType = deviceType
+    
+    return finalScale, (deviceType == "mobile"), deviceType
+end
+
+-- Initialize scaling
+local scaleFactor, isMobile, deviceType = getOptimizedScaleFactor()
+
+-- Scaling function with minimum size enforcement
+local function S(offset)
+    local scaled = offset * scaleFactor
+    -- Ensure minimum size of 1 pixel, but allow better precision
+    return math.max(1, math.floor(scaled + 0.5))
+end
+
+-- Update function that clears cache
+local function updateUIScale()
+    UIScale.cached = {scale = nil, mobile = nil, deviceType = nil}
+    scaleFactor, isMobile, deviceType = getOptimizedScaleFactor()
+    
+    -- Print debug info (optional, can remove)
+    if deviceType then
+        print(string.format("[UI Scale] Device: %s | Scale: %.2f | Resolution: %dx%d", 
+            deviceType, scaleFactor, 
+            workspace.CurrentCamera.ViewportSize.X, 
+            workspace.CurrentCamera.ViewportSize.Y))
+    end
+end
+
+-- Advanced scaling for text based on device
+local function getTextScale()
+    if deviceType == "mobile" then
+        return scaleFactor * 0.95  -- Slightly smaller text on mobile
+    elseif deviceType == "tablet" then
+        return scaleFactor * 1.0
+    else
+        return scaleFactor * 1.05  -- Slightly larger text on desktop
+    end
+end
+
+-- Helper function for text sizes
+local function TS(baseSize)
+    return math.max(8, math.floor(baseSize * getTextScale() + 0.5))
+end
+
+-- Responsive spacing function
+local function getResponsiveSpacing()
+    if deviceType == "mobile" then
+        return {
+            padding = S(4),
+            margin = S(3),
+            gap = S(5)
+        }
+    elseif deviceType == "tablet" then
+        return {
+            padding = S(5),
+            margin = S(4),
+            gap = S(6)
+        }
+    else
+        return {
+            padding = S(6),
+            margin = S(5),
+            gap = S(7)
+        }
+    end
+end
+
+-- Add orientation change detection
+local lastOrientation = nil
+local function checkOrientationChange()
+    local viewport = workspace.CurrentCamera.ViewportSize
+    local currentOrientation = viewport.X > viewport.Y and "landscape" or "portrait"
+    
+    if lastOrientation and lastOrientation ~= currentOrientation then
+        -- Orientation changed, force rescale
+        updateUIScale()
+        return true
+    end
+    
+    lastOrientation = currentOrientation
+    return false
+end
 -- Configuration
 local Config = {
     speed = 4, range = S(15), walkSpeed = 22, jumpPower = 50, flySpeed = S(40),
@@ -935,140 +1092,119 @@ local function executeSequentially(targetList, actionFunction, actionName)
  
     notification(string.format("'%s' finished: %d/%d successful.", actionName, successCount, #targetList), 3, "success")
 end
+
 -- Reverse Damage System
-local CONFIG = {
-    ATTACK_COOLDOWN = 0.1, -- Slight reduction
-    CLEANUP_INTERVAL = 0.1,
+local reverseDmgConfig = {
+    COOLDOWN = 0.25,
+    CLEANUP_INTERVAL = 1.0,
     PROXIMITY_RANGE = 3
 }
+
 local attackerHistory = {}
 local lastHealth = 0
-local function getPlayerName(player)
-    return player and (player.DisplayName or player.Name) or "Unknown"
-end
+local reverseDmgActive = false
+
 local function cleanupHistory()
     local currentTime = time()
     for attacker, data in pairs(attackerHistory) do
-        if currentTime - data.timestamp > 8 then
+        if currentTime - data.timestamp > 10 then
             attackerHistory[attacker] = nil
         end
     end
 end
-local function retaliate(attacker, method)
-    if not attacker or not attacker.Character then return false end
-    local currentTime = time()
-    local lastAttack = attackerHistory[attacker]
- 
-    if lastAttack and currentTime - lastAttack.timestamp < CONFIG.ATTACK_COOLDOWN then
+
+local function retaliate(attacker)
+    if not attacker or not attacker.Character or attacker == player or not reverseDmgActive then
         return false
     end
+   
+    local currentTime = time()
+    local lastAttack = attackerHistory[attacker]
+   
+    if lastAttack and currentTime - lastAttack.timestamp < reverseDmgConfig.COOLDOWN then
+        return false
+    end
+   
     attackerHistory[attacker] = {timestamp = currentTime}
-    local playerName = getPlayerName(attacker)
- 
-    playSound("combat")
-    pcall(function() killPlayerWithVerification(attacker) end)
-    notification("Eliminated " .. playerName .. " (" .. method .. ")", 3, "combat")
- 
+   
+    task.spawn(function()
+        pcall(function()
+            killPlayer(attacker)
+        end)
+    end)
+   
     return true
 end
-local function findNearbyAttackers()
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return {}
-    end
- 
-    local playerPos = player.Character.HumanoidRootPart.Position
-    local nearby = {}
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                local distance = (p.Character.HumanoidRootPart.Position - playerPos).Magnitude
-                if distance <= CONFIG.PROXIMITY_RANGE then
-                    local tool = p.Character:FindFirstChildOfClass("Tool") or p.Backpack:FindFirstChildOfClass("Tool")
-                    if tool then
-                        table.insert(nearby, {player = p, distance = distance})
-                    end
-                end
-            end
-        end
-    end
- 
-    table.sort(nearby, function(a, b) return a.distance < b.distance end)
-    return nearby
-end
-local function setupCreatorMonitoring()
-    if not player.Character then return nil end
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return nil end
-    return humanoid.ChildAdded:Connect(function(child)
-        if not State.reverseDmg or child.Name ~= "creator" then return end
-        if child:IsA("ObjectValue") and child.Value and child.Value:IsA("Player") then
-            local attacker = child.Value
-            if attacker ~= player then
-                task.spawn(retaliate, attacker, "Direct Hit")
-            end
-            task.spawn(function()
-                task.wait(0.05)
-                if child and child.Parent then
-                    child:Destroy()
-                end
-            end)
-        end
-    end)
-end
-local function setupMainMonitoring()
-    if not player.Character then return nil end
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return nil end
-    lastHealth = humanoid.Health
-    local lastCheck = 0
-    return Services.Run.Heartbeat:Connect(function()
-        if not State.reverseDmg or not player.Character then return end
-        local currentTime = time()
-        if currentTime - lastCheck < 0.08 then return end -- Reduced check interval
-        lastCheck = currentTime
-        local currentHumanoid = player.Character:FindFirstChildOfClass("Humanoid")
-        if not currentHumanoid then return end
-        local currentHealth = currentHumanoid.Health
-        local nearby = findNearbyAttackers()
-        if currentHealth ~= lastHealth and (currentHealth < lastHealth or State.godMode) then
-            if #nearby > 0 then
-                task.spawn(retaliate, nearby[1].player, "Health Drop")
-            end
-        end
-        for _, data in ipairs(nearby) do
-            if data.player.Character:FindFirstChildOfClass("Tool") and data.distance <= 6 then
-                task.spawn(retaliate, data.player, "Armed Proximity")
-                break
-            end
-        end
-     
-        lastHealth = currentHealth
-    end)
-end
+
 local function setupReverseDamage()
-    for _, connection in pairs(Data.connections or {}) do
-        if typeof(connection) == "RBXScriptConnection" then
-            connection:Disconnect()
-        elseif typeof(connection) == "thread" then
-            task.cancel(connection)
-        end
+    if Data.connections.reverseDmgMain then
+        pcall(function() Data.connections.reverseDmgMain:Disconnect() end)
+        Data.connections.reverseDmgMain = nil
     end
-    Data.connections = Data.connections or {}
+    if Data.connections.reverseDmgCleanup then
+        if typeof(Data.connections.reverseDmgCleanup) == "thread" then
+            task.cancel(Data.connections.reverseDmgCleanup)
+        end
+        Data.connections.reverseDmgCleanup = nil
+    end
+   
     attackerHistory = {}
+    reverseDmgActive = State.reverseDmg
+   
     if not State.reverseDmg or not player.Character then
         notification("Reverse Damage: OFF", 2, "info")
         return
     end
-    Data.connections.reverseDmgCreator = setupCreatorMonitoring()
-    Data.connections.reverseDmgMain = setupMainMonitoring()
+   
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+   
+    lastHealth = humanoid.Health
+   
+    local lastCheck = 0
+    Data.connections.reverseDmgMain = Services.Run.Heartbeat:Connect(function()
+        if not reverseDmgActive or not State.reverseDmg or not player.Character then
+            reverseDmgActive = false
+            return
+        end
+       
+        local currentTime = time()
+        if currentTime - lastCheck < 0.2 then return end
+        lastCheck = currentTime
+       
+        local currentHumanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if not currentHumanoid then return end
+       
+        local currentHealth = currentHumanoid.Health
+       
+        if currentHealth < lastHealth then
+            local creator = currentHumanoid:FindFirstChild("creator")
+            if creator and creator:IsA("ObjectValue") and creator.Value and creator.Value:IsA("Player") then
+                local attacker = creator.Value
+                if attacker ~= player then
+                    retaliate(attacker)
+                end
+                task.spawn(function()
+                    task.wait(0.05)
+                    if creator and creator.Parent then
+                        creator:Destroy()
+                    end
+                end)
+            end
+        end
+       
+        lastHealth = currentHealth
+    end)
+   
     Data.connections.reverseDmgCleanup = task.spawn(function()
-        while State.reverseDmg do
-            task.wait(CONFIG.CLEANUP_INTERVAL)
+        while State.reverseDmg and reverseDmgActive do
+            task.wait(reverseDmgConfig.CLEANUP_INTERVAL)
             cleanupHistory()
         end
     end)
-    notification("Reverse Damage: ON", 2, "success")
+   
+    notification("Reverse Damage: ACTIVE", 2, "success")
+    playSound("combat")
 end
 -- Loop Kill System
 local function startLoopKill(targets, sourcePlayer)
