@@ -515,7 +515,7 @@ function library:CreateWindow(title)
  
     local MIN_WINDOW_SIZE = Vector2.new(520, 400)
  
-    CreateInstance("UICorner", mainFrame, { CornerRadius = UDim.new(0, 24) })
+    CreateInstance("UICorner", mainFrame, { CornerRadius = UDim.new(0, 18) })
  
     local windowStroke = CreateInstance("UIStroke", mainFrame, {
         Color = Colors.Accent,
@@ -532,7 +532,7 @@ function library:CreateWindow(title)
         BorderSizePixel = 0,
         ZIndex = -1
     })
-    CreateInstance("UICorner", accentGlow, {CornerRadius = UDim.new(0, 28)})
+    CreateInstance("UICorner", accentGlow, {CornerRadius = UDim.new(0, 20)})
  
     spawn(function()
         local count = 0
@@ -550,7 +550,7 @@ function library:CreateWindow(title)
         BackgroundColor3 = Colors.Gray.Top,
         BackgroundTransparency = 0.12
     })
-    CreateInstance("UICorner", top, { CornerRadius = UDim.new(0, 24) })
+    CreateInstance("UICorner", top, { CornerRadius = UDim.new(0, 18) })
  
     local topAccent = CreateInstance("Frame", top, {
         Size = UDim2.new(1, 0, 0, 2.8),
@@ -596,7 +596,7 @@ function library:CreateWindow(title)
             AutoButtonColor = false,
             ZIndex = 3
         })
-        CreateInstance("UICorner", btn, { CornerRadius = UDim.new(0, 14) })
+        CreateInstance("UICorner", btn, { CornerRadius = UDim.new(0, 10) })
         CreateInstance("UIStroke", btn, {
             Color = Colors.Gray.Stroke,
             Thickness = 1.3,
@@ -728,7 +728,7 @@ function library:CreateWindow(title)
         BackgroundTransparency = 0.22,
         ClipsDescendants = true
     })
-    CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 24) })
+    CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 18) })
     local resizeHandle = CreateInstance("Frame", mainFrame, {
         Name = "ResizeHandle",
         Position = UDim2.new(1, 0, 1, 0),
@@ -967,7 +967,7 @@ function library:CreateWindow(title)
         ScrollingEnabled = true,
         ScrollBarImageTransparency = 0.18
     })
-    CreateInstance("UICorner", windowBody, {CornerRadius = UDim.new(0, 18)})
+    CreateInstance("UICorner", windowBody, {CornerRadius = UDim.new(0, 12)})
     table.insert(colorChangeElements, windowBody)
     local tabs = {}
     local currentTab = 1
@@ -1049,7 +1049,7 @@ function library:CreateWindow(title)
             BackgroundColor3 = _if(tabId == 1, Colors.Gray.Hover, Colors.Gray.DarkButton),
             BackgroundTransparency = 0.12
         })
-        CreateInstance("UICorner", tabButton, { CornerRadius = UDim.new(0, 14) })
+        CreateInstance("UICorner", tabButton, { CornerRadius = UDim.new(0, 10) })
         local tabStroke = CreateInstance("UIStroke", tabButton, {
             Name = "TabStroke",
             Color = Colors.Accent,
@@ -1070,7 +1070,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", paragraph, {CornerRadius = UDim.new(0, 18)})
+            CreateInstance("UICorner", paragraph, {CornerRadius = UDim.new(0, 12)})
             CreateInstance("UIStroke", paragraph, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1119,7 +1119,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.18
             })
-            CreateInstance("UICorner", card, {CornerRadius = UDim.new(0, 18)})
+            CreateInstance("UICorner", card, {CornerRadius = UDim.new(0, 12)})
             local cardStroke = CreateInstance("UIStroke", card, {
                 Color = Colors.Accent,
                 Thickness = 1.6,
@@ -1137,7 +1137,7 @@ function library:CreateWindow(title)
                 TextSize = 26,
                 BorderSizePixel = 0
             })
-            CreateInstance("UICorner", icon, {CornerRadius = UDim.new(0, 12)})
+            CreateInstance("UICorner", icon, {CornerRadius = UDim.new(0, 9)})
          
             local titleLabel = CreateInstance("TextLabel", card, {
                 Size = UDim2.new(1, -76, 0, 28),
@@ -1176,7 +1176,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 18)})
+            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 12)})
             CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1224,7 +1224,7 @@ function library:CreateWindow(title)
                     TextSize = 14,
                     AutoButtonColor = false
                 })
-                CreateInstance("UICorner", chipButton, {CornerRadius = UDim.new(0, 12)})
+                CreateInstance("UICorner", chipButton, {CornerRadius = UDim.new(0, 9)})
                 local chipStroke = CreateInstance("UIStroke", chipButton, {
                     Color = Colors.Gray.Stroke,
                     Thickness = 1.3,
@@ -1294,7 +1294,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", textBoxLabel, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", textBoxLabel, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", textBoxLabel, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1317,7 +1317,7 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 0.12,
                 ClearTextOnFocus = false,
             })
-            CreateInstance("UICorner", textBoxInstance, { CornerRadius = UDim.new(0, 14) })
+            CreateInstance("UICorner", textBoxInstance, { CornerRadius = UDim.new(0, 10) })
             CreateInstance("UIStroke", textBoxInstance, {
                 Color = Colors.Accent,
                 Thickness = 1.3,
@@ -1349,7 +1349,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1386,7 +1386,7 @@ function library:CreateWindow(title)
                     TextXAlignment = Enum.TextXAlignment.Center,
                     ZIndex = 3
                 })
-                CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 12)})
+                CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 8)})
                 CreateInstance("UIStroke", valueDisplay, {
                     Color = Colors.Accent,
                     Thickness = 1.3,
@@ -1495,7 +1495,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", mainToggleContainer, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1562,39 +1562,48 @@ function library:CreateWindow(title)
             left = tostring(left or "")
             right = tostring(right or "")
             local labelObject = {}
-            local textLabel = CreateInstance("Frame", tabContainer, {
+            local textLabel = CreateInstance("TextLabel", tabContainer, {
+                TextWrapped = true,
+                TextColor3 = Colors.White,
+                Text = "",
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Font = Font,
+                TextXAlignment = Enum.TextXAlignment.Left,
                 Size = UDim2.new(1, 0, 0, 46),
+                ZIndex = 0,
+                TextSize = 15,
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", textLabel, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", textLabel, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", textLabel, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
                 Transparency = 0.52
             })
+            CreateInstance("UIPadding", textLabel, {
+                PaddingTop = UDim.new(0, 9),
+                PaddingLeft = UDim.new(0, 7)
+            })
             local leftLabel = CreateInstance("TextLabel", textLabel, {
-                Position = UDim2.new(0, 11, 0.5, 0),
-                Size = UDim2.new(0.5, 0, 1, 0),
                 BackgroundTransparency = 1,
+                Size = UDim2.new(0.5, 0, 1, 0),
                 Text = left,
                 TextColor3 = Colors.White,
                 Font = Font,
                 TextSize = 15,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextYAlignment = Enum.TextYAlignment.Center
+                TextXAlignment = Enum.TextXAlignment.Left
             })
             local rightLabel = CreateInstance("TextLabel", textLabel, {
-                AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, -11, 0.5, 0),
-                Size = UDim2.new(0.5, -22, 1, 0),
                 BackgroundTransparency = 1,
+                Size = UDim2.new(0.5, 0, 1, 0),
+                Position = UDim2.new(1, 0, 0, 0),
+                AnchorPoint = Vector2.new(1, 0),
                 Text = right,
                 TextColor3 = Color3.fromRGB(210, 190, 190),
                 Font = Enum.Font.Gotham,
-                TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Right,
-                TextYAlignment = Enum.TextYAlignment.Center
+                TextSize = 13,
+                TextXAlignment = Enum.TextXAlignment.Right
             })
             function labelObject:Set(l, r)
                 leftLabel.Text = tostring(l or "")
@@ -1630,7 +1639,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", buttonContainer, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", buttonContainer, { CornerRadius = UDim.new(0, 12) })
             local btnStroke = CreateInstance("UIStroke", buttonContainer, {
                 Color = Colors.Accent,
                 Thickness = 1.3,
@@ -1673,7 +1682,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", dropdownLabel, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", dropdownLabel, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", dropdownLabel, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1717,7 +1726,7 @@ function library:CreateWindow(title)
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 ScrollBarImageTransparency = 0.18
             })
-            CreateInstance("UICorner", dropdownValuesContainer, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", dropdownValuesContainer, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", dropdownValuesContainer, {
                 Color = Colors.Accent,
                 Thickness = 1.3,
@@ -1757,7 +1766,7 @@ function library:CreateWindow(title)
                     BackgroundColor3 = Colors.Gray.DropDownButton,
                     BackgroundTransparency = 0.22
                 }, {
-                    CreateInstance("UICorner", nil, {CornerRadius = UDim.new(0, 14)}),
+                    CreateInstance("UICorner", nil, {CornerRadius = UDim.new(0, 10)}),
                     CreateInstance("UIStroke", nil, {
                         Color = Colors.Gray.Stroke,
                         Thickness = 1.3,
@@ -1771,35 +1780,35 @@ function library:CreateWindow(title)
                     callback(value, dropdown)
                 end)
             end
-            function dropdown:SetOptions(newValues)
-                newValues = newValues or {}
-                for _, child in ipairs(dropdownValuesContainer:GetChildren()) do
-                    if child:IsA("TextButton") then
-                        child:Destroy()
-                    end
-                end
-                local currentSelection = dropdownSelectedLabel.Text
-                local selectionStillExists = false
-                for _, v in ipairs(newValues) do
-                    if v == currentSelection then
-                        selectionStillExists = true
-                        break
-                    end
-                end
-                if not selectionStillExists then
-                    dropdownSelectedLabel.Text = ""
-                    pcall(callback, nil, dropdown)
-                end
-                for _, v in ipairs(newValues) do
-                    addDropButton(v)
-                end
-            end
-            for _, v in ipairs(values) do
-                addDropButton(v)
-            end
-            return dropdown
+function dropdown:SetOptions(newValues)
+    newValues = newValues or {}
+    for _, child in ipairs(dropdownValuesContainer:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
         end
- function tab:CreatePlayerDropdown(text, callback)
+    end
+    local currentSelection = dropdownSelectedLabel.Text
+    local selectionStillExists = false
+    for _, v in ipairs(newValues) do
+        if v == currentSelection then
+            selectionStillExists = true
+            break
+        end
+    end
+    if not selectionStillExists then
+        dropdownSelectedLabel.Text = ""
+        pcall(callback, nil, dropdown)
+    end
+    for _, v in ipairs(newValues) do
+        addDropButton(v)
+    end
+end
+for _, v in ipairs(values) do
+    addDropButton(v)
+end
+return dropdown
+end
+function tab:CreatePlayerDropdown(text, callback)
     local function getPlayerNames()
         local players = game.Players:GetPlayers()
         local names = {}
@@ -1859,7 +1868,7 @@ end
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 18)})
+            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 12)})
             CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1877,7 +1886,7 @@ end
                 BackgroundTransparency = 0.12,
                 AutoButtonColor = false
             })
-            CreateInstance("UICorner", keyButton, {CornerRadius = UDim.new(0, 14)})
+            CreateInstance("UICorner", keyButton, {CornerRadius = UDim.new(0, 10)})
             local keyStroke = CreateInstance("UIStroke", keyButton, {
                 Color = Colors.Accent,
                 Thickness = 1.3,
@@ -1930,7 +1939,7 @@ end
                 BackgroundColor3 = Colors.Gray.DarkButton,
                 BackgroundTransparency = 0.22
             })
-            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", container, {
                 Color = Colors.Gray.Stroke,
                 Thickness = 1.3,
@@ -1944,7 +1953,7 @@ end
                 BackgroundColor3 = defaultColor or Colors.Accent,
                 BorderSizePixel = 0
             })
-            CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 14) })
+            CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 10) })
             CreateInstance("UIStroke", colorDisplay, {
                 Color = Colors.White,
                 Thickness = 2.4,
@@ -1967,7 +1976,7 @@ end
                 Visible = false,
                 ClipsDescendants = true
             })
-            CreateInstance("UICorner", paletteFrame, { CornerRadius = UDim.new(0, 18) })
+            CreateInstance("UICorner", paletteFrame, { CornerRadius = UDim.new(0, 12) })
             CreateInstance("UIStroke", paletteFrame, {
                 Color = Colors.Accent,
                 Thickness = 1.3,
@@ -1990,7 +1999,7 @@ end
                     AutoButtonColor = false,
                     Size = UDim2.new(0, 47, 0, 42)
                 })
-                CreateInstance("UICorner", colorBtn, { CornerRadius = UDim.new(0, 14) })
+                CreateInstance("UICorner", colorBtn, { CornerRadius = UDim.new(0, 10) })
                 local colorStroke = CreateInstance("UIStroke", colorBtn, {
                     Color = Color3.fromRGB(110, 90, 90),
                     Thickness = 2.4,
