@@ -1780,35 +1780,35 @@ function library:CreateWindow(title)
                     callback(value, dropdown)
                 end)
             end
-function dropdown:SetOptions(newValues)
-    newValues = newValues or {}
-    for _, child in ipairs(dropdownValuesContainer:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
+            function dropdown:SetOptions(newValues)
+                newValues = newValues or {}
+                for _, child in ipairs(dropdownValuesContainer:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                local currentSelection = dropdownSelectedLabel.Text
+                local selectionStillExists = false
+                for _, v in ipairs(newValues) do
+                    if v == currentSelection then
+                        selectionStillExists = true
+                        break
+                    end
+                end
+                if not selectionStillExists then
+                    dropdownSelectedLabel.Text = ""
+                    pcall(callback, nil, dropdown)
+                end
+                for _, v in ipairs(newValues) do
+                    addDropButton(v)
+                end
+            end
+            for _, v in ipairs(values) do
+                addDropButton(v)
+            end
+            return dropdown
         end
-    end
-    local currentSelection = dropdownSelectedLabel.Text
-    local selectionStillExists = false
-    for _, v in ipairs(newValues) do
-        if v == currentSelection then
-            selectionStillExists = true
-            break
-        end
-    end
-    if not selectionStillExists then
-        dropdownSelectedLabel.Text = ""
-        pcall(callback, nil, dropdown)
-    end
-    for _, v in ipairs(newValues) do
-        addDropButton(v)
-    end
-end
-for _, v in ipairs(values) do
-    addDropButton(v)
-end
-return dropdown
-end
-function tab:CreatePlayerDropdown(text, callback)
+ function tab:CreatePlayerDropdown(text, callback)
     local function getPlayerNames()
         local players = game.Players:GetPlayers()
         local names = {}
