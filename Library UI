@@ -117,7 +117,7 @@ pcall(function()
     subtitle.Position = UDim2.new(0.5, 0, 0, 120)
     subtitle.AnchorPoint = Vector2.new(0.5, 0)
     subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Ignite Your Power • Activating Modules..."
+    subtitle.Text = "Unleash the Demon • Initializing Systems..."
     subtitle.TextColor3 = Color3.fromRGB(255, 130, 130)
     subtitle.Font = Enum.Font.GothamSemibold
     subtitle.TextSize = 20
@@ -178,7 +178,7 @@ pcall(function()
     statusText.Size = UDim2.new(0, 500, 0, 26)
     statusText.Position = UDim2.new(0.5, -250, 0.82, 0)
     statusText.BackgroundTransparency = 1
-    statusText.Text = "► Activating Core Modules..."
+    statusText.Text = "► Activating Demon Core..."
     statusText.TextColor3 = Color3.fromRGB(200, 100, 100)
     statusText.Font = Enum.Font.GothamMedium
     statusText.TextSize = 16
@@ -195,11 +195,11 @@ pcall(function()
     task.wait(0.6)
     -- Refined loading stages
     local stages = {
-        {percent = 20, subtitle = "Ignite Your Power • Loading Essentials...", status = "► Initializing Framework"},
-        {percent = 45, subtitle = "Ignite Your Power • Constructing UI...", status = "► Building Components"},
-        {percent = 70, subtitle = "Ignite Your Power • Applying Styles...", status = "► Configuring Design"},
-        {percent = 90, subtitle = "Ignite Your Power • Final Touches...", status = "► Enhancing Performance"},
-        {percent = 100, subtitle = "Ignite Your Power • Ready to Dominate!", status = "► Activation Complete"}
+        {percent = 20, subtitle = "Unleash the Demon • Loading Essentials...", status = "► Activating Framework"},
+        {percent = 45, subtitle = "Unleash the Demon • Constructing UI...", status = "► Building Components"},
+        {percent = 70, subtitle = "Unleash the Demon • Applying Styles...", status = "► Configuring Design"},
+        {percent = 90, subtitle = "Unleash the Demon • Final Touches...", status = "► Enhancing Performance"},
+        {percent = 100, subtitle = "Unleash the Demon • Ready to Conquer!", status = "► Activation Complete"}
     }
     for _, stage in ipairs(stages) do
         local startPercent = tonumber(percentText.Text:match("%d+")) or 0
@@ -376,11 +376,18 @@ function library:CreateWindow(title)
     local mainFrame = CreateInstance("Frame", screen, { Name = "MainFrame", Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 680, 0, 480), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(15, 0, 0), BackgroundTransparency = 0.02, Active = true, ClipsDescendants = true })
     local glassEffect = CreateInstance("Frame", mainFrame, { Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(25, 3, 3), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 0 })
     local MIN_WINDOW_SIZE = Vector2.new(520, 400)
-    CreateInstance("UICorner", mainFrame, { CornerRadius = UDim.new(0, 32) })
+    CreateInstance("UICorner", mainFrame, { CornerRadius = UDim.new(0, 40) })
     local windowStroke = CreateInstance("UIStroke", mainFrame, { Color = Colors.Accent, Thickness = 2, Transparency = 0.45 })
     table.insert(colorChangeElements, windowStroke)
-    local accentGlow = CreateInstance("Frame", mainFrame, { Size = UDim2.new(1, 40, 1, 40), Position = UDim2.new(0.5, -20, 0.5, -20), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Colors.Accent, BackgroundTransparency = 0.85, BorderSizePixel = 0, ZIndex = -1 })
-    CreateInstance("UICorner", accentGlow, {CornerRadius = UDim.new(0, 36)})
+    local accentGlow = Instance.new("Frame", mainFrame)
+    accentGlow.Size = UDim2.new(1, 60, 1, 60)
+    accentGlow.Position = UDim2.new(0.5, -30, 0.5, -30)
+    accentGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+    accentGlow.BackgroundColor3 = Colors.Accent
+    accentGlow.BackgroundTransparency = 0.85
+    accentGlow.BorderSizePixel = 0
+    accentGlow.ZIndex = -1
+    Instance.new("UICorner", accentGlow).CornerRadius = UDim.new(0, 52)
     spawn(function()
         local count = 0
         while screen and screen.Parent and count < 100 do
@@ -390,14 +397,14 @@ function library:CreateWindow(title)
         end
     end)
     local top = CreateInstance("Frame", mainFrame, { Name = "Top", Size = UDim2.new(1, 0, 0, 52), BackgroundColor3 = Colors.Gray.Top, BackgroundTransparency = 0.1 })
-    CreateInstance("UICorner", top, { CornerRadius = UDim.new(0, 32) })
+    CreateInstance("UICorner", top, { CornerRadius = UDim.new(0, 40) })
     local topAccent = CreateInstance("Frame", top, { Size = UDim2.new(1, 0, 0, 2.5), Position = UDim2.new(0, 0, 1, -2.5), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, ZIndex = 2 })
     CreateInstance("UIGradient", topAccent, { Color = Colors.Gradients.Accent, Rotation = 90 })
     local titleLabel = CreateInstance("TextLabel", top, { TextColor3 = Colors.White, BorderColor3 = Colors.Gray.Stroke, Text = title, Font = Font, BackgroundTransparency = 1, Size = UDim2.new(1, -200, 1, 0), Position = UDim2.new(0, 26, 0, 0), TextSize = 18, TextXAlignment = Enum.TextXAlignment.Left })
     CreateInstance("UIGradient", titleLabel, { Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 130, 130)) }), Rotation = 90 })
     local function createControlButton(text, pos, callback)
         local btn = CreateInstance("TextButton", top, { Text = text, Font = Enum.Font.GothamBlack, TextSize = 18, TextColor3 = Colors.White, Position = pos, BackgroundColor3 = Colors.Gray.Button, BackgroundTransparency = 0.15, Size = UDim2.new(0, 38, 0, 38), AutoButtonColor = false, ZIndex = 3 })
-        CreateInstance("UICorner", btn, { CornerRadius = UDim.new(0, 16) })
+        CreateInstance("UICorner", btn, { CornerRadius = UDim.new(0, 20) })
         CreateInstance("UIStroke", btn, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.45 })
         autobutcolor(btn, Colors.Gray.Button)
         if callback then btn.MouseButton1Click:Connect(callback) end
@@ -464,7 +471,7 @@ function library:CreateWindow(title)
         end
     end)
     local windowContainer = CreateInstance("Frame", mainFrame, { Position = UDim2.new(0, 0, 0, 52), ZIndex = 0, Size = UDim2.new(1, 0, 1, -52), BackgroundColor3 = Colors.Gray.Top, BackgroundTransparency = 0.2, ClipsDescendants = true })
-    CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 32) })
+    CreateInstance("UICorner", windowContainer, { CornerRadius = UDim.new(0, 40) })
     local resizeHandle = CreateInstance("Frame", mainFrame, { Name = "ResizeHandle", Position = UDim2.new(1, 0, 1, 0), Size = UDim2.new(0, 24, 0, 24), AnchorPoint = Vector2.new(1, 1), BackgroundTransparency = 1, ZIndex = 100 })
     local resizeLine1 = CreateInstance("Frame", resizeHandle, { BackgroundColor3 = Colors.Gray.Stroke, Size = UDim2.new(0, 10, 0, 2), Position = UDim2.new(1, -11, 1, -4.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = -45, BorderSizePixel = 0 })
     local resizeLine2 = CreateInstance("Frame", resizeHandle, { BackgroundColor3 = Colors.Gray.Stroke, Size = UDim2.new(0, 16, 0, 2), Position = UDim2.new(1, -9, 1, -9), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = -45, BorderSizePixel = 0 })
@@ -637,7 +644,7 @@ function library:CreateWindow(title)
         end)
     end
     local windowBody = CreateInstance("ScrollingFrame", windowContainer, { ScrollBarImageColor3 = Colors.Accent, Active = true, BorderColor3 = Colors.Gray.Stroke, ScrollBarThickness = 6, Position = UDim2.new(0.26, 0, 0.02, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(0, 0, 0, 0), Size = UDim2.new(0.72, 0, 0.96, 0), BorderSizePixel = 0, BackgroundColor3 = Colors.Gray.FramesBack, BackgroundTransparency = 0.25, ScrollingEnabled = true, ScrollBarImageTransparency = 0.15 })
-    CreateInstance("UICorner", windowBody, {CornerRadius = UDim.new(0, 24)})
+    CreateInstance("UICorner", windowBody, {CornerRadius = UDim.new(0, 32)})
     table.insert(colorChangeElements, windowBody)
     local tabs = {}
     local currentTab = 1
@@ -670,7 +677,7 @@ function library:CreateWindow(title)
         CreateInstance("UIPadding", tabContainer, { PaddingTop = UDim.new(0, 12), PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingBottom = UDim.new(0, 12) })
         CreateInstance("UIListLayout", tabContainer, { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder })
         local tabButton = CreateInstance("TextButton", scrollingFrameTabs, { TextColor3 = _if(tabId == 1, Colors.White, Color3.fromRGB(220, 200, 200)), Text = name, Font = Font, Name = "Tab" .. tabId, AutoButtonColor = false, Size = UDim2.new(1, 0, 0, 40), TextSize = 15, BackgroundColor3 = _if(tabId == 1, Colors.Gray.Hover, Colors.Gray.DarkButton), BackgroundTransparency = 0.1 })
-        CreateInstance("UICorner", tabButton, { CornerRadius = UDim.new(0, 16) })
+        CreateInstance("UICorner", tabButton, { CornerRadius = UDim.new(0, 20) })
         local tabStroke = CreateInstance("UIStroke", tabButton, { Name = "TabStroke", Color = Colors.Accent, Thickness = 1.4, Transparency = _if(tabId == 1, 0.2, 0.7) })
         table.insert(colorChangeElements, tabStroke)
         autobutcolor(tabButton, _if(tabId == 1, Colors.Gray.Hover, Colors.Gray.DarkButton))
@@ -680,7 +687,7 @@ function library:CreateWindow(title)
         -- Paragraph Component
         function tab:CreateParagraph(title, content)
             local paragraph = CreateInstance("Frame", tabContainer, { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", paragraph, {CornerRadius = UDim.new(0, 24)})
+            CreateInstance("UICorner", paragraph, {CornerRadius = UDim.new(0, 28)})
             CreateInstance("UIStroke", paragraph, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             CreateInstance("UIPadding", paragraph, { PaddingTop = UDim.new(0, 12), PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14), PaddingBottom = UDim.new(0, 12) })
             local titleLabel = CreateInstance("TextLabel", paragraph, { Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = title, TextColor3 = Colors.White, Font = Font, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top })
@@ -691,10 +698,10 @@ function library:CreateWindow(title)
         function tab:CreateInfoCard(title, description, iconText)
             iconText = iconText or "ℹ"
             local card = CreateInstance("Frame", tabContainer, { Size = UDim2.new(1, 0, 0, 72), BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.15 })
-            CreateInstance("UICorner", card, {CornerRadius = UDim.new(0, 24)})
+            CreateInstance("UICorner", card, {CornerRadius = UDim.new(0, 28)})
             local cardStroke = CreateInstance("UIStroke", card, { Color = Colors.Accent, Thickness = 1.4, Transparency = 0.55 })
             local icon = CreateInstance("TextLabel", card, { Size = UDim2.new(0, 52, 0, 52), Position = UDim2.new(0, 10, 0.5, -26), BackgroundColor3 = Colors.Accent, BackgroundTransparency = 0.75, Text = iconText, TextColor3 = Colors.White, Font = Font, TextSize = 26, BorderSizePixel = 0 })
-            CreateInstance("UICorner", icon, {CornerRadius = UDim.new(0, 16)})
+            CreateInstance("UICorner", icon, {CornerRadius = UDim.new(0, 20)})
             local titleLabel = CreateInstance("TextLabel", card, { Size = UDim2.new(1, -76, 0, 28), Position = UDim2.new(0, 70, 0, 13), BackgroundTransparency = 1, Text = title, TextColor3 = Colors.White, Font = Font, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left })
             local descLabel = CreateInstance("TextLabel", card, { Size = UDim2.new(1, -76, 0, 22), Position = UDim2.new(0, 70, 0, 41), BackgroundTransparency = 1, Text = description, TextColor3 = Color3.fromRGB(210, 190, 190), Font = Enum.Font.GothamMedium, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left })
             return {}
@@ -705,7 +712,7 @@ function library:CreateWindow(title)
             local chip = {}
             local selectedChip = nil
             local container = CreateInstance("Frame", tabContainer, { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 24)})
+            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 28)})
             CreateInstance("UIStroke", container, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             CreateInstance("UIPadding", container, { PaddingTop = UDim.new(0, 12), PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14), PaddingBottom = UDim.new(0, 12) })
             local label = CreateInstance("TextLabel", container, { Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = labelText, TextColor3 = Colors.White, Font = Font, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left })
@@ -713,7 +720,7 @@ function library:CreateWindow(title)
             CreateInstance("UIListLayout", chipsContainer, { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, Wraps = true })
             for _, chipName in ipairs(chips) do
                 local chipButton = CreateInstance("TextButton", chipsContainer, { Size = UDim2.new(0, 0, 0, 34), AutomaticSize = Enum.AutomaticSize.X, BackgroundColor3 = Colors.Gray.TogBox, BackgroundTransparency = 0.15, Text = " " .. chipName .. " ", TextColor3 = Color3.fromRGB(220, 200, 200), Font = Enum.Font.GothamSemibold, TextSize = 14, AutoButtonColor = false })
-                CreateInstance("UICorner", chipButton, {CornerRadius = UDim.new(0, 16)})
+                CreateInstance("UICorner", chipButton, {CornerRadius = UDim.new(0, 20)})
                 local chipStroke = CreateInstance("UIStroke", chipButton, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.55 })
                 CreateInstance("UIPadding", chipButton, { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12) })
                 chipButton.MouseButton1Click:Connect(function()
@@ -749,10 +756,10 @@ function library:CreateWindow(title)
             local placeholder = placeholder or "Enter value..."
             local textbox = {}
             local textBoxLabel = CreateInstance("TextLabel", tabContainer, { TextColor3 = Colors.White, Text = " " .. label, TextXAlignment = Enum.TextXAlignment.Left, Font = Font, Size = UDim2.new(1, 0, 0, 46), ZIndex = 0, TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", textBoxLabel, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", textBoxLabel, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", textBoxLabel, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             local textBoxInstance = CreateInstance("TextBox", textBoxLabel, { TextWrapped = true, TextColor3 = Colors.White, BorderColor3 = Colors.Gray.Stroke, Text = "", AnchorPoint = Vector2.new(1, 0.5), Font = Font, Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.new(0, 160, 0, 36), PlaceholderText = placeholder, PlaceholderColor3 = Color3.fromRGB(160, 140, 140), TextSize = 14, BackgroundColor3 = Colors.Gray.TogBox, BackgroundTransparency = 0.1, ClearTextOnFocus = false, })
-            CreateInstance("UICorner", textBoxInstance, { CornerRadius = UDim.new(0, 16) })
+            CreateInstance("UICorner", textBoxInstance, { CornerRadius = UDim.new(0, 20) })
             CreateInstance("UIStroke", textBoxInstance, { Color = Colors.Accent, Thickness = 1.2, Transparency = 0.7 })
             textBoxInstance.Focused:Connect(function()
                 playSound("Click", 0.12)
@@ -774,7 +781,7 @@ function library:CreateWindow(title)
             local hasTextbox = options.textbox or false
             local slider = {}
             local container = CreateInstance("Frame", tabContainer, { Size = UDim2.new(1, 0, 0, 54), BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", container, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             local labelText = CreateInstance("TextLabel", container, { BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 0), Size = UDim2.new(1, -20, 0, 28), Font = Font, Text = label, TextColor3 = Colors.White, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center })
             local valueDisplay
@@ -782,7 +789,7 @@ function library:CreateWindow(title)
             local valueSize = UDim2.new(0, 110, 0, 28)
             if hasTextbox then
                 valueDisplay = CreateInstance("TextBox", container, { BackgroundColor3 = Colors.Gray.TogBox, BackgroundTransparency = 0.1, AnchorPoint = Vector2.new(1, 0.5), Position = valuePos, Size = valueSize, Font = Enum.Font.GothamSemibold, Text = tostring(default), TextColor3 = Colors.White, TextSize = 14, ClearTextOnFocus = false, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3 })
-                CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 16)})
+                CreateInstance("UICorner", valueDisplay, {CornerRadius = UDim.new(0, 20)})
                 CreateInstance("UIStroke", valueDisplay, { Color = Colors.Accent, Thickness = 1.2, Transparency = 0.6 })
             else
                 valueDisplay = CreateInstance("TextLabel", container, { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = valuePos, Size = valueSize, Font = Enum.Font.GothamSemibold, Text = tostring(default), TextColor3 = Colors.White, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3 })
@@ -844,7 +851,7 @@ function library:CreateWindow(title)
             callback = callback or function () end
             local toggle = {}
             local mainToggleContainer = CreateInstance("TextButton", tabContainer, { Font = Font, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Colors.White, AutoButtonColor = false, Size = UDim2.new(1, 0, 0, 46), Text = " " .. label, TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", mainToggleContainer, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", mainToggleContainer, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             local toggleTrack = CreateInstance("Frame", mainToggleContainer, { Name = "Toggle", Position = UDim2.new(1, -16, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), ZIndex = 2, Size = UDim2.new(0, 56, 0, 30), BackgroundColor3 = default and Colors.Accent or Color3.fromRGB(140, 120, 120), BackgroundTransparency = 0.02, BorderSizePixel = 0 })
             CreateInstance("UIGradient", toggleTrack, { Color = _if(default, Colors.Gradients.Accent, ColorSequence.new(Color3.fromRGB(140,120,120)))})
@@ -873,7 +880,7 @@ function library:CreateWindow(title)
         end
         function tab:CreateLabel(title, description)
             local textLabel = CreateInstance("TextLabel", tabContainer, { TextWrapped = true, TextColor3 = Colors.White, Text = " " .. (title or ""), TextYAlignment = Enum.TextYAlignment.Top, Font = Font, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, (description and #description > 0) and 64 or 46), ZIndex = 0, TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", textLabel, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", textLabel, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", textLabel, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             CreateInstance("UIPadding", textLabel, { PaddingTop = UDim.new(0, 8), PaddingLeft = UDim.new(0, 6) })
             local descLabel = nil
@@ -888,7 +895,7 @@ function library:CreateWindow(title)
         end
         function tab:CreateButton(name, callback)
             local buttonContainer = CreateInstance("TextButton", tabContainer, { TextColor3 = Colors.White, Text = " " .. name, Font = Font, TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor = false, Size = UDim2.new(1, 0, 0, 46), TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", buttonContainer, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", buttonContainer, { CornerRadius = UDim.new(0, 28) })
             local btnStroke = CreateInstance("UIStroke", buttonContainer, { Color = Colors.Accent, Thickness = 1.2, Transparency = 0.7 })
             CreateInstance("TextLabel", buttonContainer, { Text = "→", TextColor3 = Colors.Accent, Font = Font, TextSize = 20, BackgroundTransparency = 1, Position = UDim2.new(1, -34, 0.5, -11), Size = UDim2.new(0, 24, 0, 22) })
             autobutcolor(buttonContainer, Colors.Gray.DarkButton)
@@ -900,13 +907,13 @@ function library:CreateWindow(title)
             local dropdown = {}
             local dropdownContainer = CreateInstance("Frame", tabContainer, { Size = UDim2.new(1, 0, 0, 46), BackgroundTransparency = 1, ClipsDescendants = true })
             local dropdownLabel = CreateInstance("TextButton", dropdownContainer, { TextColor3 = Colors.White, Text = " " .. text, Font = Font, TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor = false, Size = UDim2.new(1, 0, 0, 46), ZIndex = 3, TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", dropdownLabel, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", dropdownLabel, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", dropdownLabel, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             autobutcolor(dropdownLabel, Colors.Gray.DarkButton)
             local dropdownArrow = CreateInstance("TextLabel", dropdownLabel, { Text = "▼", TextColor3 = Colors.Accent, Font = Font, TextSize = 15, BackgroundTransparency = 1, Position = UDim2.new(1, -32, 0.5, -8), Size = UDim2.new(0, 18, 0, 18), ZIndex = 4 })
             local dropdownSelectedLabel = CreateInstance("TextLabel", dropdownLabel, { TextWrapped = true, TextColor3 = Color3.fromRGB(240, 220, 220), Text = "", Font = Font, BackgroundTransparency = 1, Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.new(0.5, -44, 1, 0), TextSize = 14, TextXAlignment = Enum.TextXAlignment.Right })
             local dropdownValuesContainer = CreateInstance("ScrollingFrame", dropdownContainer, { ScrollBarImageColor3 = Colors.Accent, Active = true, ScrollBarThickness = 5, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.1, Position = UDim2.new(0, 0, 0, 52), Visible = false, Size = UDim2.new(1, 0, 0, 140), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 4, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0), ScrollBarImageTransparency = 0.15 })
-            CreateInstance("UICorner", dropdownValuesContainer, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", dropdownValuesContainer, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", dropdownValuesContainer, { Color = Colors.Accent, Thickness = 1.2, Transparency = 0.5 })
             CreateInstance("UIListLayout", dropdownValuesContainer, { Padding = UDim.new(0, 7), SortOrder = Enum.SortOrder.LayoutOrder })
             CreateInstance("UIPadding", dropdownValuesContainer, { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 12), PaddingBottom = UDim.new(0, 12) })
@@ -923,7 +930,7 @@ function library:CreateWindow(title)
             end
             dropdownLabel.MouseButton1Click:Connect(toggleDropdown)
             local function addDropButton(value)
-                local btn = CreateInstance("TextButton", dropdownValuesContainer, { TextSize = 14, Font = Font, TextColor3 = Colors.White, Size = UDim2.new(1, 0, 0, 36), AutoButtonColor = false, Text = " " .. value, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = Colors.Gray.DropDownButton, BackgroundTransparency = 0.2 }, { CreateInstance("UICorner", nil, {CornerRadius = UDim.new(0, 16)}), CreateInstance("UIStroke", nil, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.6 }) })
+                local btn = CreateInstance("TextButton", dropdownValuesContainer, { TextSize = 14, Font = Font, TextColor3 = Colors.White, Size = UDim2.new(1, 0, 0, 36), AutoButtonColor = false, Text = " " .. value, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = Colors.Gray.DropDownButton, BackgroundTransparency = 0.2 }, { CreateInstance("UICorner", nil, {CornerRadius = UDim.new(0, 20)}), CreateInstance("UIStroke", nil, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.6 }) })
                 autobutcolor(btn, Colors.Gray.DropDownButton)
                 btn.MouseButton1Click:Connect(function()
                     toggleDropdown()
@@ -994,10 +1001,10 @@ function library:CreateWindow(title)
             local key = defaultKey
             local isSettingKey = false
             local container = CreateInstance("TextLabel", tabContainer, { TextColor3 = Colors.White, Text = " " .. label, TextXAlignment = Enum.TextXAlignment.Left, Font = Font, Size = UDim2.new(1, 0, 0, 46), TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 24)})
+            CreateInstance("UICorner", container, {CornerRadius = UDim.new(0, 28)})
             CreateInstance("UIStroke", container, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             local keyButton = CreateInstance("TextButton", container, { Text = key, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.new(0, 115, 0, 36), Font = Font, TextSize = 14, TextColor3 = Colors.White, BackgroundColor3 = Colors.Gray.TogBox, BackgroundTransparency = 0.1, AutoButtonColor = false })
-            CreateInstance("UICorner", keyButton, {CornerRadius = UDim.new(0, 16)})
+            CreateInstance("UICorner", keyButton, {CornerRadius = UDim.new(0, 20)})
             local keyStroke = CreateInstance("UIStroke", keyButton, { Color = Colors.Accent, Thickness = 1.2, Transparency = 0.6 })
             autobutcolor(keyButton, Colors.Gray.TogBox)
             keyButton.MouseButton1Click:Connect(function()
@@ -1035,21 +1042,21 @@ function library:CreateWindow(title)
             callback = callback or function() end
             local colorPicker = {}
             local container = CreateInstance("TextButton", tabContainer, { TextColor3 = Colors.White, Text = " " .. label, Font = Font, TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor = false, Size = UDim2.new(1, 0, 0, 46), TextSize = 15, BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.2 })
-            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", container, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", container, { Color = Colors.Gray.Stroke, Thickness = 1.2, Transparency = 0.5 })
             autobutcolor(container, Colors.Gray.DarkButton)
             local colorDisplay = CreateInstance("Frame", container, { Size = UDim2.new(0, 42, 0, 30), Position = UDim2.new(1, -50, 0.5, -15), BackgroundColor3 = defaultColor or Colors.Accent, BorderSizePixel = 0 })
-            CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 16) })
+            CreateInstance("UICorner", colorDisplay, { CornerRadius = UDim.new(0, 20) })
             CreateInstance("UIStroke", colorDisplay, { Color = Colors.White, Thickness = 2.2, Transparency = 0.3 })
             local colorPalette = { Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 100, 200), Color3.fromRGB(220, 20, 60), Color3.fromRGB(255, 140, 0), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 255, 0), Color3.fromRGB(50, 255, 50), Color3.fromRGB(0, 200, 80), Color3.fromRGB(0, 255, 180), Color3.fromRGB(0, 191, 255), Color3.fromRGB(65, 105, 225), Color3.fromRGB(138, 43, 226), Color3.fromRGB(147, 112, 219), Color3.fromRGB(255, 20, 147), Color3.fromRGB(199, 21, 133), Color3.fromRGB(255, 255, 255), Color3.fromRGB(220, 220, 220), Color3.fromRGB(140, 140, 150), Color3.fromRGB(90, 90, 100), Color3.fromRGB(50, 50, 60), Color3.fromRGB(20, 20, 30), Color3.fromRGB(0, 128, 128), Color3.fromRGB(255, 69, 0), Color3.fromRGB(75, 0, 130), }
             local paletteFrame = CreateInstance("Frame", tabContainer, { Size = UDim2.new(1, 0, 0, 0), BackgroundColor3 = Colors.Gray.DarkButton, BackgroundTransparency = 0.1, Visible = false, ClipsDescendants = true })
-            CreateInstance("UICorner", paletteFrame, { CornerRadius = UDim.new(0, 24) })
+            CreateInstance("UICorner", paletteFrame, { CornerRadius = UDim.new(0, 28) })
             CreateInstance("UIStroke", paletteFrame, { Color = Colors.Accent, Thickness = 1.2, Transparency = 0.4 })
             local paletteGrid = CreateInstance("Frame", paletteFrame, { Size = UDim2.new(1, -24, 1, -24), Position = UDim2.new(0, 12, 0, 12), BackgroundTransparency = 1 })
             CreateInstance("UIGridLayout", paletteGrid, { CellSize = UDim2.new(0, 45, 0, 40), CellPadding = UDim2.new(0, 7, 0, 7), SortOrder = Enum.SortOrder.LayoutOrder })
             for i, color in ipairs(colorPalette) do
                 local colorBtn = CreateInstance("TextButton", paletteGrid, { Text = "", BackgroundColor3 = color, AutoButtonColor = false, Size = UDim2.new(0, 45, 0, 40) })
-                CreateInstance("UICorner", colorBtn, { CornerRadius = UDim.new(0, 16) })
+                CreateInstance("UICorner", colorBtn, { CornerRadius = UDim.new(0, 20) })
                 local colorStroke = CreateInstance("UIStroke", colorBtn, { Color = Color3.fromRGB(120, 100, 100), Thickness = 2.2, Transparency = 0.4 })
                 colorBtn.MouseEnter:Connect(function()
                     playHoverSound()
