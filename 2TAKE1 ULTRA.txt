@@ -23,9 +23,9 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Performance = {fps = 0, ping = 0}
 -- Farm Configuration with speed options
 local FARM_CONFIG = {
-    SLOW_MULTIPLIER = 0.2,
-    FAST_MULTIPLIER = 0.7,
-    DELAY = 0
+    SLOW_MULTIPLIER = 0.5,
+    FAST_MULTIPLIER = 1.0,
+    DELAY = 0.08
 }
 -- Sound System
 local Sounds = {}
@@ -86,7 +86,7 @@ end
 -- UI Scaling
 local UIScale = {
     userScale = 1.0,
-    desktop = {minScale = 0.75, maxScale = 4.0, baseReferenceSize = 1080},
+    desktop = {minScale = 0.75, maxScale = 5.0, baseReferenceSize = 1080},
     mobile = {minScale = 0.80, maxScale = 0.95, baseReferenceSize = 1980},
     tablet = {minScale = 0.65, maxScale = 1.2, baseReferenceSize = 1366},
     cached = {scale = nil, mobile = nil, deviceType = nil}
@@ -681,28 +681,74 @@ resizeBtn.MouseButton1Click:Connect(function()
     if not canExecuteInput("resizeClick", "button") then return end
     playSound("click")
     
-    -- Cycle through sizes: 0.75x -> 1x -> 1.25x -> 1.5x -> 2x -> 3x -> 4x -> 0.75x
+    -- Cycle through sizes: 0.75x -> 1x -> 1.5x -> 2x -> 3x -> 4x -> 5x -> 0.75x
     -- Mobile devices have lower max (0.95x)
     local currentScale = UIScale.userScale
-    local maxScale = deviceType == "mobile" and 0.95 or 4.0
+    local maxScale = deviceType == "mobile" and 0.95 or 5.0
     
     if currentScale >= maxScale then
         UIScale.userScale = 0.75
+    elseif currentScale >= 4.0 and deviceType ~= "mobile" then
+        UIScale.userScale = 5.0
     elseif currentScale >= 3.0 and deviceType ~= "mobile" then
         UIScale.userScale = 4.0
     elseif currentScale >= 2.0 and deviceType ~= "mobile" then
         UIScale.userScale = 3.0
     elseif currentScale >= 1.5 then
         UIScale.userScale = deviceType == "mobile" and 0.95 or 2.0
-    elseif currentScale >= 1.25 then
-        UIScale.userScale = 1.5
     elseif currentScale >= 1.0 then
-        UIScale.userScale = 1.25
+        UIScale.userScale = 1.5
     else
         UIScale.userScale = 1.0
     end
     
-    notification(string.format("UI Scale: %.2fx - Please rejoin to apply changes", UIScale.userScale), 3, "info")
+    -- Clear cache and recalculate
+    UIScale.cached = {scale = nil, mobile = nil, deviceType = nil}
+    scaleFactor, isMobile, deviceType = getOptimizedScaleFactor()
+    
+    -- Recalculate all UI sizes
+    local newMainWidth = S(isMobile and 350 or 450)
+    local newMainHeight = S(isMobile and 550 or 650)
+    local newHeaderHeight = S(isMobile and 40 or 50)
+    
+    -- Update main frame
+    Data.originalUISize = UDim2.new(0, newMainWidth, 0, newMainHeight)
+    
+    if State.isMinimized then
+        mainFrame.Size = UDim2.new(0, newMainWidth, 0, newHeaderHeight)
+        mainFrame.Position = UDim2.new(0.5, -newMainWidth/2, 0.5, -newHeaderHeight/2)
+    else
+        mainFrame.Size = UDim2.new(0, newMainWidth, 0, newMainHeight)
+        mainFrame.Position = UDim2.new(0.5, -newMainWidth/2, 0.5, -newMainHeight/2)
+    end
+    
+    -- Update header elements
+    header.Size = UDim2.new(1, 0, 0, newHeaderHeight)
+    title.TextSize = S(isMobile and 13 or 16)
+    proBadge.Size = UDim2.new(0, S(50), 0, S(22))
+    proBadge.Position = UDim2.new(0, S(140), 0.5, -S(11))
+    proBadge.TextSize = S(isMobile and 10 or 12)
+    yearBadge.Size = UDim2.new(0, S(48), 0, S(18))
+    yearBadge.Position = UDim2.new(0, S(196), 0.5, -S(9))
+    yearBadge.TextSize = S(isMobile and 9 or 10)
+    
+    -- Update buttons
+    local btnSize = S(28)
+    resizeBtn.Size = UDim2.new(0, btnSize, 0, btnSize)
+    resizeBtn.Position = UDim2.new(1, -S(96), 0.5, -btnSize/2)
+    resizeBtn.TextSize = S(isMobile and 16 or 20)
+    minimizeBtn.Size = UDim2.new(0, btnSize, 0, btnSize)
+    minimizeBtn.Position = UDim2.new(1, -S(64), 0.5, -btnSize/2)
+    minimizeBtn.TextSize = S(isMobile and 18 or 22)
+    closeBtn.Size = UDim2.new(0, btnSize, 0, btnSize)
+    closeBtn.Position = UDim2.new(1, -S(32), 0.5, -btnSize/2)
+    closeBtn.TextSize = S(isMobile and 14 or 18)
+    
+    -- Update content area
+    content.Size = UDim2.new(1, -S(10), 1, -newHeaderHeight - S(5))
+    content.Position = UDim2.new(0, S(5), 0, newHeaderHeight + S(5))
+    
+    notification(string.format("UI Scale: %.2fx", UIScale.userScale), 2, "success")
 end)
 
 local minimizeBtn = Instance.new("TextButton")
@@ -1052,15 +1098,30 @@ local function executeSequentially(targetList, actionFunction, actionName)
     end
     notification(string.format("'%s' finished: %d/%d successful.", actionName, successCount, #targetList), 3, "success")
 end
--- Reverse Damage System
+-- Reverse Damage System - IMPROVED
 local reverseDmgConfig = {
-    COOLDOWN = 0.25,
+    COOLDOWN = 0.15,
     CLEANUP_INTERVAL = 1.0,
     PROXIMITY_RANGE = 3
 }
 local attackerHistory = {}
 local lastHealth = 0
 local reverseDmgActive = false
+local reverseDmgTools = {}
+
+local function ensureReverseDmgTools()
+    -- Load extra tool specifically for reverse damage
+    if #reverseDmgTools == 0 then
+        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
+        if remote then
+            pcall(function() remote:FireServer() end)
+            task.wait(0.1)
+            reverseDmgTools = getTools()
+        end
+    end
+    return reverseDmgTools
+end
+
 local function cleanupHistory()
     local currentTime = time()
     for attacker, data in pairs(attackerHistory) do
@@ -1069,6 +1130,7 @@ local function cleanupHistory()
         end
     end
 end
+
 local function retaliate(attacker)
     if not attacker or not attacker.Character or attacker == player or not reverseDmgActive then
         return false
@@ -1085,12 +1147,28 @@ local function retaliate(attacker)
    
     task.spawn(function()
         pcall(function()
-            killPlayer(attacker)
+            -- Use multiple tools for better retaliation
+            local tools = ensureReverseDmgTools()
+            for i = 1, 3 do
+                for _, tool in ipairs(tools) do
+                    if tool and tool.Parent and attacker.Character then
+                        local targetHumanoid = attacker.Character:FindFirstChildOfClass("Humanoid")
+                        if targetHumanoid and targetHumanoid.Health > 0 then
+                            local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
+                            if r then
+                                pcall(function() r:FireServer(targetHumanoid, math.huge) end)
+                            end
+                        end
+                    end
+                end
+                task.wait(0.05)
+            end
         end)
     end)
    
     return true
 end
+
 local function setupReverseDamage()
     if Data.connections.reverseDmgMain then
         pcall(function() Data.connections.reverseDmgMain:Disconnect() end)
@@ -1115,6 +1193,9 @@ local function setupReverseDamage()
     if not humanoid then return end
    
     lastHealth = humanoid.Health
+    
+    -- Load extra tools for reverse damage
+    ensureReverseDmgTools()
    
     local lastCheck = 0
     Data.connections.reverseDmgMain = Services.Run.Heartbeat:Connect(function()
@@ -1124,7 +1205,7 @@ local function setupReverseDamage()
         end
        
         local currentTime = time()
-        if currentTime - lastCheck < 0.2 then return end
+        if currentTime - lastCheck < 0.1 then return end
         lastCheck = currentTime
        
         local currentHumanoid = player.Character:FindFirstChildOfClass("Humanoid")
@@ -1132,12 +1213,14 @@ local function setupReverseDamage()
        
         local currentHealth = currentHumanoid.Health
        
-        if currentHealth < lastHealth then
+        -- Monitor health changes even in god mode
+        if currentHealth < lastHealth or (State.godMode and currentHealth < currentHumanoid.MaxHealth) then
             local creator = currentHumanoid:FindFirstChild("creator")
             if creator and creator:IsA("ObjectValue") and creator.Value and creator.Value:IsA("Player") then
                 local attacker = creator.Value
                 if attacker ~= player then
                     retaliate(attacker)
+                    notification("Retaliating against " .. attacker.DisplayName, 1, "combat")
                 end
                 task.spawn(function()
                     task.wait(0.05)
@@ -1158,7 +1241,7 @@ local function setupReverseDamage()
         end
     end)
    
-    notification("Reverse Damage: ACTIVE", 2, "success")
+    notification("Reverse Damage: ACTIVE (Enhanced)", 2, "success")
     playSound("combat")
 end
 -- Loop Kill System
@@ -1265,13 +1348,26 @@ end
 -- Farm function with speed parameter
 local function farm(speed)
     if not player.Character then return end
+    
+    -- Always ensure we have tools before farming
     local tools = getTools()
+    if #tools == 0 then
+        -- Try to load tools if we don't have any
+        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
+        if remote then
+            pcall(function() remote:FireServer() end)
+            task.wait(0.15)
+            tools = getTools()
+        end
+    end
+    
+    -- Farm with all available tools
     for _, h in pairs(tools) do
         if h and h.Parent then
             local r = h:FindFirstChild("up") and h.up:FindFirstChild("RemoteEvent")
             if r then
                 for i = 1, speed do
-                    r:FireServer()
+                    pcall(function() r:FireServer() end)
                 end
             end
         end
@@ -1286,7 +1382,22 @@ local function watchPlayer(targetName)
     State.watchingPlayer = target
     notification("Now watching " .. target.DisplayName, 3, "success")
 end
--- Protection System
+-- Protection System - IMPROVED
+local protectionTools = {}
+
+local function ensureProtectionTools()
+    -- Load extra tools specifically for protection
+    if #protectionTools == 0 then
+        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
+        if remote then
+            pcall(function() remote:FireServer() end)
+            task.wait(0.1)
+            protectionTools = getTools()
+        end
+    end
+    return protectionTools
+end
+
 local function protectPlayer(targetName)
     local target = findPlayer(targetName, player)
     if not target or type(target) == "table" then
@@ -1299,8 +1410,11 @@ local function protectPlayer(targetName)
     if Data.protectionCleanup then task.cancel(Data.protectionCleanup) end
     State.protectedPlayer = target
     State.protectionActive = true
-    notification("Protection enabled for " .. target.DisplayName, 3, "success")
+    notification("Enhanced Protection enabled for " .. target.DisplayName, 3, "success")
     playSound("shield")
+   
+    -- Load extra tools for protection
+    ensureProtectionTools()
    
     local protectionAttackerHistory = {}
     local protectionLastHealth = 0
@@ -1319,19 +1433,30 @@ local function protectPlayer(targetName)
         local currentTime = time()
         local lastAttack = protectionAttackerHistory[attacker]
        
-        if lastAttack and currentTime - lastAttack.timestamp < 0.25 then
+        if lastAttack and currentTime - lastAttack.timestamp < 0.15 then
             return false
         end
         protectionAttackerHistory[attacker] = {timestamp = currentTime}
        
         task.spawn(function()
-            for i = 1, 3 do
-                spamAttackWithAllMyTools(attacker)
-                task.wait(0.1)
+            local tools = ensureProtectionTools()
+            for i = 1, 5 do -- More aggressive retaliation
+                for _, tool in ipairs(tools) do
+                    if tool and tool.Parent and attacker.Character then
+                        local targetHumanoid = attacker.Character:FindFirstChildOfClass("Humanoid")
+                        if targetHumanoid and targetHumanoid.Health > 0 then
+                            local r = tool:FindFirstChild("dmg") and tool.dmg:FindFirstChild("RemoteEvent")
+                            if r then
+                                pcall(function() r:FireServer(targetHumanoid, math.huge) end)
+                            end
+                        end
+                    end
+                end
+                task.wait(0.05)
             end
         end)
         playSound("combat")
-        notification("Protected " .. target.DisplayName .. "! Attacking " .. attacker.DisplayName .. " (" .. method .. ")", 3, "combat")
+        notification("Protected " .. target.DisplayName .. "! Attacking " .. attacker.DisplayName .. " (" .. method .. ")", 2, "combat")
         return true
     end
    
@@ -1360,7 +1485,7 @@ local function protectPlayer(targetName)
             if not target.Character then return end
            
             local currentTime = time()
-            if currentTime - lastCheck < 0.08 then return end
+            if currentTime - lastCheck < 0.05 then return end
             lastCheck = currentTime
             local currentHumanoid = target.Character:FindFirstChildOfClass("Humanoid")
             if not currentHumanoid then return end
@@ -1369,9 +1494,9 @@ local function protectPlayer(targetName)
             if currentHealth ~= protectionLastHealth and currentHealth < protectionLastHealth then
                 local nearbyPlayers = {}
                 for _, p in pairs(Players:GetPlayers()) do
-                    if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    if p ~= target and p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and target.Character:FindFirstChild("HumanoidRootPart") then
                         local distance = (p.Character.HumanoidRootPart.Position - target.Character.HumanoidRootPart.Position).Magnitude
-                        if distance <= 30 then
+                        if distance <= 40 then
                             table.insert(nearbyPlayers, {player = p, distance = distance})
                         end
                     end
@@ -2412,6 +2537,20 @@ showCommandsUI = function()
 end
 -- Create UI toggles and buttons
 local farmToggles = {}
+
+local function startSlowFarm()
+    if State.coroutines.slowFarm then
+        task.cancel(State.coroutines.slowFarm)
+    end
+    State.coroutines.slowFarm = task.spawn(function()
+        while State.slowFarm and task.wait() do
+            if player.Character then
+                fireSword(math.ceil(Config.speed * FARM_CONFIG.SLOW_MULTIPLIER))
+            end
+        end
+    end)
+end
+
 local ffFrame, ffToggle = createToggle("Fast Farm", function(enabled, toggleBtn)
     State.fastFarm = enabled
     if enabled and State.slowFarm then
@@ -2425,29 +2564,23 @@ local ffFrame, ffToggle = createToggle("Fast Farm", function(enabled, toggleBtn)
                 }):Play()
             end)
         end
+        if State.coroutines.slowFarm then
+            task.cancel(State.coroutines.slowFarm)
+            State.coroutines.slowFarm = nil
+        end
     end
-    if State.coroutines.fastFarm then
-        task.cancel(State.coroutines.fastFarm)
-        State.coroutines.fastFarm = nil
-    end
+    
     if enabled then
         Stats.farmStartPower = Stats.power or 0
         Stats.powerGainedFarming = 0
         powerHistory = {{time = time(), power = Stats.power}}
-        notification("Fast farm ON", 2, "success")
-       
-        State.coroutines.fastFarm = task.spawn(function()
-            while State.fastFarm do
-                local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_MULTIPLIER
-                farm(math.ceil(effectiveSpeed))
-                task.wait(FARM_CONFIG.DELAY)
-            end
-        end)
+        notification("Fast farm ON - Persists through death", 2, "success")
     else
         notification("Fast farm OFF", 2, "info")
     end
 end, {key = "speed", min = 1, max = 10})
 farmToggles.fast = ffToggle
+
 local sfFrame, sfToggle = createToggle("Slow Farm", function(enabled, toggleBtn)
     State.slowFarm = enabled
     if enabled and State.fastFarm then
@@ -2462,28 +2595,29 @@ local sfFrame, sfToggle = createToggle("Slow Farm", function(enabled, toggleBtn)
             end)
         end
     end
-    if State.coroutines.slowFarm then
-        task.cancel(State.coroutines.slowFarm)
-        State.coroutines.slowFarm = nil
-    end
+    
     if enabled then
         Stats.farmStartPower = Stats.power or 0
         Stats.powerGainedFarming = 0
         powerHistory = {{time = time(), power = Stats.power}}
-        notification("Slow farm ON", 2, "success")
-       
-        State.coroutines.slowFarm = task.spawn(function()
-            while State.slowFarm do
-                local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_MULTIPLIER
-                farm(math.ceil(effectiveSpeed))
-                task.wait(FARM_CONFIG.DELAY)
-            end
-        end)
+        notification("Slow farm ON - Persists through death", 2, "success")
+        startSlowFarm()
     else
+        if State.coroutines.slowFarm then
+            task.cancel(State.coroutines.slowFarm)
+            State.coroutines.slowFarm = nil
+        end
         notification("Slow farm OFF", 2, "info")
     end
 end)
 farmToggles.slow = sfToggle
+
+-- Fast farm connection (runs on Stepped for max speed)
+Services.Run.Stepped:Connect(function()
+    if State.fastFarm and player.Character then
+        fireSword(math.ceil(Config.speed * FARM_CONFIG.FAST_MULTIPLIER))
+    end
+end)
 local godFrame, godToggleBtn = createToggle("God Mode", function(enabled)
     setLocalGodMode(enabled)
 end)
@@ -2673,9 +2807,85 @@ local mainLoop = Services.Run.Heartbeat:Connect(function(step)
 end)
 table.insert(Data.connections, mainLoop)
 -- Character Management
+local function restartFarmingAfterRespawn()
+    -- Wait for character to fully load
+    if not player.Character then return end
+    local humanoid = player.Character:WaitForChild("Humanoid", 5)
+    if not humanoid then return end
+    
+    -- Small delay to ensure everything is loaded
+    task.wait(1)
+    
+    -- Restart fast farm if it was active
+    if State.fastFarm and not State.coroutines.fastFarm then
+        State.coroutines.fastFarm = task.spawn(function()
+            local lastToolCheck = 0
+            while State.fastFarm do
+                if not player.Character then
+                    task.wait(0.5)
+                    continue
+                end
+                
+                local currentTime = time()
+                if currentTime - lastToolCheck > 1 then
+                    local toolCount = updateToolCache(player)
+                    if toolCount == 0 then
+                        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
+                        if remote then
+                            pcall(function() remote:FireServer() end)
+                            task.wait(0.15)
+                            updateToolCache(player)
+                        end
+                    end
+                    lastToolCheck = currentTime
+                end
+                
+                local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_MULTIPLIER
+                farm(math.ceil(effectiveSpeed))
+                task.wait(FARM_CONFIG.DELAY)
+            end
+        end)
+        notification("Fast farm resumed after respawn", 2, "success")
+    end
+    
+    -- Restart slow farm if it was active
+    if State.slowFarm and not State.coroutines.slowFarm then
+        State.coroutines.slowFarm = task.spawn(function()
+            local lastToolCheck = 0
+            while State.slowFarm do
+                if not player.Character then
+                    task.wait(0.5)
+                    continue
+                end
+                
+                local currentTime = time()
+                if currentTime - lastToolCheck > 1 then
+                    local toolCount = updateToolCache(player)
+                    if toolCount == 0 then
+                        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
+                        if remote then
+                            pcall(function() remote:FireServer() end)
+                            task.wait(0.15)
+                            updateToolCache(player)
+                        end
+                    end
+                    lastToolCheck = currentTime
+                end
+                
+                local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_MULTIPLIER
+                farm(math.ceil(effectiveSpeed))
+                task.wait(FARM_CONFIG.DELAY)
+            end
+        end)
+        notification("Slow farm resumed after respawn", 2, "success")
+    end
+end
+
 local function onChar(char)
     if not char then return end
     updateToolCache(player)
+    
+    -- Reconnect tool monitoring
     char.ChildAdded:Connect(function()
         updateToolCache(player)
     end)
@@ -2689,12 +2899,15 @@ local function onChar(char)
     backpack.ChildRemoved:Connect(function()
         updateToolCache(player)
     end)
+    
     local h = char:WaitForChild("Humanoid", 5)
     if h then
         h.WalkSpeed = State.speedHack and (Config.flySpeed or 50) or Config.walkSpeed
         h.JumpPower = Config.jumpPower
        
+        -- Restart reverse damage if it was active
         if State.reverseDmg then
+            task.wait(0.5)
             setupReverseDamage()
         end
        
@@ -2715,12 +2928,16 @@ local function onChar(char)
             end)
         end
        
+        -- Restart god mode if it was active
         if State.godMode then
             task.spawn(function()
-                task.wait(0.1)
+                task.wait(0.5)
                 setLocalGodMode(true)
             end)
         end
+        
+        -- IMPORTANT: Restart farming after respawn
+        task.spawn(restartFarmingAfterRespawn)
     end
 end
 if player.Character then
