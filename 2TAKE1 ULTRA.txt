@@ -86,9 +86,9 @@ end
 -- UI Scaling
 local UIScale = {
     userScale = 1.0,
-    desktop = {minScale = 0.75, maxScale = 5.0, baseReferenceSize = 1080},
-    mobile = {minScale = 0.80, maxScale = 0.95, baseReferenceSize = 1980},
-    tablet = {minScale = 0.65, maxScale = 1.2, baseReferenceSize = 1366},
+    desktop = {minScale = 0.75, maxScale = 2.5, baseReferenceSize = 1080},
+    mobile = {minScale = 0.80, maxScale = 1.5, baseReferenceSize = 1980},
+    tablet = {minScale = 0.65, maxScale = 2.0, baseReferenceSize = 1366},
     cached = {scale = nil, mobile = nil, deviceType = nil}
 }
 local function detectDeviceType()
@@ -681,74 +681,78 @@ resizeBtn.MouseButton1Click:Connect(function()
     if not canExecuteInput("resizeClick", "button") then return end
     playSound("click")
     
-    -- Cycle through sizes: 0.75x -> 1x -> 1.5x -> 2x -> 3x -> 4x -> 5x -> 0.75x
-    -- Mobile devices have lower max (0.95x)
+    -- Only 3 size options: Small -> Medium -> Large -> Small
     local currentScale = UIScale.userScale
-    local maxScale = deviceType == "mobile" and 0.95 or 5.0
     
-    if currentScale >= maxScale then
-        UIScale.userScale = 0.75
-    elseif currentScale >= 4.0 and deviceType ~= "mobile" then
-        UIScale.userScale = 5.0
-    elseif currentScale >= 3.0 and deviceType ~= "mobile" then
-        UIScale.userScale = 4.0
-    elseif currentScale >= 2.0 and deviceType ~= "mobile" then
-        UIScale.userScale = 3.0
-    elseif currentScale >= 1.5 then
-        UIScale.userScale = deviceType == "mobile" and 0.95 or 2.0
-    elseif currentScale >= 1.0 then
-        UIScale.userScale = 1.5
+    if deviceType == "mobile" then
+        -- Mobile: Small(0.8x) -> Medium(1.0x) -> Large(1.3x)
+        if currentScale >= 1.3 then
+            UIScale.userScale = 0.8  -- Small
+        elseif currentScale >= 1.0 then
+            UIScale.userScale = 1.3  -- Large
+        else
+            UIScale.userScale = 1.0  -- Medium
+        end
     else
-        UIScale.userScale = 1.0
+        -- Desktop: Small(0.8x) -> Medium(1.0x) -> Large(1.5x)
+        if currentScale >= 1.7 then
+            UIScale.userScale = 0.8  -- Small
+        elseif currentScale >= 1.0 then
+            UIScale.userScale = 1.3  -- Large
+        else
+            UIScale.userScale = 1.0  -- Medium
+        end
     end
     
-    -- Clear cache and recalculate
+    -- Calculate new scale
     UIScale.cached = {scale = nil, mobile = nil, deviceType = nil}
+    local oldScale = scaleFactor
     scaleFactor, isMobile, deviceType = getOptimizedScaleFactor()
+    local ratio = scaleFactor / oldScale
     
-    -- Recalculate all UI sizes
-    local newMainWidth = S(isMobile and 350 or 450)
-    local newMainHeight = S(isMobile and 550 or 650)
-    local newHeaderHeight = S(isMobile and 40 or 50)
+    -- Resize main frame
+    local w = math.floor(mainFrame.Size.X.Offset * ratio)
+    local h = math.floor(mainFrame.Size.Y.Offset * ratio)
+    mainFrame.Size = UDim2.new(0, w, 0, h)
+    mainFrame.Position = UDim2.new(0.5, -w/2, 0.5, -h/2)
+    Data.originalUISize = mainFrame.Size
     
-    -- Update main frame
-    Data.originalUISize = UDim2.new(0, newMainWidth, 0, newMainHeight)
-    
-    if State.isMinimized then
-        mainFrame.Size = UDim2.new(0, newMainWidth, 0, newHeaderHeight)
-        mainFrame.Position = UDim2.new(0.5, -newMainWidth/2, 0.5, -newHeaderHeight/2)
-    else
-        mainFrame.Size = UDim2.new(0, newMainWidth, 0, newMainHeight)
-        mainFrame.Position = UDim2.new(0.5, -newMainWidth/2, 0.5, -newMainHeight/2)
+    -- Resize all UI elements
+    for _, obj in ipairs(screenGui:GetDescendants()) do
+        if obj:IsA("GuiObject") and obj ~= screenGui then
+            -- Scale size
+            local sz = obj.Size
+            obj.Size = UDim2.new(sz.X.Scale, math.floor(sz.X.Offset * ratio), sz.Y.Scale, math.floor(sz.Y.Offset * ratio))
+            
+            -- Scale position
+            local ps = obj.Position
+            obj.Position = UDim2.new(ps.X.Scale, math.floor(ps.X.Offset * ratio), ps.Y.Scale, math.floor(ps.Y.Offset * ratio))
+        end
+        
+        -- Scale text
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            obj.TextSize = math.max(8, math.floor(obj.TextSize * ratio))
+        end
+        
+        -- Scale corners
+        if obj:IsA("UICorner") then
+            obj.CornerRadius = UDim.new(0, math.max(1, math.floor(obj.CornerRadius.Offset * ratio)))
+        end
+        
+        -- Scale strokes
+        if obj:IsA("UIStroke") then
+            obj.Thickness = math.max(1, math.floor(obj.Thickness * ratio))
+        end
+        
+        -- Scale scrollbars
+        if obj:IsA("ScrollingFrame") then
+            obj.ScrollBarThickness = math.max(2, math.floor(obj.ScrollBarThickness * ratio))
+        end
     end
     
-    -- Update header elements
-    header.Size = UDim2.new(1, 0, 0, newHeaderHeight)
-    title.TextSize = S(isMobile and 13 or 16)
-    proBadge.Size = UDim2.new(0, S(50), 0, S(22))
-    proBadge.Position = UDim2.new(0, S(140), 0.5, -S(11))
-    proBadge.TextSize = S(isMobile and 10 or 12)
-    yearBadge.Size = UDim2.new(0, S(48), 0, S(18))
-    yearBadge.Position = UDim2.new(0, S(196), 0.5, -S(9))
-    yearBadge.TextSize = S(isMobile and 9 or 10)
-    
-    -- Update buttons
-    local btnSize = S(28)
-    resizeBtn.Size = UDim2.new(0, btnSize, 0, btnSize)
-    resizeBtn.Position = UDim2.new(1, -S(96), 0.5, -btnSize/2)
-    resizeBtn.TextSize = S(isMobile and 16 or 20)
-    minimizeBtn.Size = UDim2.new(0, btnSize, 0, btnSize)
-    minimizeBtn.Position = UDim2.new(1, -S(64), 0.5, -btnSize/2)
-    minimizeBtn.TextSize = S(isMobile and 18 or 22)
-    closeBtn.Size = UDim2.new(0, btnSize, 0, btnSize)
-    closeBtn.Position = UDim2.new(1, -S(32), 0.5, -btnSize/2)
-    closeBtn.TextSize = S(isMobile and 14 or 18)
-    
-    -- Update content area
-    content.Size = UDim2.new(1, -S(10), 1, -newHeaderHeight - S(5))
-    content.Position = UDim2.new(0, S(5), 0, newHeaderHeight + S(5))
-    
-    notification(string.format("UI Scale: %.2fx", UIScale.userScale), 2, "success")
+    -- Show size name
+    local sizeName = currentScale <= 0.8 and "Small" or currentScale >= 1.3 and "Large" or "Medium"
+    notification(string.format("UI Size: %s (%.1fx)", sizeName, UIScale.userScale), 2, "success")
 end)
 
 local minimizeBtn = Instance.new("TextButton")
@@ -1802,7 +1806,7 @@ local cmds = {
                 for i = 1, amount do
                     equipAll()
                     remote:FireServer()
-                    task.wait(0.10)
+                    task.wait(0.8)
                 end
                 equipAll()
                 notification("Duplication finished.", 5, "success")
@@ -2537,19 +2541,7 @@ showCommandsUI = function()
 end
 -- Create UI toggles and buttons
 local farmToggles = {}
-
-local function startSlowFarm()
-    if State.coroutines.slowFarm then
-        task.cancel(State.coroutines.slowFarm)
-    end
-    State.coroutines.slowFarm = task.spawn(function()
-        while State.slowFarm and task.wait() do
-            if player.Character then
-                fireSword(math.ceil(Config.speed * FARM_CONFIG.SLOW_MULTIPLIER))
-            end
-        end
-    end)
-end
+local farmConnections = {}
 
 local ffFrame, ffToggle = createToggle("Fast Farm", function(enabled, toggleBtn)
     State.fastFarm = enabled
@@ -2564,10 +2556,12 @@ local ffFrame, ffToggle = createToggle("Fast Farm", function(enabled, toggleBtn)
                 }):Play()
             end)
         end
-        if State.coroutines.slowFarm then
-            task.cancel(State.coroutines.slowFarm)
-            State.coroutines.slowFarm = nil
-        end
+    end
+    
+    -- Disconnect old connection
+    if farmConnections.fast then
+        farmConnections.fast:Disconnect()
+        farmConnections.fast = nil
     end
     
     if enabled then
@@ -2575,6 +2569,14 @@ local ffFrame, ffToggle = createToggle("Fast Farm", function(enabled, toggleBtn)
         Stats.powerGainedFarming = 0
         powerHistory = {{time = time(), power = Stats.power}}
         notification("Fast farm ON - Persists through death", 2, "success")
+        
+        -- Create persistent connection
+        farmConnections.fast = Services.Run.Heartbeat:Connect(function()
+            if State.fastFarm and player.Character then
+                local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_MULTIPLIER
+                farm(math.ceil(effectiveSpeed))
+            end
+        end)
     else
         notification("Fast farm OFF", 2, "info")
     end
@@ -2594,6 +2596,16 @@ local sfFrame, sfToggle = createToggle("Slow Farm", function(enabled, toggleBtn)
                 }):Play()
             end)
         end
+        if farmConnections.fast then
+            farmConnections.fast:Disconnect()
+            farmConnections.fast = nil
+        end
+    end
+    
+    -- Disconnect old connection
+    if farmConnections.slow then
+        farmConnections.slow:Disconnect()
+        farmConnections.slow = nil
     end
     
     if enabled then
@@ -2601,23 +2613,20 @@ local sfFrame, sfToggle = createToggle("Slow Farm", function(enabled, toggleBtn)
         Stats.powerGainedFarming = 0
         powerHistory = {{time = time(), power = Stats.power}}
         notification("Slow farm ON - Persists through death", 2, "success")
-        startSlowFarm()
+        
+        -- Create persistent connection
+        farmConnections.slow = Services.Run.Heartbeat:Connect(function()
+            if State.slowFarm and player.Character then
+                local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_MULTIPLIER
+                farm(math.ceil(effectiveSpeed))
+                task.wait(FARM_CONFIG.DELAY)
+            end
+        end)
     else
-        if State.coroutines.slowFarm then
-            task.cancel(State.coroutines.slowFarm)
-            State.coroutines.slowFarm = nil
-        end
         notification("Slow farm OFF", 2, "info")
     end
 end)
 farmToggles.slow = sfToggle
-
--- Fast farm connection (runs on Stepped for max speed)
-Services.Run.Stepped:Connect(function()
-    if State.fastFarm and player.Character then
-        fireSword(math.ceil(Config.speed * FARM_CONFIG.FAST_MULTIPLIER))
-    end
-end)
 local godFrame, godToggleBtn = createToggle("God Mode", function(enabled)
     setLocalGodMode(enabled)
 end)
@@ -2807,105 +2816,22 @@ local mainLoop = Services.Run.Heartbeat:Connect(function(step)
 end)
 table.insert(Data.connections, mainLoop)
 -- Character Management
-local function restartFarmingAfterRespawn()
-    -- Wait for character to fully load
-    if not player.Character then return end
-    local humanoid = player.Character:WaitForChild("Humanoid", 5)
-    if not humanoid then return end
-    
-    -- Small delay to ensure everything is loaded
-    task.wait(1)
-    
-    -- Restart fast farm if it was active
-    if State.fastFarm and not State.coroutines.fastFarm then
-        State.coroutines.fastFarm = task.spawn(function()
-            local lastToolCheck = 0
-            while State.fastFarm do
-                if not player.Character then
-                    task.wait(0.5)
-                    continue
-                end
-                
-                local currentTime = time()
-                if currentTime - lastToolCheck > 1 then
-                    local toolCount = updateToolCache(player)
-                    if toolCount == 0 then
-                        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
-                        if remote then
-                            pcall(function() remote:FireServer() end)
-                            task.wait(0.15)
-                            updateToolCache(player)
-                        end
-                    end
-                    lastToolCheck = currentTime
-                end
-                
-                local effectiveSpeed = Config.speed * FARM_CONFIG.FAST_MULTIPLIER
-                farm(math.ceil(effectiveSpeed))
-                task.wait(FARM_CONFIG.DELAY)
-            end
-        end)
-        notification("Fast farm resumed after respawn", 2, "success")
-    end
-    
-    -- Restart slow farm if it was active
-    if State.slowFarm and not State.coroutines.slowFarm then
-        State.coroutines.slowFarm = task.spawn(function()
-            local lastToolCheck = 0
-            while State.slowFarm do
-                if not player.Character then
-                    task.wait(0.5)
-                    continue
-                end
-                
-                local currentTime = time()
-                if currentTime - lastToolCheck > 1 then
-                    local toolCount = updateToolCache(player)
-                    if toolCount == 0 then
-                        local remote = workspace:FindFirstChild("load") and workspace.load:FindFirstChild("RemoteEvent")
-                        if remote then
-                            pcall(function() remote:FireServer() end)
-                            task.wait(0.15)
-                            updateToolCache(player)
-                        end
-                    end
-                    lastToolCheck = currentTime
-                end
-                
-                local effectiveSpeed = Config.speed * FARM_CONFIG.SLOW_MULTIPLIER
-                farm(math.ceil(effectiveSpeed))
-                task.wait(FARM_CONFIG.DELAY)
-            end
-        end)
-        notification("Slow farm resumed after respawn", 2, "success")
-    end
-end
-
 local function onChar(char)
     if not char then return end
     updateToolCache(player)
     
-    -- Reconnect tool monitoring
-    char.ChildAdded:Connect(function()
-        updateToolCache(player)
-    end)
-    char.ChildRemoved:Connect(function()
-        updateToolCache(player)
-    end)
+    char.ChildAdded:Connect(function() updateToolCache(player) end)
+    char.ChildRemoved:Connect(function() updateToolCache(player) end)
+    
     local backpack = player:WaitForChild("Backpack")
-    backpack.ChildAdded:Connect(function()
-        updateToolCache(player)
-    end)
-    backpack.ChildRemoved:Connect(function()
-        updateToolCache(player)
-    end)
+    backpack.ChildAdded:Connect(function() updateToolCache(player) end)
+    backpack.ChildRemoved:Connect(function() updateToolCache(player) end)
     
     local h = char:WaitForChild("Humanoid", 5)
     if h then
         h.WalkSpeed = State.speedHack and (Config.flySpeed or 50) or Config.walkSpeed
         h.JumpPower = Config.jumpPower
        
-        -- Restart reverse damage if it was active
         if State.reverseDmg then
             task.wait(0.5)
             setupReverseDamage()
@@ -2928,7 +2854,6 @@ local function onChar(char)
             end)
         end
        
-        -- Restart god mode if it was active
         if State.godMode then
             task.spawn(function()
                 task.wait(0.5)
@@ -2936,13 +2861,11 @@ local function onChar(char)
             end)
         end
         
-        -- IMPORTANT: Restart farming after respawn
-        task.spawn(restartFarmingAfterRespawn)
+        -- Farming connections persist automatically - no restart needed
     end
 end
-if player.Character then
-    onChar(player.Character)
-end
+
+if player.Character then onChar(player.Character) end
 player.CharacterAdded:Connect(onChar)
 table.insert(Data.adminPlayers, player.Name)
 Stats.sessionStartTime = time()
