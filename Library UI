@@ -84,73 +84,329 @@ local function MakeDraggable(topbarobject, object)
     end)
 end
 
--- Enhanced Loading Sequence
+-- Ultra Enhanced Loading Sequence (Demon Hub Style)
 function Library:LoadSequence()
     local LoaderGui = Instance.new("ScreenGui")
     LoaderGui.Name = "DemonHub_Loader"
     LoaderGui.Parent = CoreGui
     LoaderGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+    -- Background with gradient
     local BG = Instance.new("Frame")
     BG.Size = UDim2.new(1, 0, 1, 0)
-    BG.BackgroundColor3 = Color3.new(0, 0, 0)
+    BG.BackgroundColor3 = Color3.fromRGB(10, 0, 5)
     BG.BorderSizePixel = 0
     BG.Parent = LoaderGui
 
+    -- Gradient overlay
+    local BGGradient = Instance.new("UIGradient")
+    BGGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 0, 10)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(40, 0, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 0, 10))
+    })
+    BGGradient.Rotation = 45
+    BGGradient.Parent = BG
+
+    -- Animated gradient
+    task.spawn(function()
+        while LoaderGui.Parent do
+            for i = 0, 360, 2 do
+                if not LoaderGui.Parent then break end
+                BGGradient.Rotation = i
+                task.wait(0.03)
+            end
+        end
+    end)
+
+    -- Particle container
+    local ParticleContainer = Instance.new("Frame")
+    ParticleContainer.Size = UDim2.new(1, 0, 1, 0)
+    ParticleContainer.BackgroundTransparency = 1
+    ParticleContainer.Parent = BG
+
+    -- Create floating particles
+    for i = 1, 30 do
+        local Particle = Instance.new("Frame")
+        Particle.Size = UDim2.new(0, math.random(2, 6), 0, math.random(2, 6))
+        Particle.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(0, 100) / 100, 0)
+        Particle.BackgroundColor3 = Color3.fromRGB(255, math.random(50, 100), math.random(100, 150))
+        Particle.BackgroundTransparency = math.random(30, 70) / 100
+        Particle.BorderSizePixel = 0
+        Particle.Parent = ParticleContainer
+
+        local ParticleCorner = Instance.new("UICorner")
+        ParticleCorner.CornerRadius = UDim.new(1, 0)
+        ParticleCorner.Parent = Particle
+
+        -- Animate particles
+        task.spawn(function()
+            while LoaderGui.Parent do
+                local randomY = math.random(-50, 50)
+                local randomX = math.random(-30, 30)
+                TweenService:Create(Particle, TweenInfo.new(math.random(20, 40) / 10, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+                    Position = Particle.Position + UDim2.new(0, randomX, 0, randomY)
+                }):Play()
+                task.wait(math.random(10, 30) / 10)
+            end
+        end)
+    end
+
+    -- Main container
     local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(0, 300, 0, 300)
+    Container.Size = UDim2.new(0, 400, 0, 400)
     Container.Position = UDim2.new(0.5, 0, 0.5, 0)
     Container.AnchorPoint = Vector2.new(0.5, 0.5)
     Container.BackgroundTransparency = 1
     Container.Parent = BG
 
-    -- Outer Ring
-    local OuterRing = Instance.new("ImageLabel")
-    OuterRing.Size = UDim2.new(0, 180, 0, 180)
-    OuterRing.Position = UDim2.new(0.5, 0, 0.5, 0)
-    OuterRing.AnchorPoint = Vector2.new(0.5, 0.5)
-    OuterRing.Image = "rbxassetid://12437341355"
-    OuterRing.ImageColor3 = UIConfig.AccentColor
-    OuterRing.BackgroundTransparency = 1
-    OuterRing.ImageTransparency = 0.3
-    OuterRing.Parent = Container
+    -- Logo/Icon container with glow
+    local LogoContainer = Instance.new("Frame")
+    LogoContainer.Size = UDim2.new(0, 200, 0, 200)
+    LogoContainer.Position = UDim2.new(0.5, 0, 0.5, -50)
+    LogoContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+    LogoContainer.BackgroundTransparency = 1
+    LogoContainer.Parent = Container
 
-    -- Inner Ring
+    -- Outer glow ring 1
+    local GlowRing1 = Instance.new("ImageLabel")
+    GlowRing1.Size = UDim2.new(0, 240, 0, 240)
+    GlowRing1.Position = UDim2.new(0.5, 0, 0.5, 0)
+    GlowRing1.AnchorPoint = Vector2.new(0.5, 0.5)
+    GlowRing1.Image = "rbxassetid://12437341355"
+    GlowRing1.ImageColor3 = Color3.fromRGB(255, 50, 100)
+    GlowRing1.BackgroundTransparency = 1
+    GlowRing1.ImageTransparency = 0.4
+    GlowRing1.Parent = LogoContainer
+
+    -- Outer glow ring 2
+    local GlowRing2 = Instance.new("ImageLabel")
+    GlowRing2.Size = UDim2.new(0, 200, 0, 200)
+    GlowRing2.Position = UDim2.new(0.5, 0, 0.5, 0)
+    GlowRing2.AnchorPoint = Vector2.new(0.5, 0.5)
+    GlowRing2.Image = "rbxassetid://12437341355"
+    GlowRing2.ImageColor3 = Color3.fromRGB(220, 20, 60)
+    GlowRing2.BackgroundTransparency = 1
+    GlowRing2.ImageTransparency = 0.3
+    GlowRing2.Parent = LogoContainer
+
+    -- Inner ring
     local InnerRing = Instance.new("ImageLabel")
-    InnerRing.Size = UDim2.new(0, 140, 0, 140)
+    InnerRing.Size = UDim2.new(0, 160, 0, 160)
     InnerRing.Position = UDim2.new(0.5, 0, 0.5, 0)
     InnerRing.AnchorPoint = Vector2.new(0.5, 0.5)
     InnerRing.Image = "rbxassetid://12437341355"
-    InnerRing.ImageColor3 = UIConfig.AccentColor
+    InnerRing.ImageColor3 = Color3.fromRGB(255, 0, 100)
     InnerRing.BackgroundTransparency = 1
-    InnerRing.Parent = Container
+    InnerRing.Parent = LogoContainer
 
-    -- Loading Text
-    local LoadText = Instance.new("TextLabel")
-    LoadText.Size = UDim2.new(1, 0, 0, 30)
-    LoadText.Position = UDim2.new(0, 0, 1, 20)
-    LoadText.BackgroundTransparency = 1
-    LoadText.Font = UIConfig.HeaderFont
-    LoadText.Text = "DEMON HUB"
-    LoadText.TextColor3 = UIConfig.AccentColor
-    LoadText.TextSize = 20
-    LoadText.Parent = Container
+    -- Center demon icon/logo
+    local DemonIcon = Instance.new("Frame")
+    DemonIcon.Size = UDim2.new(0, 100, 0, 100)
+    DemonIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    DemonIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+    DemonIcon.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+    DemonIcon.BorderSizePixel = 0
+    DemonIcon.Parent = LogoContainer
 
-    -- Animated Rotation
+    local IconCorner = Instance.new("UICorner")
+    IconCorner.CornerRadius = UDim.new(1, 0)
+    IconCorner.Parent = DemonIcon
+
+    -- D Letter
+    local DLetter = Instance.new("TextLabel")
+    DLetter.Size = UDim2.new(1, 0, 1, 0)
+    DLetter.BackgroundTransparency = 1
+    DLetter.Font = Enum.Font.GothamBold
+    DLetter.Text = "D"
+    DLetter.TextColor3 = Color3.new(1, 1, 1)
+    DLetter.TextSize = 60
+    DLetter.Parent = DemonIcon
+
+    -- Pulsing animation for icon
+    TweenService:Create(DemonIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Size = UDim2.new(0, 110, 0, 110)
+    }):Play()
+
+    -- Title text with gradient
+    local TitleFrame = Instance.new("Frame")
+    TitleFrame.Size = UDim2.new(1, 0, 0, 100)
+    TitleFrame.Position = UDim2.new(0, 0, 1, 70)
+    TitleFrame.BackgroundTransparency = 1
+    TitleFrame.Parent = Container
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 45)
+    Title.Position = UDim2.new(0, 0, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = "DEMON HUB"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 38
+    Title.TextStrokeTransparency = 0.5
+    Title.TextStrokeColor3 = Color3.fromRGB(220, 20, 60)
+    Title.Parent = TitleFrame
+
+    local TitleGradient = Instance.new("UIGradient")
+    TitleGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 100, 150)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+    })
+    TitleGradient.Parent = Title
+
+    -- Animate title gradient
+    task.spawn(function()
+        while LoaderGui.Parent do
+            for i = 0, 360, 5 do
+                if not LoaderGui.Parent then break end
+                TitleGradient.Rotation = i
+                task.wait(0.03)
+            end
+        end
+    end)
+
+    -- Subtitle
+    local Subtitle = Instance.new("TextLabel")
+    Subtitle.Size = UDim2.new(1, 0, 0, 20)
+    Subtitle.Position = UDim2.new(0, 0, 0, 48)
+    Subtitle.BackgroundTransparency = 1
+    Subtitle.Font = Enum.Font.Gotham
+    Subtitle.Text = "V5.0 ULTRA EDITION"
+    Subtitle.TextColor3 = Color3.fromRGB(255, 100, 150)
+    Subtitle.TextSize = 14
+    Subtitle.Parent = TitleFrame
+
+    -- Loading bar container
+    local LoadBarContainer = Instance.new("Frame")
+    LoadBarContainer.Size = UDim2.new(0, 300, 0, 6)
+    LoadBarContainer.Position = UDim2.new(0.5, 0, 1, 130)
+    LoadBarContainer.AnchorPoint = Vector2.new(0.5, 0)
+    LoadBarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    LoadBarContainer.BorderSizePixel = 0
+    LoadBarContainer.Parent = Container
+
+    local LoadBarCorner = Instance.new("UICorner")
+    LoadBarCorner.CornerRadius = UDim.new(1, 0)
+    LoadBarCorner.Parent = LoadBarContainer
+
+    -- Loading bar fill
+    local LoadBar = Instance.new("Frame")
+    LoadBar.Size = UDim2.new(0, 0, 1, 0)
+    LoadBar.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+    LoadBar.BorderSizePixel = 0
+    LoadBar.Parent = LoadBarContainer
+
+    local LoadBarFillCorner = Instance.new("UICorner")
+    LoadBarFillCorner.CornerRadius = UDim.new(1, 0)
+    LoadBarFillCorner.Parent = LoadBar
+
+    -- Loading bar gradient
+    local LoadBarGradient = Instance.new("UIGradient")
+    LoadBarGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 20, 60)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 100, 150)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 20, 60))
+    })
+    LoadBarGradient.Parent = LoadBar
+
+    -- Animate loading bar gradient
+    task.spawn(function()
+        while LoaderGui.Parent do
+            for i = 0, 360, 10 do
+                if not LoaderGui.Parent then break end
+                LoadBarGradient.Rotation = i
+                task.wait(0.05)
+            end
+        end
+    end)
+
+    -- Loading percentage
+    local LoadPercent = Instance.new("TextLabel")
+    LoadPercent.Size = UDim2.new(1, 0, 0, 18)
+    LoadPercent.Position = UDim2.new(0, 0, 1, 12)
+    LoadPercent.BackgroundTransparency = 1
+    LoadPercent.Font = Enum.Font.GothamBold
+    LoadPercent.Text = "0%"
+    LoadPercent.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LoadPercent.TextSize = 13
+    LoadPercent.Parent = LoadBarContainer
+
+    -- Status text
+    local StatusText = Instance.new("TextLabel")
+    StatusText.Size = UDim2.new(1, 0, 0, 18)
+    StatusText.Position = UDim2.new(0, 0, 1, 165)
+    StatusText.BackgroundTransparency = 1
+    StatusText.Font = Enum.Font.Gotham
+    StatusText.Text = "Initializing..."
+    StatusText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    StatusText.TextSize = 12
+    StatusText.Parent = Container
+
+    -- Rotating animations
     task.spawn(function()
         while LoaderGui.Parent do 
-            OuterRing.Rotation -= 3
-            InnerRing.Rotation += 5
+            GlowRing1.Rotation -= 2
+            GlowRing2.Rotation += 3
+            InnerRing.Rotation -= 4
             task.wait()
         end
     end)
 
+    -- Scale animations
+    TweenService:Create(GlowRing1, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Size = UDim2.new(0, 260, 0, 260),
+        ImageTransparency = 0.7
+    }):Play()
+
+    TweenService:Create(GlowRing2, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Size = UDim2.new(0, 220, 0, 220),
+        ImageTransparency = 0.6
+    }):Play()
+
+    -- Loading sequence with status updates
+    local loadingSteps = {
+        {percent = 20, text = "Loading modules..."},
+        {percent = 40, text = "Initializing UI..."},
+        {percent = 60, text = "Loading features..."},
+        {percent = 80, text = "Finalizing setup..."},
+        {percent = 100, text = "Complete!"}
+    }
+
+    task.spawn(function()
+        for _, step in ipairs(loadingSteps) do
+            TweenService:Create(LoadBar, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(step.percent / 100, 0, 1, 0)
+            }):Play()
+            
+            for i = tonumber(LoadPercent.Text:sub(1, -2)) or 0, step.percent do
+                LoadPercent.Text = i .. "%"
+                task.wait(0.02)
+            end
+            
+            StatusText.Text = step.text
+            task.wait(0.5)
+        end
+    end)
+
     -- Fade out animation
-    task.wait(2.5)
+    task.wait(3)
+    
+    -- Dramatic exit
+    TweenService:Create(Container, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Position = UDim2.new(0.5, 0, -0.5, 0)
+    }):Play()
+    
     TweenService:Create(BG, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(OuterRing, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {ImageTransparency = 1}):Play()
-    TweenService:Create(InnerRing, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {ImageTransparency = 1}):Play()
-    TweenService:Create(LoadText, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {TextTransparency = 1}):Play()
+    TweenService:Create(BGGradient, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {Offset = Vector2.new(0, -2)}):Play()
+    
+    for _, particle in pairs(ParticleContainer:GetChildren()) do
+        TweenService:Create(particle, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {
+            BackgroundTransparency = 1,
+            Position = particle.Position + UDim2.new(0, 0, 0, -100)
+        }):Play()
+    end
+    
     task.wait(0.8)
     LoaderGui:Destroy()
 end
