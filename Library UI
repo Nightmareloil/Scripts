@@ -386,7 +386,7 @@ function library:CreateWindow(title)
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = Colors.Background,
         Active = true,
-        ClipsDescendants = false,
+        ClipsDescendants = true,
         Parent = screen
     })
     create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = mainFrame})
@@ -501,6 +501,86 @@ function library:CreateWindow(title)
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
+        end
+    end)
+
+    -- Resize Handle
+    local MIN_SIZE = Vector2.new(520, 400)
+    local resizeHandle = create("Frame", {
+        Name = "ResizeHandle",
+        Position = UDim2.new(1, 0, 1, 0),
+        Size = UDim2.new(0, 20, 0, 20),
+        AnchorPoint = Vector2.new(1, 1),
+        BackgroundTransparency = 1,
+        ZIndex = 100,
+        Parent = mainFrame
+    })
+
+    -- Resize indicator lines
+    local line1 = create("Frame", {
+        BackgroundColor3 = Colors.Stroke,
+        Size = UDim2.new(0, 10, 0, 2),
+        Position = UDim2.new(1, -10, 1, -4),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Rotation = -45,
+        BorderSizePixel = 0,
+        Parent = resizeHandle
+    })
+    create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = line1})
+
+    local line2 = create("Frame", {
+        BackgroundColor3 = Colors.Stroke,
+        Size = UDim2.new(0, 14, 0, 2),
+        Position = UDim2.new(1, -8, 1, -8),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Rotation = -45,
+        BorderSizePixel = 0,
+        Parent = resizeHandle
+    })
+    create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = line2})
+
+    local resizing = false
+    local resizeStart, sizeStart, posStart
+    
+    resizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            resizing = true
+            playSound("Slide", 0.1)
+            resizeStart = UserInputService:GetMouseLocation()
+            sizeStart = mainFrame.AbsoluteSize
+            posStart = mainFrame.AbsolutePosition
+            
+            -- Change anchor to top-left for resizing
+            mainFrame.AnchorPoint = Vector2.new(0, 0)
+            mainFrame.Position = UDim2.new(0, posStart.X, 0, posStart.Y)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = UserInputService:GetMouseLocation() - resizeStart
+            local newWidth = math.max(sizeStart.X + delta.X, MIN_SIZE.X)
+            local newHeight = math.max(sizeStart.Y + delta.Y, MIN_SIZE.Y)
+            mainFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if resizing then
+                resizing = false
+                -- Restore center anchor
+                local viewport = workspace.CurrentCamera.ViewportSize
+                local currentSize = mainFrame.AbsoluteSize
+                local currentPos = mainFrame.AbsolutePosition
+                local centerX = currentPos.X + currentSize.X / 2
+                local centerY = currentPos.Y + currentSize.Y / 2
+                local offsetX = centerX - viewport.X / 2
+                local offsetY = centerY - viewport.Y / 2
+                
+                mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+                mainFrame.Position = UDim2.new(0.5, offsetX, 0.5, offsetY)
+            end
         end
     end)
 
@@ -932,19 +1012,48 @@ function library:CreateWindow(title)
             end
         end
 
-        function tab:CreateLabel(text)
+        function tab:CreateLabel(title, description)
+            -- If description is provided, create a taller label with both title and description
+            local hasDescription = description and description ~= ""
+            local height = hasDescription and 60 or 42
+            
             local label = create("TextLabel", {
-                Text = " " .. text,
+                Text = hasDescription and (" " .. title) or (" " .. title),
                 Font = Enum.Font.GothamSemibold,
                 TextSize = 14,
                 TextColor3 = Colors.Text,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Size = UDim2.new(1, 0, 0, 42),
+                TextYAlignment = hasDescription and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center,
+                Size = UDim2.new(1, 0, 0, height),
                 BackgroundColor3 = Colors.ElementDark,
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = label})
             create("UIStroke", {Color = Colors.Stroke, Thickness = 1.2, Transparency = 0.5, Parent = label})
+            
+            if hasDescription then
+                create("UIPadding", {
+                    PaddingTop = UDim.new(0, 6),
+                    PaddingLeft = UDim.new(0, 4),
+                    Parent = label
+                })
+                
+                local descLabel = create("TextLabel", {
+                    Text = " " .. description,
+                    Font = Enum.Font.GothamMedium,
+                    TextSize = 13,
+                    TextColor3 = Colors.TextDim,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Position = UDim2.new(0, 0, 0, 24),
+                    Size = UDim2.new(1, -8, 0, 30),
+                    TextWrapped = true,
+                    BackgroundTransparency = 1,
+                    Parent = label
+                })
+                return {Label = label, Description = descLabel}
+            end
+            
+            return {Label = label}
         end
 
         function tab:CreateTextbox(text, callback, placeholder)
@@ -1121,3 +1230,4 @@ function library:CreateWindow(title)
 end
 
 return library
+
