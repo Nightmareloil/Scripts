@@ -391,35 +391,6 @@ function library:CreateWindow(title)
     })
     create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = mainFrame})
 
-    -- Fixed outer stroke
-    create("UIStroke", {
-        Color = Colors.Accent,
-        Thickness = 2,
-        Transparency = 0.4,
-        Parent = mainFrame
-    })
-
-    -- Glow effect
-    local glow = create("Frame", {
-        Size = UDim2.new(1, 60, 1, 60),
-        Position = UDim2.new(0.5, -30, 0.5, -30),
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Colors.Accent,
-        BackgroundTransparency = 0.9,
-        ZIndex = 0,
-        Parent = mainFrame
-    })
-    create("UICorner", {CornerRadius = UDim.new(0, 18), Parent = glow})
-
-    task.spawn(function()
-        while screen.Parent do
-            TweenService:Create(glow, TweenInfo.new(2.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-                BackgroundTransparency = 0.95
-            }):Play()
-            task.wait(4.6)
-        end
-    end)
-
     -- Top Bar
     local topBar = create("Frame", {
         Name = "TopBar",
@@ -974,6 +945,173 @@ function library:CreateWindow(title)
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = label})
             create("UIStroke", {Color = Colors.Stroke, Thickness = 1.2, Transparency = 0.5, Parent = label})
+        end
+
+        function tab:CreateTextbox(text, callback, placeholder)
+            callback = callback or function() end
+            placeholder = placeholder or "Enter value..."
+            
+            local container = create("TextLabel", {
+                Text = " " .. text,
+                Font = Enum.Font.GothamSemibold,
+                TextSize = 14,
+                TextColor3 = Colors.Text,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2.new(1, 0, 0, 42),
+                BackgroundColor3 = Colors.ElementDark,
+                Parent = tabContent
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
+            create("UIStroke", {Color = Colors.Stroke, Thickness = 1.2, Transparency = 0.5, Parent = container})
+
+            local textbox = create("TextBox", {
+                Text = "",
+                PlaceholderText = placeholder,
+                PlaceholderColor3 = Color3.fromRGB(150, 130, 130),
+                Font = Enum.Font.GothamMedium,
+                TextSize = 13,
+                TextColor3 = Colors.Text,
+                Position = UDim2.new(1, -8, 0.5, 0),
+                AnchorPoint = Vector2.new(1, 0.5),
+                Size = UDim2.new(0, 140, 0, 32),
+                BackgroundColor3 = Colors.Element,
+                ClearTextOnFocus = false,
+                Parent = container
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = textbox})
+            create("UIStroke", {Color = Colors.Accent, Thickness = 1.2, Transparency = 0.6, Parent = textbox})
+
+            textbox.FocusLost:Connect(function(enter)
+                if enter then
+                    playSound("Click", 0.16)
+                    callback(textbox.Text)
+                end
+            end)
+        end
+
+        function tab:CreateKeybind(text, defaultKey, callback)
+            defaultKey = defaultKey or "..."
+            callback = callback or function() end
+            local currentKey = defaultKey
+            local settingKey = false
+
+            local container = create("TextLabel", {
+                Text = " " .. text,
+                Font = Enum.Font.GothamSemibold,
+                TextSize = 14,
+                TextColor3 = Colors.Text,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2.new(1, 0, 0, 42),
+                BackgroundColor3 = Colors.ElementDark,
+                Parent = tabContent
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
+            create("UIStroke", {Color = Colors.Stroke, Thickness = 1.2, Transparency = 0.5, Parent = container})
+
+            local keyButton = create("TextButton", {
+                Text = currentKey,
+                Font = Enum.Font.GothamMedium,
+                TextSize = 13,
+                TextColor3 = Colors.Text,
+                Position = UDim2.new(1, -8, 0.5, 0),
+                AnchorPoint = Vector2.new(1, 0.5),
+                Size = UDim2.new(0, 100, 0, 32),
+                BackgroundColor3 = Colors.Element,
+                AutoButtonColor = false,
+                Parent = container
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = keyButton})
+            create("UIStroke", {Color = Colors.Accent, Thickness = 1.2, Transparency = 0.6, Parent = keyButton})
+
+            addHover(keyButton, Colors.Element)
+            keyButton.MouseButton1Click:Connect(function()
+                settingKey = true
+                keyButton.Text = "..."
+                playSound("Click", 0.13)
+            end)
+
+            keyButton.MouseButton2Click:Connect(function()
+                settingKey = false
+                currentKey = "..."
+                keyButton.Text = currentKey
+                playSound("Click", 0.11)
+            end)
+
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if not gameProcessed then
+                    if settingKey then
+                        currentKey = input.KeyCode.Name
+                        keyButton.Text = currentKey
+                        settingKey = false
+                        playSound("Click", 0.16)
+                    elseif input.KeyCode.Name == currentKey and currentKey ~= "..." then
+                        callback()
+                    end
+                end
+            end)
+        end
+
+        function tab:CreateParagraph(title, content)
+            local container = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BackgroundColor3 = Colors.ElementDark,
+                Parent = tabContent
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
+            create("UIStroke", {Color = Colors.Stroke, Thickness = 1.2, Transparency = 0.5, Parent = container})
+            create("UIPadding", {
+                PaddingTop = UDim.new(0, 10),
+                PaddingLeft = UDim.new(0, 10),
+                PaddingRight = UDim.new(0, 10),
+                PaddingBottom = UDim.new(0, 10),
+                Parent = container
+            })
+
+            local titleLabel = create("TextLabel", {
+                Text = title,
+                Font = Enum.Font.GothamBold,
+                TextSize = 15,
+                TextColor3 = Colors.Text,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Size = UDim2.new(1, 0, 0, 20),
+                BackgroundTransparency = 1,
+                Parent = container
+            })
+
+            local contentLabel = create("TextLabel", {
+                Text = content,
+                Font = Enum.Font.GothamMedium,
+                TextSize = 13,
+                TextColor3 = Colors.TextDim,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                TextWrapped = true,
+                Position = UDim2.new(0, 0, 0, 24),
+                Size = UDim2.new(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BackgroundTransparency = 1,
+                Parent = container
+            })
+        end
+
+        function tab:CreateSeparator()
+            local sep = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 2),
+                BackgroundColor3 = Colors.Stroke,
+                BackgroundTransparency = 0.3,
+                BorderSizePixel = 0,
+                Parent = tabContent
+            })
+            create("UIGradient", {
+                Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 60, 60)),
+                    ColorSequenceKeypoint.new(0.5, Colors.Accent),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 60, 60))
+                }),
+                Parent = sep
+            })
         end
 
         return tab
