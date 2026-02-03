@@ -378,6 +378,36 @@ function library:CreateWindow(title)
         for _, func in pairs(destructionHooks) do pcall(func) end
     end
 
+    -- Set Accent Color function for theme customization
+    function window:SetAccentColor(newColor)
+        Colors.Accent = newColor
+        
+        -- Update all accent-colored elements in the UI
+        for _, descendant in ipairs(screen:GetDescendants()) do
+            pcall(function()
+                if descendant:IsA("ScrollingFrame") and descendant.Name ~= "MobileToggle" then
+                    descendant.ScrollBarImageColor3 = newColor
+                elseif descendant:IsA("UIStroke") and descendant.Parent and descendant.Parent:IsA("TextButton") then
+                    -- Update strokes on selected tabs
+                    if descendant.Parent.BackgroundColor3 == Colors.Hover then
+                        descendant.Color = newColor
+                    end
+                elseif descendant.Name == "topAccent" then
+                    descendant.BackgroundColor3 = newColor
+                end
+            end)
+        end
+        
+        -- Update theme colors
+        local h, s, v = newColor:ToHSV()
+        Colors.Secondary = Color3.fromHSV(h, math.min(s * 1.2, 1), v * 0.6)
+        Colors.Stroke = Color3.fromRGB(
+            math.max(newColor.R * 255 * 0.31, 20),
+            math.max(newColor.G * 255 * 0.31, 5),
+            math.max(newColor.B * 255 * 0.31, 5)
+        )
+    end
+
     -- Main Frame with fixed rounded corners
     local mainFrame = create("Frame", {
         Name = "MainFrame",
@@ -903,6 +933,8 @@ function library:CreateWindow(title)
 
         function tab:CreateDropdown(text, options, callback)
             callback = callback or function() end
+            local dropdownObj = {}
+            
             local container = create("Frame", {
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundTransparency = 1,
@@ -968,21 +1000,41 @@ function library:CreateWindow(title)
             create("UIPadding", {PaddingTop = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = optionsFrame})
 
             local isOpen = false
-            addHover(header, Colors.ElementDark)
-            header.MouseButton1Click:Connect(function()
-                isOpen = not isOpen
-                playSound(isOpen and "Open" or "Close", 0.13)
-                optionsFrame.Visible = isOpen
-                
+            
+            local function closeDropdown()
+                isOpen = false
+                optionsFrame.Visible = false
                 TweenService:Create(container, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
-                    Size = isOpen and UDim2.new(1, 0, 0, 170) or UDim2.new(1, 0, 0, 42)
+                    Size = UDim2.new(1, 0, 0, 42)
                 }):Play()
                 TweenService:Create(arrow, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
-                    Rotation = isOpen and 180 or 0
+                    Rotation = 0
                 }):Play()
+            end
+            
+            local function openDropdown()
+                isOpen = true
+                optionsFrame.Visible = true
+                TweenService:Create(container, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
+                    Size = UDim2.new(1, 0, 0, 170)
+                }):Play()
+                TweenService:Create(arrow, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
+                    Rotation = 180
+                }):Play()
+            end
+            
+            addHover(header, Colors.ElementDark)
+            header.MouseButton1Click:Connect(function()
+                if isOpen then
+                    playSound("Close", 0.13)
+                    closeDropdown()
+                else
+                    playSound("Open", 0.13)
+                    openDropdown()
+                end
             end)
 
-            for _, option in ipairs(options) do
+            local function addOption(option)
                 local optionBtn = create("TextButton", {
                     Text = " " .. option,
                     Font = Enum.Font.GothamMedium,
@@ -998,18 +1050,49 @@ function library:CreateWindow(title)
                 
                 addHover(optionBtn, Colors.Element)
                 optionBtn.MouseButton1Click:Connect(function()
-                    isOpen = false
-                    optionsFrame.Visible = false
-                    TweenService:Create(container, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
-                        Size = UDim2.new(1, 0, 0, 42)
-                    }):Play()
-                    TweenService:Create(arrow, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
-                        Rotation = 0
-                    }):Play()
+                    playSound("Click", 0.16)
+                    closeDropdown()
                     selected.Text = option
                     callback(option)
                 end)
             end
+
+            -- SetOptions method for dynamic updating (used by player dropdown)
+            function dropdownObj:SetOptions(newOptions)
+                -- Clear existing options
+                for _, child in ipairs(optionsFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child:Destroy()
+                    end
+                end
+                
+                -- Check if current selection still exists
+                local currentSelection = selected.Text
+                local selectionExists = false
+                for _, opt in ipairs(newOptions) do
+                    if opt == currentSelection then
+                        selectionExists = true
+                        break
+                    end
+                end
+                
+                -- Clear selection if it no longer exists
+                if not selectionExists then
+                    selected.Text = ""
+                end
+                
+                -- Add new options
+                for _, option in ipairs(newOptions) do
+                    addOption(option)
+                end
+            end
+
+            -- Add initial options
+            for _, option in ipairs(options) do
+                addOption(option)
+            end
+
+            return dropdownObj
         end
 
         function tab:CreateLabel(title, description)
@@ -1203,6 +1286,22 @@ function library:CreateWindow(title)
                 BackgroundTransparency = 1,
                 Parent = container
             })
+
+            -- Return table with Title and Content properties so script can update them
+            local paragraphObj = {
+                Title = titleLabel,
+                Content = contentLabel,
+                Container = container
+            }
+            
+            -- Add Destroy method
+            function paragraphObj:Destroy()
+                if container and container.Parent then
+                    container:Destroy()
+                end
+            end
+            
+            return paragraphObj
         end
 
         function tab:CreateSeparator()
@@ -1221,6 +1320,159 @@ function library:CreateWindow(title)
                 }),
                 Parent = sep
             })
+        end
+
+        function tab:CreateColorPicker(text, defaultColor, callback)
+            callback = callback or function() end
+            local colorPicker = {}
+
+            local container = create("TextButton", {
+                Text = " " .. text,
+                Font = Enum.Font.GothamSemibold,
+                TextSize = 14,
+                TextColor3 = Colors.Text,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Size = UDim2.new(1, 0, 0, 42),
+                BackgroundColor3 = Colors.ElementDark,
+                AutoButtonColor = false,
+                Parent = tabContent
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
+            create("UIStroke", {Color = Colors.Stroke, Thickness = 1.2, Transparency = 0.5, Parent = container})
+
+            local colorDisplay = create("Frame", {
+                Size = UDim2.new(0, 38, 0, 28),
+                Position = UDim2.new(1, -46, 0.5, -14),
+                BackgroundColor3 = defaultColor or Colors.Accent,
+                Parent = container
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = colorDisplay})
+            create("UIStroke", {Color = Colors.Text, Thickness = 2, Transparency = 0.3, Parent = colorDisplay})
+
+            local colorPalette = {
+                Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 100, 200), Color3.fromRGB(220, 20, 60),
+                Color3.fromRGB(255, 140, 0), Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 255, 0),
+                Color3.fromRGB(50, 255, 50), Color3.fromRGB(0, 200, 80), Color3.fromRGB(0, 255, 180),
+                Color3.fromRGB(0, 191, 255), Color3.fromRGB(65, 105, 225), Color3.fromRGB(138, 43, 226),
+                Color3.fromRGB(147, 112, 219), Color3.fromRGB(255, 20, 147), Color3.fromRGB(199, 21, 133),
+                Color3.fromRGB(255, 255, 255), Color3.fromRGB(220, 220, 220), Color3.fromRGB(140, 140, 150),
+                Color3.fromRGB(90, 90, 100), Color3.fromRGB(50, 50, 60), Color3.fromRGB(20, 20, 30),
+                Color3.fromRGB(0, 128, 128), Color3.fromRGB(255, 69, 0), Color3.fromRGB(75, 0, 130)
+            }
+
+            local paletteFrame = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 0),
+                BackgroundColor3 = Colors.ElementDark,
+                Visible = false,
+                ClipsDescendants = true,
+                Parent = tabContent
+            })
+            create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = paletteFrame})
+            create("UIStroke", {Color = Colors.Accent, Thickness = 1.2, Transparency = 0.4, Parent = paletteFrame})
+
+            local paletteGrid = create("Frame", {
+                Size = UDim2.new(1, -20, 1, -20),
+                Position = UDim2.new(0, 10, 0, 10),
+                BackgroundTransparency = 1,
+                Parent = paletteFrame
+            })
+            create("UIGridLayout", {
+                CellSize = UDim2.new(0, 40, 0, 36),
+                CellPadding = UDim2.new(0, 6, 0, 6),
+                Parent = paletteGrid
+            })
+
+            for _, color in ipairs(colorPalette) do
+                local colorBtn = create("TextButton", {
+                    Text = "",
+                    BackgroundColor3 = color,
+                    Size = UDim2.new(0, 40, 0, 36),
+                    AutoButtonColor = false,
+                    Parent = paletteGrid
+                })
+                create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = colorBtn})
+                local colorStroke = create("UIStroke", {
+                    Color = Color3.fromRGB(110, 90, 90),
+                    Thickness = 2,
+                    Transparency = 0.4,
+                    Parent = colorBtn
+                })
+
+                colorBtn.MouseEnter:Connect(function()
+                    playSound("Hover", 0.07)
+                    TweenService:Create(colorStroke, TweenInfo.new(0.12, Enum.EasingStyle.Quint), {
+                        Thickness = 3,
+                        Color = Colors.Text,
+                        Transparency = 0.1
+                    }):Play()
+                end)
+
+                colorBtn.MouseLeave:Connect(function()
+                    TweenService:Create(colorStroke, TweenInfo.new(0.12, Enum.EasingStyle.Quint), {
+                        Thickness = 2,
+                        Color = Color3.fromRGB(110, 90, 90),
+                        Transparency = 0.4
+                    }):Play()
+                end)
+
+                colorBtn.MouseButton1Click:Connect(function()
+                    playSound("Click", 0.16)
+                    colorDisplay.BackgroundColor3 = color
+                    callback(color)
+                    paletteFrame.Visible = false
+                    TweenService:Create(paletteFrame, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
+                        Size = UDim2.new(1, 0, 0, 0)
+                    }):Play()
+                end)
+            end
+
+            local isOpen = false
+            addHover(container, Colors.ElementDark)
+            container.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                playSound(isOpen and "Open" or "Close", 0.13)
+                paletteFrame.Visible = isOpen
+                local targetSize = isOpen and UDim2.new(1, 0, 0, 200) or UDim2.new(1, 0, 0, 0)
+                TweenService:Create(paletteFrame, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
+                    Size = targetSize
+                }):Play()
+            end)
+
+            return colorPicker
+        end
+
+        function tab:CreatePlayerDropdown(text, callback)
+            local function getPlayerNames()
+                local names = {}
+                for _, player in ipairs(Players:GetPlayers()) do
+                    table.insert(names, player.Name)
+                end
+                table.sort(names)
+                return names
+            end
+
+            local dropdown = tab:CreateDropdown(text, getPlayerNames(), callback)
+
+            local function updateDropdown()
+                local currentPlayers = getPlayerNames()
+                if dropdown.SetOptions then
+                    dropdown:SetOptions(currentPlayers)
+                end
+            end
+
+            local connections = {}
+            connections.playerAdded = Players.PlayerAdded:Connect(updateDropdown)
+            connections.playerRemoving = Players.PlayerRemoving:Connect(updateDropdown)
+
+            window:OnDestroy(function()
+                for _, connection in pairs(connections) do
+                    if connection and connection.Connected then
+                        connection:Disconnect()
+                    end
+                end
+            end)
+
+            return dropdown
         end
 
         return tab
