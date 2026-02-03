@@ -461,6 +461,29 @@ function library:CreateWindow(title)
         local targetSize = isMinimized and UDim2.new(0, mainFrame.AbsoluteSize.X, 0, 50) or normalSize
         TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {Size = targetSize}):Play()
     end)
+    -- Add resize button in the middle
+    local isMaximized = false
+    local savedSize = normalSize
+    local savedPos = mainFrame.Position
+    local resizeBtn = createControlButton("□", UDim2.new(1, -86, 0.5, -18), function()
+        playSound("Toggle", 0.14)
+        isMaximized = not isMaximized
+        if isMaximized then
+            savedSize = mainFrame.Size
+            savedPos = mainFrame.Position
+            local viewport = workspace.CurrentCamera.ViewportSize
+            local maxSize = UDim2.new(0, viewport.X * 0.9, 0, viewport.Y * 0.9)
+            TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {
+                Size = maxSize,
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+        else
+            TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {
+                Size = savedSize,
+                Position = savedPos
+            }):Play()
+        end
+    end)
     -- Dragging
     local dragging, dragStart, startPos
     topBar.InputBegan:Connect(function(input)
@@ -599,9 +622,42 @@ function library:CreateWindow(title)
     create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = contentContainer})
     -- Toggle with Control key
     local opened = true
+    local animating = false
+    local function animateTransparency(targetTransparency)
+        if animating then return end
+        animating = true
+        local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quint)
+        TweenService:Create(mainFrame, tweenInfo, {BackgroundTransparency = targetTransparency}):Play()
+        for _, child in ipairs(mainFrame:GetDescendants()) do
+            pcall(function()
+                if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
+                    TweenService:Create(child, tweenInfo, {TextTransparency = targetTransparency}):Play()
+                elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
+                    TweenService:Create(child, tweenInfo, {ImageTransparency = targetTransparency}):Play()
+                elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
+                    TweenService:Create(child, tweenInfo, {BackgroundTransparency = targetTransparency}):Play()
+                elseif child:IsA("UIStroke") then
+                    TweenService:Create(child, tweenInfo, {Transparency = targetTransparency}):Play()
+                end
+            end)
+        end
+        task.wait(0.35)
+        animating = false
+        if targetTransparency == 1 then
+            mainFrame.Visible = false
+        end
+    end
     function window:Toggle()
         opened = not opened
-        mainFrame.Visible = opened
+        if opened then
+            mainFrame.Visible = true
+            mainFrame.BackgroundTransparency = 1
+            animateTransparency(0)
+            playSound("Open", 0.2)
+        else
+            animateTransparency(1)
+            playSound("Close", 0.2)
+        end
     end
     UserInputService.InputBegan:Connect(function(input)
         if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
@@ -1193,6 +1249,12 @@ function library:CreateWindow(title)
                 if container and container.Parent then
                     container:Destroy()
                 end
+            end
+           
+            -- Add Refresh method for forced updates
+            function paragraphObj:Refresh()
+                contentLabel.Size = UDim2.new(1, 0, 0, contentLabel.TextBounds.Y)
+                container.Size = UDim2.new(1, 0, 0, titleLabel.AbsoluteSize.Y + contentLabel.AbsoluteSize.Y + 40)
             end
            
             return paragraphObj
