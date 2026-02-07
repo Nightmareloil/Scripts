@@ -1,15 +1,15 @@
--- Demon Hub UI Library - Fixed & Improved
--- Fixed closing/opening animations, updated sounds, improved visual consistency
+-- Demon Hub UI Library - Fully Fixed & Modern
+-- Fixed: Toggle animations, element ordering, modern design
 
--- Sound Effect IDs (Updated & Working)
+-- Sound Effect IDs (Working)
 local SOUNDS = {
-    Hover = "rbxassetid://10066931761",      -- Working
-    Click = "rbxassetid://12221967/",        -- Updated - UI Click
-    Toggle = "rbxassetid://12221967/",       -- Updated - UI Click
-    Slide = "rbxassetid://12221967/",        -- Updated - UI Click  
-    Open = "rbxassetid://12222030/",         -- Updated - UI Open
-    Close = "rbxassetid://12222216/",        -- Updated - UI Close
-    Success = "rbxassetid://12222030/"       -- Updated - Success sound
+    Hover = "rbxassetid://10066931761",
+    Click = "rbxassetid://12221967/",
+    Toggle = "rbxassetid://12221967/",
+    Slide = "rbxassetid://12221967/",
+    Open = "rbxassetid://12222030/",
+    Close = "rbxassetid://12222216/",
+    Success = "rbxassetid://12222030/"
 }
 
 -- Cleanup old instances
@@ -381,17 +381,15 @@ function library:CreateWindow(title)
         for _, func in pairs(destructionHooks) do pcall(func) end
     end
     
-    -- Set Accent Color function for theme customization
+    -- Set Accent Color
     function window:SetAccentColor(newColor)
         Colors.Accent = newColor
         
-        -- Update all accent-colored elements in the UI
         for _, descendant in ipairs(screen:GetDescendants()) do
             pcall(function()
                 if descendant:IsA("ScrollingFrame") and descendant.Name ~= "MobileToggle" then
                     descendant.ScrollBarImageColor3 = newColor
                 elseif descendant:IsA("UIStroke") and descendant.Parent and descendant.Parent:IsA("TextButton") then
-                    -- Update strokes on selected tabs
                     if descendant.Parent.BackgroundColor3 == Colors.Hover then
                         descendant.Color = newColor
                     end
@@ -401,7 +399,6 @@ function library:CreateWindow(title)
             end)
         end
         
-        -- Update theme colors
         local h, s, v = newColor:ToHSV()
         Colors.Secondary = Color3.fromHSV(h, math.min(s * 1.2, 1), v * 0.6)
         Colors.Stroke = Color3.fromRGB(
@@ -424,7 +421,7 @@ function library:CreateWindow(title)
     })
     create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = mainFrame})
     
-    -- Drop shadow for depth
+    -- Drop shadow
     local shadow = create("ImageLabel", {
         Name = "Shadow",
         AnchorPoint = Vector2.new(0.5, 0.5),
@@ -450,7 +447,7 @@ function library:CreateWindow(title)
     })
     create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = topBar})
     
-    -- Mask to hide bottom corners
+    -- Mask bottom corners
     local topBarMask = create("Frame", {
         Position = UDim2.new(0, 0, 1, -12),
         Size = UDim2.new(1, 0, 0, 12),
@@ -522,7 +519,6 @@ function library:CreateWindow(title)
     createControlButton("×", UDim2.new(1, -42, 0.5, -18), function()
         playSound("Close", 0.2)
         
-        -- Smooth close animation
         local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
         TweenService:Create(mainFrame, tweenInfo, {
             Size = UDim2.new(0, 700, 0, 0),
@@ -544,11 +540,12 @@ function library:CreateWindow(title)
         TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = targetSize}):Play()
     end)
     
-    -- Maximize/Restore button
+    -- Maximize/Restore
     local isMaximized = false
     local savedSize = normalSize
     local savedPos = mainFrame.Position
-    local resizeBtn = createControlButton("□", UDim2.new(1, -86, 0.5, -18), function()
+    
+    createControlButton("□", UDim2.new(1, -86, 0.5, -18), function()
         playSound("Toggle", 0.14)
         isMaximized = not isMaximized
         
@@ -608,7 +605,6 @@ function library:CreateWindow(title)
         Parent = mainFrame
     })
     
-    -- Resize indicator lines
     local line1 = create("Frame", {
         BackgroundColor3 = Colors.Stroke,
         Size = UDim2.new(0, 10, 0, 2),
@@ -642,7 +638,6 @@ function library:CreateWindow(title)
             sizeStart = mainFrame.AbsoluteSize
             posStart = mainFrame.AbsolutePosition
             
-            -- Change anchor to top-left for resizing
             mainFrame.AnchorPoint = Vector2.new(0, 0)
             mainFrame.Position = UDim2.new(0, posStart.X, 0, posStart.Y)
         end
@@ -661,7 +656,6 @@ function library:CreateWindow(title)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             if resizing then
                 resizing = false
-                -- Restore center anchor
                 local viewport = workspace.CurrentCamera.ViewportSize
                 local currentSize = mainFrame.AbsoluteSize
                 local currentPos = mainFrame.AbsolutePosition
@@ -689,7 +683,6 @@ function library:CreateWindow(title)
     })
     create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = windowContainer})
     
-    -- Mask to hide top corners
     local windowMask = create("Frame", {
         Position = UDim2.new(0, 0, 0, 0),
         Size = UDim2.new(1, 0, 0, 12),
@@ -731,106 +724,83 @@ function library:CreateWindow(title)
     })
     create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = contentContainer})
     
-    -- IMPROVED Toggle with Control key
+    -- MODERN SMOOTH TOGGLE SYSTEM
     local opened = true
     local animating = false
+    local elementData = {}
     
-    -- Store original values for proper restoration
-    local originalTransparencies = {}
-    
-    local function storeOriginalTransparencies()
-        if next(originalTransparencies) ~= nil then return end -- Already stored
+    -- Scan and store all UI elements on first load
+    local function scanUIElements()
+        if next(elementData) ~= nil then return end
         
-        for _, child in ipairs(mainFrame:GetDescendants()) do
+        for _, descendant in ipairs(screen:GetDescendants()) do
             pcall(function()
-                if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                    originalTransparencies[child] = {
-                        TextTransparency = child.TextTransparency,
-                        BackgroundTransparency = child.BackgroundTransparency
-                    }
-                elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                    originalTransparencies[child] = {
-                        ImageTransparency = child.ImageTransparency,
-                        BackgroundTransparency = child.BackgroundTransparency
-                    }
-                elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
-                    originalTransparencies[child] = {
-                        BackgroundTransparency = child.BackgroundTransparency
-                    }
-                elseif child:IsA("UIStroke") then
-                    originalTransparencies[child] = {
-                        Transparency = child.Transparency
-                    }
+                local data = {}
+                
+                if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                    data.TextTransparency = descendant.TextTransparency
+                    data.BackgroundTransparency = descendant.BackgroundTransparency
+                elseif descendant:IsA("ImageLabel") or descendant:IsA("ImageButton") then
+                    data.ImageTransparency = descendant.ImageTransparency
+                    data.BackgroundTransparency = descendant.BackgroundTransparency
+                elseif descendant:IsA("Frame") or descendant:IsA("ScrollingFrame") then
+                    data.BackgroundTransparency = descendant.BackgroundTransparency
+                elseif descendant:IsA("UIStroke") then
+                    data.Transparency = descendant.Transparency
+                end
+                
+                if next(data) then
+                    elementData[descendant] = data
                 end
             end)
         end
     end
     
-    local function animateVisibility(show)
+    -- Modern fade animation
+    local function fadeUI(fadeIn)
         if animating then return end
         animating = true
         
-        if show then
+        if fadeIn then
             mainFrame.Visible = true
-            storeOriginalTransparencies()
         end
         
-        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        local tweens = {}
+        local tweenTime = 0.2
+        local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
         
-        -- Animate shadow
-        table.insert(tweens, TweenService:Create(shadow, tweenInfo, {
-            ImageTransparency = show and 0.7 or 1
-        }))
+        -- Animate shadow separately
+        TweenService:Create(shadow, tweenInfo, {
+            ImageTransparency = fadeIn and 0.7 or 1
+        }):Play()
         
-        for child, originalProps in pairs(originalTransparencies) do
-            if child and child.Parent then
+        -- Animate all stored elements
+        for element, originalData in pairs(elementData) do
+            if element and element.Parent then
                 pcall(function()
-                    local targetProps = {}
+                    local props = {}
                     
-                    if show then
-                        -- Restore to original transparency
-                        if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                            targetProps.TextTransparency = originalProps.TextTransparency
-                            targetProps.BackgroundTransparency = originalProps.BackgroundTransparency
-                        elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                            targetProps.ImageTransparency = originalProps.ImageTransparency
-                            targetProps.BackgroundTransparency = originalProps.BackgroundTransparency
-                        elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
-                            targetProps.BackgroundTransparency = originalProps.BackgroundTransparency
-                        elseif child:IsA("UIStroke") then
-                            targetProps.Transparency = originalProps.Transparency
-                        end
-                    else
-                        -- Hide completely
-                        if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                            targetProps.TextTransparency = 1
-                            targetProps.BackgroundTransparency = 1
-                        elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                            targetProps.ImageTransparency = 1
-                            targetProps.BackgroundTransparency = 1
-                        elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
-                            targetProps.BackgroundTransparency = 1
-                        elseif child:IsA("UIStroke") then
-                            targetProps.Transparency = 1
-                        end
+                    if element:IsA("TextLabel") or element:IsA("TextButton") or element:IsA("TextBox") then
+                        props.TextTransparency = fadeIn and originalData.TextTransparency or 1
+                        props.BackgroundTransparency = fadeIn and originalData.BackgroundTransparency or 1
+                    elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
+                        props.ImageTransparency = fadeIn and originalData.ImageTransparency or 1
+                        props.BackgroundTransparency = fadeIn and originalData.BackgroundTransparency or 1
+                    elseif element:IsA("Frame") or element:IsA("ScrollingFrame") then
+                        props.BackgroundTransparency = fadeIn and originalData.BackgroundTransparency or 1
+                    elseif element:IsA("UIStroke") then
+                        props.Transparency = fadeIn and originalData.Transparency or 1
                     end
                     
-                    if next(targetProps) then
-                        table.insert(tweens, TweenService:Create(child, tweenInfo, targetProps))
+                    if next(props) then
+                        TweenService:Create(element, tweenInfo, props):Play()
                     end
                 end)
             end
         end
         
-        -- Play all tweens
-        for _, tween in ipairs(tweens) do
-            tween:Play()
-        end
+        task.wait(tweenTime)
         
-        task.wait(0.25)
-        
-        if not show then
+        if not fadeIn then
             mainFrame.Visible = false
         end
         
@@ -839,20 +809,21 @@ function library:CreateWindow(title)
     
     function window:Toggle()
         opened = not opened
-        animateVisibility(opened)
+        fadeUI(opened)
         playSound(opened and "Open" or "Close", 0.2)
     end
     
-    -- Store original transparencies on first load
-    task.defer(storeOriginalTransparencies)
+    -- Scan UI after a short delay to ensure everything is loaded
+    task.delay(0.1, scanUIElements)
     
+    -- Ctrl key toggle
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not gameProcessed and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
             window:Toggle()
         end
     end)
     
-    -- Mobile toggle button
+    -- Mobile toggle
     if UserInputService.TouchEnabled then
         local mobileBtn = create("TextButton", {
             Name = "MobileToggle",
@@ -884,6 +855,7 @@ function library:CreateWindow(title)
     -- Tabs System
     local tabs = {}
     local currentTab = 1
+    local elementLayoutOrder = 0 -- Global counter for element ordering
     
     local function switchTab(id)
         currentTab = id
@@ -899,7 +871,6 @@ function library:CreateWindow(title)
                     TextColor3 = isSelected and Colors.Text or Colors.TextDim
                 }):Play()
                 
-                -- Update stroke
                 local stroke = btn:FindFirstChildOfClass("UIStroke")
                 if stroke then
                     TweenService:Create(stroke, TweenInfo.new(0.16, Enum.EasingStyle.Quint), {
@@ -929,7 +900,12 @@ function library:CreateWindow(title)
             PaddingBottom = UDim.new(0, 10),
             Parent = tabContent
         })
-        create("UIListLayout", {Padding = UDim.new(0, 8), Parent = tabContent})
+        -- CRITICAL FIX: Use LayoutOrder for proper ordering
+        create("UIListLayout", {
+            Padding = UDim.new(0, 8),
+            SortOrder = Enum.SortOrder.LayoutOrder, -- This ensures proper ordering
+            Parent = tabContent
+        })
         
         local tabButton = create("TextButton", {
             Name = "Tab" .. tabId,
@@ -955,9 +931,16 @@ function library:CreateWindow(title)
         tabButton.MouseButton1Click:Connect(function() switchTab(tabId) end)
         
         tab.Container = tabContent
+        tab.LayoutOrder = 0 -- Track layout order for this tab
         table.insert(tabs, tab)
         
-        -- Element Creation Functions
+        -- HELPER: Get next layout order
+        local function getNextLayoutOrder()
+            tab.LayoutOrder = tab.LayoutOrder + 1
+            return tab.LayoutOrder
+        end
+        
+        -- Element Creation Functions (ALL NOW USE LAYOUT ORDER)
         function tab:CreateButton(text, callback)
             local btn = create("TextButton", {
                 Text = " " .. text,
@@ -968,6 +951,7 @@ function library:CreateWindow(title)
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundColor3 = Colors.ElementDark,
                 AutoButtonColor = false,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = btn})
@@ -1000,6 +984,7 @@ function library:CreateWindow(title)
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundColor3 = Colors.ElementDark,
                 AutoButtonColor = false,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
@@ -1048,6 +1033,7 @@ function library:CreateWindow(title)
             local container = create("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = Colors.ElementDark,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
@@ -1136,6 +1122,7 @@ function library:CreateWindow(title)
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundTransparency = 1,
                 ClipsDescendants = true,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             
@@ -1255,16 +1242,13 @@ function library:CreateWindow(title)
                 end)
             end
             
-            -- SetOptions method for dynamic updating
             function dropdownObj:SetOptions(newOptions)
-                -- Clear existing options
                 for _, child in ipairs(optionsFrame:GetChildren()) do
                     if child:IsA("TextButton") then
                         child:Destroy()
                     end
                 end
                 
-                -- Check if current selection still exists
                 local currentSelection = selected.Text
                 local selectionExists = false
                 for _, opt in ipairs(newOptions) do
@@ -1274,18 +1258,15 @@ function library:CreateWindow(title)
                     end
                 end
                 
-                -- Clear selection if it no longer exists
                 if not selectionExists then
                     selected.Text = ""
                 end
                 
-                -- Add new options
                 for _, option in ipairs(newOptions) do
                     addOption(option)
                 end
             end
             
-            -- Add initial options
             for _, option in ipairs(options) do
                 addOption(option)
             end
@@ -1306,6 +1287,7 @@ function library:CreateWindow(title)
                 TextYAlignment = hasDescription and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center,
                 Size = UDim2.new(1, 0, 0, height),
                 BackgroundColor3 = Colors.ElementDark,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = label})
@@ -1348,6 +1330,7 @@ function library:CreateWindow(title)
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundColor3 = Colors.ElementDark,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
@@ -1392,6 +1375,7 @@ function library:CreateWindow(title)
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundColor3 = Colors.ElementDark,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
@@ -1446,6 +1430,7 @@ function library:CreateWindow(title)
                 Size = UDim2.new(1, 0, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = Colors.ElementDark,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
@@ -1511,6 +1496,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.Stroke,
                 BackgroundTransparency = 0.3,
                 BorderSizePixel = 0,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UIGradient", {
@@ -1536,6 +1522,7 @@ function library:CreateWindow(title)
                 Size = UDim2.new(1, 0, 0, 42),
                 BackgroundColor3 = Colors.ElementDark,
                 AutoButtonColor = false,
+                LayoutOrder = getNextLayoutOrder(), -- FIXED
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = container})
@@ -1566,6 +1553,7 @@ function library:CreateWindow(title)
                 BackgroundColor3 = Colors.ElementDark,
                 Visible = false,
                 ClipsDescendants = true,
+                LayoutOrder = getNextLayoutOrder(), -- Add to layout
                 Parent = tabContent
             })
             create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = paletteFrame})
