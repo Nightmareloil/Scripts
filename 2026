@@ -1,11 +1,11 @@
 local Players=game:GetService("Players")
 local RunService=game:GetService("RunService")
 local SRC=[==[local RunService=game:GetService("RunService")
-local Children=15000000000000
+local Children=1500000
 local NestedPerChild=0
 local FieldsPerChild=0
 local FireBurst=1
-local FrameDelay=0.1
+local FrameDelay=0.125
 local FieldSize=0
 local RebuildEach=false
 local state={running=false,thread=nil,remote=nil,cache=nil,pad="",}
@@ -91,7 +91,7 @@ task.spawn(function()
 if api and api.start then
 pcall(api.start)
 end
-task.wait(2)
+task.wait(0)
 if api and api.stop then
 pcall(api.stop)
 end
