@@ -1,950 +1,177 @@
--- Enhanced Spinning Sword Ball Script with 40 UNIQUE Modes
--- Ultra-robust pickup prevention for both player and others
--- Fixed network ownership issues when players get close
--- Keys: Z toggle spin, C cycle mode, V increase spin speed, B decrease spin speed
+
+-- Mini Script GUI | Always On Top | PC + Mobile
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
+local UIS = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local torso = character:WaitForChild("HumanoidRootPart")
+local parent = player:WaitForChild("PlayerGui")
 
--- Check if typing in textbox
-local focused = false
-UserInputService.TextBoxFocused:Connect(function() focused = true end)
-UserInputService.TextBoxFocusReleased:Connect(function() focused = false end)
+local old = parent:FindFirstChild("MiniScriptGUI")
+if old then old:Destroy() end
 
--- Collect tools from Workspace
-local tools = {}
-local function collectTools()
-    tools = {}
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Tool") and obj.Parent == Workspace then
-            table.insert(tools, obj)
-        end
-    end
-end
-collectTools()
+local gui = Instance.new("ScreenGui")
+gui.Name = "MiniScriptGUI"
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 999999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+gui.IgnoreGuiInset = true
+gui.Parent = parent
 
-if #tools == 0 then
-    warn("No tools found in Workspace!")
-    return
-end
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(180, 105)
+frame.Position = UDim2.new(0.5, -90, 0.5, -52)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Parent = gui
 
--- Enhanced Configuration
-local CONFIG = {
-    baseRadius = 15,
-    radiusVariation = 5,
-    orbitSpeed = 1.0,
-    verticalOffset = 2,
-    verticalVariation = 1.5,
-    spinSpeed = 8,
-    minSpinSpeed = 2,
-    maxSpinSpeed = 30,
-    spinSpeedIncrement = 2,
-    updateInterval = 1/120, -- Higher update rate for smoothness
-    bodyPosition = {
-        maxForce = Vector3.new(50000, 50000, 50000), -- Much stronger forces
-        p = 25000, -- Higher P for more responsive positioning
-        d = 2000 -- Higher damping
-    },
-    transitionSpeed = 2,
-    wingAngle = 0.5,
-    wingValue = 0.5,
-    ownershipUpdateRate = 0.1 -- Update ownership every 0.1 seconds
-}
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
--- Humanoid scales
-local function updateHumanoidScales()
-    local heightScale = humanoid.BodyHeightScale.Value
-    local depthScale = humanoid.BodyDepthScale.Value
-    local widthScale = humanoid.BodyWidthScale.Value
-    local hipHeight = humanoid.HipHeight
-    local swordLength = 5.5
-    local backDepth = 0.5 * depthScale + 0.5
-    local shoulderHeight = (hipHeight / 2) * heightScale
-    return heightScale, depthScale, widthScale, hipHeight, swordLength, backDepth, shoulderHeight
+local function button(name, txt, pos, size, color, parentObj)
+    local b = Instance.new("TextButton")
+    b.Name = name
+    b.Text = txt
+    b.Position = pos
+    b.Size = size
+    b.BackgroundColor3 = color
+    b.BorderSizePixel = 0
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 13
+    b.AutoButtonColor = true
+    b.Parent = parentObj
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    return b
 end
 
-local heightScale, depthScale, widthScale, hipHeight, swordLength, backDepth, shoulderHeight = updateHumanoidScales()
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -65, 0, 32)
+title.Position = UDim2.fromOffset(10, 0)
+title.BackgroundTransparency = 1
+title.Text = "SCRIPT CONTROL"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 12
+title.Parent = frame
 
--- State management
-local animated = true
-local flying = false
-local sprinting = false
-local spinEnabled = true
-local currentRotationMode = 1
+local minimize = button(
+    "Minimize", "-",
+    UDim2.new(1, -58, 0, 5),
+    UDim2.fromOffset(24, 24),
+    Color3.fromRGB(65, 65, 75), frame
+)
 
--- Cache math functions
-local sin, cos, abs, floor, ceil, sqrt, pi, acos, atan2, min, max = 
-    math.sin, math.cos, math.abs, math.floor, math.ceil, math.sqrt, math.pi, math.acos, math.atan2, math.min, math.max
+local close = button(
+    "Close", "X",
+    UDim2.new(1, -30, 0, 5),
+    UDim2.fromOffset(24, 24),
+    Color3.fromRGB(180, 50, 50), frame
+)
 
--- 40 COMPLETELY UNIQUE Rotation Modes
-local rotationModes = {
-    -- 1: Fibonacci Golden Sphere
-    function(data, t, torsoPos)
-        local phi = acos(1 - 2 * data.index / data.total)
-        local theta = pi * (1 + sqrt(5)) * data.index + t * 0.8
-        local r = data.radius + sin(t * 0.5) * 2
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            r * cos(phi) + data.height,
-            r * sin(phi) * sin(theta)
-        )
-    end,
-    
-    -- 2: Saturn's Rings (Multiple flat rotating rings)
-    function(data, t, torsoPos)
-        local rings = 5
-        local ring = (data.index - 1) % rings
-        local theta = ((data.index - 1) / rings) * 2 * pi + t * (ring + 1) * 0.5
-        local r = data.radius * (0.6 + ring * 0.15)
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + ring * 0.5,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 3: Ascending Spiral Staircase
-    function(data, t, torsoPos)
-        local theta = (data.index / data.total) * 8 * pi + t * 2
-        local height = (data.index / data.total) * 20
-        local r = data.radius * (1 - (data.index / data.total) * 0.3)
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            height + data.height,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 4: Electron Cloud Chaos
-    function(data, t, torsoPos)
-        local phi = sin(t * 1.5 + data.index) * pi
-        local theta = cos(t * 2 + data.index * 0.7) * 2 * pi
-        local r = data.radius * (0.7 + sin(t + data.index) * 0.3)
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            r * cos(phi) + data.height,
-            r * sin(phi) * sin(theta)
-        )
-    end,
-    
-    -- 5: Triple DNA Helix
-    function(data, t, torsoPos)
-        local strand = data.index % 3
-        local tt = (data.index / data.total) * 6 * pi + t * 1.5
-        local offset = strand * (2 * pi / 3)
-        local r = data.radius * 0.5
-        return torsoPos + Vector3.new(
-            r * cos(tt + offset),
-            (data.index / data.total) * 15 + data.height,
-            r * sin(tt + offset)
-        )
-    end,
-    
-    -- 6: Breathing Sphere (Smooth pulse)
-    function(data, t, torsoPos)
-        local phi = acos(1 - 2 * data.index / data.total)
-        local theta = pi * (1 + sqrt(5)) * data.index
-        local pulse = 1 + sin(t * 3) * 0.4
-        local r = data.radius * pulse
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            r * cos(phi) + data.height + sin(t * 2) * 2,
-            r * sin(phi) * sin(theta)
-        )
-    end,
-    
-    -- 7: Infinity Loop Dance
-    function(data, t, torsoPos)
-        local tt = (data.index / data.total) * 4 * pi + t * 1.5
-        local scale = data.radius / (1 + sin(tt)^2 + 0.1)
-        return torsoPos + Vector3.new(
-            scale * cos(tt) * 2,
-            data.height + sin(tt * 3) * 3,
-            scale * sin(tt) * cos(tt) * 2
-        )
-    end,
-    
-    -- 8: Cyclone Tornado
-    function(data, t, torsoPos)
-        local height = ((data.index / data.total) - 0.5) * 25
-        local rad = data.radius * (1 - abs(height / 25) * 0.7)
-        local theta = (data.index / data.total) * 10 * pi + t * 3 + height * 0.5
-        return torsoPos + Vector3.new(
-            cos(theta) * rad,
-            height + data.height,
-            sin(theta) * rad
-        )
-    end,
-    
-    -- 9: Phoenix Wings
-    function(data, t, torsoPos)
-        local half = floor(data.total / 2)
-        if half == 0 then half = 1 end
-        local flap = sin(t * 4) * 0.3
-        local isLeft = data.index <= half
-        local wingIndex = isLeft and data.index or (data.index - half)
-        wingIndex = max(1, wingIndex)
-        
-        local curve = (wingIndex / half) ^ 1.5
-        local spread = curve * 8 * widthScale
-        local lift = sin(curve * pi) * 4 + flap * 2
-        
-        local x = isLeft and -spread or spread
-        return torsoPos + Vector3.new(
-            x,
-            shoulderHeight + data.height + lift,
-            -backDepth - curve * 2
-        )
-    end,
-    
-    -- 10: Shuriken Spinner (Behind back)
-    function(data, t, torsoPos)
-        local angle = (data.index - 1) / data.total * 2 * pi + t * 6
-        local r = data.radius * 0.4 + sin(t * 3) * 1.5
-        return torsoPos + Vector3.new(
-            cos(angle) * r,
-            shoulderHeight + data.height + sin(angle * 3 + t) * 0.5,
-            -backDepth - 2
-        )
-    end,
-    
-    -- 11: Divine Halo
-    function(data, t, torsoPos)
-        local layers = 2
-        local layer = floor((data.index - 1) / (data.total / layers))
-        local theta = ((data.index - 1) % (data.total / layers)) / (data.total / layers) * 2 * pi + t * 1.5
-        local r = data.radius * 0.5 * (1 + layer * 0.3)
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            (hipHeight + 3) * heightScale + data.height + sin(t * 2) * 0.8 + layer * 0.5,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 12: Fortress Wall Grid
-    function(data, t, torsoPos)
-        local cols = ceil(sqrt(data.total))
-        local row = floor((data.index - 1) / cols)
-        local col = (data.index - 1) % cols
-        local spacing = 3
-        local wave = sin(t * 2 + row * 0.5 + col * 0.5) * 0.8
-        return torsoPos + Vector3.new(
-            (col - cols / 2) * spacing,
-            (row - cols / 2) * spacing + data.height + wave,
-            data.radius * 0.7
-        )
-    end,
-    
-    -- 13: Royal Crown Jewels
-    function(data, t, torsoPos)
-        local points = 8
-        local layer = floor((data.index - 1) / points)
-        local theta = ((data.index - 1) % points) / points * 2 * pi + t * 0.5
-        local r = (3 + layer) * heightScale
-        local height = (hipHeight + 2.5 + layer * 0.8) * heightScale
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            height + data.height + sin(theta * 3 + t * 2) * 0.5,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 14: Serpent Tail Undulation
-    function(data, t, torsoPos)
-        local segment = (data.index / data.total)
-        local length = data.radius * 1.5
-        local wave = sin(t * 2 - segment * 4 * pi) * 2
-        local sway = cos(t * 2 - segment * 4 * pi) * 1.5
-        return torsoPos + Vector3.new(
-            sway,
-            shoulderHeight + data.height - segment * length * 0.5 + wave,
-            -backDepth - segment * length
-        )
-    end,
-    
-    -- 15: Dragonfly Wings (Four wings)
-    function(data, t, torsoPos)
-        local wingsPerSide = floor(data.total / 4)
-        if wingsPerSide == 0 then wingsPerSide = 1 end
-        
-        local quadrant = floor((data.index - 1) / wingsPerSide)
-        local wingPos = ((data.index - 1) % wingsPerSide) / max(wingsPerSide - 1, 1)
-        
-        local flap = sin(t * 5) * 0.4
-        local angle = (quadrant * pi / 2) + flap
-        local dist = (2 + wingPos * 4) * widthScale
-        
-        return torsoPos + Vector3.new(
-            cos(angle) * dist,
-            shoulderHeight + data.height + sin(wingPos * pi) * 2,
-            sin(angle) * dist - backDepth
-        )
-    end,
-    
-    -- 16: Black Hole Accretion Disk
-    function(data, t, torsoPos)
-        local spiralSpeed = data.index / data.total
-        local theta = spiralSpeed * 10 * pi + t * (2 + spiralSpeed * 3)
-        local r = data.radius * (0.3 + spiralSpeed * 0.7)
-        local tilt = sin(theta) * 2
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + tilt,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 17: Gladiator Shield Dome
-    function(data, t, torsoPos)
-        local phi = acos(1 - data.index / data.total)
-        local theta = sqrt(data.total) * phi + t * 0.8
-        local r = data.radius * 0.9
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            data.height + hipHeight / 2,
-            r * sin(phi) * sin(theta) + data.radius * 0.3
-        )
-    end,
-    
-    -- 18: Energy Aura Waves
-    function(data, t, torsoPos)
-        local wave = floor((data.index - 1) / (data.total / 3))
-        local theta = ((data.index - 1) % (data.total / 3)) / (data.total / 3) * 2 * pi + t * (wave + 1)
-        local r = data.radius * (0.6 + wave * 0.2)
-        local wobble = sin(t * 3 + theta * 2) * 1.5
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + wobble,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 19: Tesseract Hypercube
-    function(data, t, torsoPos)
-        local cubeSize = ceil(data.total^(1/3))
-        local idx = data.index - 1
-        local x = (idx % cubeSize) / cubeSize - 0.5
-        local y = floor(idx / cubeSize) % cubeSize / cubeSize - 0.5
-        local z = floor(idx / (cubeSize * cubeSize)) / cubeSize - 0.5
-        
-        local rotation = t * 0.5
-        local xr = x * cos(rotation) - z * sin(rotation)
-        local zr = x * sin(rotation) + z * cos(rotation)
-        
-        local scale = data.radius
-        return torsoPos + Vector3.new(
-            xr * scale * 2,
-            y * scale * 2 + data.height,
-            zr * scale * 2
-        )
-    end,
-    
-    -- 20: Orbital Moon System
-    function(data, t, torsoPos)
-        local moons = 4
-        local moon = floor((data.index - 1) / (data.total / moons))
-        local orbit = ((data.index - 1) % (data.total / moons)) / (data.total / moons) * 2 * pi
-        local theta = orbit + t * (moon + 1) * 0.7
-        local phi = sin(t * 0.5 + moon) * 0.5
-        local r = data.radius * (0.8 + moon * 0.15)
-        
-        return torsoPos + Vector3.new(
-            cos(theta) * cos(phi) * r,
-            sin(phi) * r + data.height,
-            sin(theta) * cos(phi) * r
-        )
-    end,
-    
-    -- 21: Supernova Explosion
-    function(data, t, torsoPos)
-        local angle = (data.index / data.total) * 2 * pi + sin(t + data.index) * 0.3
-        local pulse = 1 + sin(t * 4) * 0.5
-        local burst = (1 + sin(t * 2 + data.index * 0.5) * 0.3)
-        local r = data.radius * pulse * burst
-        local height = sin(angle * 5 + t * 3) * 4
-        
-        return torsoPos + Vector3.new(
-            cos(angle) * r,
-            data.height + height,
-            sin(angle) * r
-        )
-    end,
-    
-    -- 22: Ocean Wave Ripples
-    function(data, t, torsoPos)
-        local ring = floor(data.index / 8)
-        local theta = ((data.index - 1) % 8) / 8 * 2 * pi
-        local r = (ring + 1) * 3
-        local wave = sin(ring * 0.5 - t * 3) * 4
-        
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + wave,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 23: Quantum Entanglement
-    function(data, t, torsoPos)
-        local pair = floor((data.index - 1) / 2)
-        local isPrimary = (data.index - 1) % 2 == 0
-        local theta = pair / ceil(data.total / 2) * 2 * pi + t * 1.5
-        local offset = isPrimary and 0 or pi
-        local r = data.radius * 0.7
-        local entangle = sin(t * 4 + pair) * 0.3
-        
-        return torsoPos + Vector3.new(
-            cos(theta + offset) * r,
-            data.height + (isPrimary and entangle or -entangle) * 5,
-            sin(theta + offset) * r
-        )
-    end,
-    
-    -- 24: Time Vortex Funnel
-    function(data, t, torsoPos)
-        local depth = (data.index / data.total)
-        local theta = depth * 12 * pi + t * 2
-        local r = data.radius * (1 - depth * 0.7) * (1 + sin(t * 3) * 0.2)
-        local y = (depth - 0.5) * 20
-        
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            y + data.height,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 25: Klein Bottle Flow
-    function(data, t, torsoPos)
-        local u = (data.index / data.total) * 2 * pi + t * 0.8
-        local v = ((data.index - 1) % 4) / 4 * 2 * pi
-        local r = 4 * (1 - cos(u) / 2)
-        
-        return torsoPos + Vector3.new(
-            6 * cos(u) * (1 + sin(u)) + r * cos(u) * cos(v),
-            r * sin(v) + data.height,
-            16 * sin(u) + r * sin(u) * cos(v)
-        ) * 0.3
-    end,
-    
-    -- 26: Aztec Temple Steps
-    function(data, t, torsoPos)
-        local steps = 6
-        local step = floor((data.index - 1) / (data.total / steps))
-        local pos = ((data.index - 1) % (data.total / steps)) / (data.total / steps) * 4 * pi
-        local stepSize = 2.5
-        local radius = data.radius - step * stepSize
-        
-        return torsoPos + Vector3.new(
-            cos(pos + t * 0.5) * radius,
-            -step * stepSize + data.height + sin(pos * 2 + t) * 0.5,
-            sin(pos + t * 0.5) * radius
-        )
-    end,
-    
-    -- 27: Gyroscope Multi-Axis
-    function(data, t, torsoPos)
-        local axis = floor((data.index - 1) / (data.total / 3))
-        local theta = ((data.index - 1) % (data.total / 3)) / (data.total / 3) * 2 * pi + t * (axis + 1)
-        local r = data.radius * 0.8
-        
-        if axis == 0 then -- XY plane
-            return torsoPos + Vector3.new(cos(theta) * r, sin(theta) * r + data.height, 0)
-        elseif axis == 1 then -- XZ plane
-            return torsoPos + Vector3.new(cos(theta) * r, data.height, sin(theta) * r)
-        else -- YZ plane
-            return torsoPos + Vector3.new(0, cos(theta) * r + data.height, sin(theta) * r)
-        end
-    end,
-    
-    -- 28: Blooming Lotus Petals
-    function(data, t, torsoPos)
-        local petals = 8
-        local layers = ceil(data.total / petals)
-        local layer = floor((data.index - 1) / petals)
-        local petal = (data.index - 1) % petals
-        
-        local theta = petal / petals * 2 * pi + layer * 0.3
-        local bloom = sin(t * 2) * 0.5 + 0.5
-        local r = data.radius * (0.3 + layer * 0.2) * bloom
-        
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + layer * 1.5 + sin(t * 3 + theta) * 0.5,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 29: Aurora Borealis Waves
-    function(data, t, torsoPos)
-        local wave = (data.index / data.total) * 4 * pi
-        local x = (data.index / data.total - 0.5) * data.radius * 2
-        local z = sin(wave + t * 2) * data.radius * 0.8
-        local y = cos(wave * 2 + t * 3) * 5
-        
-        return torsoPos + Vector3.new(x, y + data.height, z)
-    end,
-    
-    -- 30: Mandala Pattern
-    function(data, t, torsoPos)
-        local rings = 5
-        local ring = floor((data.index - 1) / (data.total / rings))
-        local theta = ((data.index - 1) % (data.total / rings)) / (data.total / rings) * 2 * pi + t * 0.3
-        local r = (ring + 1) * data.radius / rings
-        local petal = sin(theta * 6) * 0.3 + 1
-        
-        return torsoPos + Vector3.new(
-            cos(theta) * r * petal,
-            data.height + sin(ring * t) * 0.8,
-            sin(theta) * r * petal
-        )
-    end,
-    
-    -- 31: Celtic Knot Weave
-    function(data, t, torsoPos)
-        local u = (data.index / data.total) * 4 * pi + t * 0.7
-        local weave = floor((data.index - 1) % 4)
-        local offset = weave * pi / 2
-        local r = data.radius * 0.6
-        
-        local x = r * sin(u) * (2 + cos(u / 2))
-        local y = r * cos(u) * (2 + cos(u / 2))
-        local z = r * sin(u / 2 + offset) * 2
-        
-        return torsoPos + Vector3.new(x * 0.5, z + data.height, y * 0.5)
-    end,
-    
-    -- 32: Plasma Ball Tendrils
-    function(data, t, torsoPos)
-        local tendrils = 6
-        local tendril = floor((data.index - 1) / (data.total / tendrils))
-        local segment = ((data.index - 1) % (data.total / tendrils)) / (data.total / tendrils)
-        
-        local theta = tendril / tendrils * 2 * pi + t
-        local r = segment * data.radius * (1 + sin(t * 3 + tendril) * 0.3)
-        local arc = sin(segment * pi) * 3
-        
-        return torsoPos + Vector3.new(
-            cos(theta) * r,
-            data.height + arc,
-            sin(theta) * r
-        )
-    end,
-    
-    -- 33: Hexagonal Honeycomb
-    function(data, t, torsoPos)
-        local hexSize = 2.5
-        local cols = ceil(sqrt(data.total * 2 / sqrt(3)))
-        local row = floor((data.index - 1) / cols)
-        local col = (data.index - 1) % cols
-        
-        local x = col * hexSize * 1.5
-        local z = row * hexSize * sqrt(3)
-        if col % 2 == 1 then z = z + hexSize * sqrt(3) / 2 end
-        
-        x = x - cols * hexSize * 0.75
-        z = z - row * hexSize * sqrt(3) / 2
-        
-        return torsoPos + Vector3.new(
-            x + sin(t + row) * 0.3,
-            data.height + hipHeight + sin(t * 2 + col) * 0.5,
-            z + data.radius * 0.5
-        )
-    end,
-    
-    -- 34: Penrose Triangle Paradox
-    function(data, t, torsoPos)
-        local sides = 3
-        local side = floor((data.index - 1) / (data.total / sides))
-        local pos = ((data.index - 1) % (data.total / sides)) / (data.total / sides)
-        
-        local angle = side / sides * 2 * pi + t * 0.5
-        local r = data.radius * 0.7
-        local twist = pos * pi + t
-        
-        return torsoPos + Vector3.new(
-            cos(angle) * r + cos(twist) * 2,
-            data.height + sin(angle) * r + pos * 8 - 4,
-            sin(angle) * r + sin(twist) * 2
-        )
-    end,
-    
-    -- 35: Nebula Gas Cloud
-    function(data, t, torsoPos)
-        local cluster = floor(data.index / 10)
-        local phi = sin(t * 0.7 + data.index * 0.3 + cluster) * pi
-        local theta = cos(t * 0.5 + data.index * 0.4 + cluster) * 2 * pi
-        local r = data.radius * (0.5 + sin(t * 2 + data.index) * 0.5)
-        
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            r * cos(phi) + data.height + sin(t + cluster) * 2,
-            r * sin(phi) * sin(theta)
-        )
-    end,
-    
-    -- 36: Crystal Lattice Structure
-    function(data, t, torsoPos)
-        local gridSize = ceil(data.total^(1/3))
-        local idx = data.index - 1
-        local x = (idx % gridSize) / gridSize - 0.5
-        local y = floor(idx / gridSize) % gridSize / gridSize - 0.5
-        local z = floor(idx / (gridSize * gridSize)) / gridSize - 0.5
-        
-        local pulse = sin(t * 2 + (x + y + z) * 5) * 0.3 + 1
-        local scale = data.radius * 1.5
-        
-        return torsoPos + Vector3.new(
-            x * scale * pulse,
-            y * scale * pulse + data.height,
-            z * scale * pulse
-        )
-    end,
-    
-    -- 37: Spiraling Rose Petals
-    function(data, t, torsoPos)
-        local k = 7
-        local theta = (data.index / data.total) * 6 * pi + t
-        local r = data.radius * abs(cos(k * theta / 2)) * 0.8
-        local height = sin(theta * 2) * 3
-        
-        return torsoPos + Vector3.new(
-            r * cos(theta),
-            data.height + height,
-            r * sin(theta)
-        )
-    end,
-    
-    -- 38: Möbius Strip Path
-    function(data, t, torsoPos)
-        local u = (data.index / data.total) * 4 * pi + t * 0.8
-        local width = ((data.index - 1) % 3 - 1) * 0.5
-        local r = data.radius * 0.6
-        
-        local x = (r + width * cos(u / 2)) * cos(u)
-        local y = (r + width * cos(u / 2)) * sin(u)
-        local z = width * sin(u / 2) * 4
-        
-        return torsoPos + Vector3.new(x, z + data.height, y)
-    end,
-    
-    -- 39: Electromagnetic Field Lines
-    function(data, t, torsoPos)
-        local fieldLine = floor((data.index - 1) / 8)
-        local segment = ((data.index - 1) % 8) / 8
-        
-        local theta = fieldLine / ceil(data.total / 8) * 2 * pi + t * 0.5
-        local phi = segment * pi
-        local r = data.radius * sin(phi) * (1 + cos(t * 2) * 0.2)
-        
-        return torsoPos + Vector3.new(
-            r * cos(theta),
-            data.radius * cos(phi) + data.height,
-            r * sin(theta)
-        )
-    end,
-    
-    -- 40: Quantum Probability Cloud
-    function(data, t, torsoPos)
-        local shell = floor(sqrt(data.index))
-        local offset = data.index - shell * shell
-        local theta = offset * 2.4 + t * (shell * 0.3 + 0.5)
-        local phi = shell * 0.8 + sin(t + offset) * 0.4
-        local r = data.radius * (0.4 + shell * 0.15) * (1 + sin(t * 3 + data.index) * 0.2)
-        
-        return torsoPos + Vector3.new(
-            r * sin(phi) * cos(theta),
-            r * cos(phi) + data.height,
-            r * sin(phi) * sin(theta)
-        )
-    end,
-}
+local toggle = button(
+    "Toggle", "OFF",
+    UDim2.fromOffset(15, 43),
+    UDim2.new(1, -30, 0, 45),
+    Color3.fromRGB(180, 50, 50), frame
+)
 
--- Mode names
-local modeNames = {
-    "Fibonacci Golden Sphere", "Saturn's Rings", "Ascending Spiral Staircase", "Electron Cloud Chaos",
-    "Triple DNA Helix", "Breathing Sphere", "Infinity Loop Dance", "Cyclone Tornado",
-    "Phoenix Wings", "Shuriken Spinner", "Divine Halo", "Fortress Wall Grid",
-    "Royal Crown Jewels", "Serpent Tail Undulation", "Dragonfly Wings", "Black Hole Accretion Disk",
-    "Gladiator Shield Dome", "Energy Aura Waves", "Tesseract Hypercube", "Orbital Moon System",
-    "Supernova Explosion", "Ocean Wave Ripples", "Quantum Entanglement", "Time Vortex Funnel",
-    "Klein Bottle Flow", "Aztec Temple Steps", "Gyroscope Multi-Axis", "Blooming Lotus Petals",
-    "Aurora Borealis Waves", "Mandala Pattern", "Celtic Knot Weave", "Plasma Ball Tendrils",
-    "Hexagonal Honeycomb", "Penrose Triangle Paradox", "Nebula Gas Cloud", "Crystal Lattice Structure",
-    "Spiraling Rose Petals", "Möbius Strip Path", "Electromagnetic Field Lines", "Quantum Probability Cloud"
-}
+local open = button(
+    "Open", "OPEN",
+    UDim2.fromOffset(12, 220),
+    UDim2.fromOffset(65, 32),
+    Color3.fromRGB(40, 130, 85), gui
+)
+open.Visible = false
 
--- Display current mode
-local function displayMode()
-    local msg = "Mode " .. currentRotationMode .. "/40: " .. modeNames[currentRotationMode] .. 
-                "\nSpin Speed: " .. CONFIG.spinSpeed .. 
-                " | Spin: " .. (spinEnabled and "ON" or "OFF")
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Rotation Mode";
-        Text = msg;
-        Duration = 3;
-    })
-end
+-- Dragging PC + Mobile
+local function makeDraggable(target, handle)
+    local dragging = false
+    local dragStart
+    local startPos
+    local dragInput
 
--- ULTRA ROBUST TOOL PICKUP PREVENTION
-local function disableToolPickup(tool)
-    if not tool:IsA("Tool") then return end
-    
-    local handle = tool:FindFirstChild("Handle")
-    if not handle then return end
-    
-    -- Nuclear option: Disable EVERYTHING
-    tool.Enabled = false
-    tool.CanBeDropped = false
-    tool.ManualActivationOnly = true
-    
-    pcall(function() tool.RequiresHandle = false end)
-    pcall(function() tool.Grip = CFrame.new(0, 0, 0) end)
-    
-    -- Handle properties
-    handle.CanCollide = false
-    handle.CanTouch = false
-    handle.CanQuery = false
-    handle.Massless = true
-    handle.Locked = true
-    
-    -- Force network ownership immediately and continuously
-    pcall(function()
-        handle:SetNetworkOwner(player)
-    end)
-    
-    -- Prevent ALL parent changes to character
-    local function forceWorkspace()
-        if tool.Parent == character or handle.Parent == character then
-            task.wait()
-            tool.Parent = Workspace
-            pcall(function()
-                handle:SetNetworkOwner(player)
-            end)
-        end
-    end
-    
-    -- Multiple event connections for redundancy
-    tool.AncestryChanged:Connect(forceWorkspace)
-    tool.Changed:Connect(function(prop)
-        if prop == "Parent" then
-            forceWorkspace()
-        end
-    end)
-    
-    handle.AncestryChanged:Connect(forceWorkspace)
-    
-    -- Block equipped event
-    tool.Equipped:Connect(function()
-        forceWorkspace()
-    end)
-    
-    -- Block activation
-    tool.Activated:Connect(function()
-        forceWorkspace()
-    end)
-    
-    -- Disable TouchTransmitters (prevents other players from touching/picking up)
-    for _, obj in pairs(handle:GetDescendants()) do
-        if obj:IsA("TouchTransmitter") then
-            obj:Destroy()
-        end
-    end
-    for _, obj in pairs(tool:GetDescendants()) do
-        if obj:IsA("TouchTransmitter") then
-            obj:Destroy()
-        end
-    end
-end
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = target.Position
+            dragInput = input
 
--- Initialize tools with enhanced protection
-local toolData = {}
-local lastOwnershipUpdate = 0
-
-local function initializeTools()
-    toolData = {}
-    for i, tool in ipairs(tools) do
-        disableToolPickup(tool)
-        local handle = tool.Handle
-        if handle then
-            -- Create physics bodies with MUCH stronger forces
-            local bp = Instance.new("BodyPosition", handle)
-            bp.MaxForce = CONFIG.bodyPosition.maxForce
-            bp.P = CONFIG.bodyPosition.p
-            bp.D = CONFIG.bodyPosition.d
-            
-            local bav = Instance.new("BodyAngularVelocity", handle)
-            bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            bav.AngularVelocity = Vector3.new(0, CONFIG.spinSpeed, 0)
-            
-            local baseAngle = (i - 1) * (2 * pi / #tools)
-            local radius = CONFIG.baseRadius + (i % 3) * CONFIG.radiusVariation
-            local height = CONFIG.verticalOffset + sin(i) * CONFIG.verticalVariation
-            
-            toolData[tool] = {
-                index = i,
-                total = #tools,
-                angle = baseAngle,
-                radius = radius,
-                height = height,
-                bodyPosition = bp,
-                bodyAngularVelocity = bav,
-                tool = tool,
-                handle = handle
-            }
-            
-            -- Set initial position
-            local t = os.clock() * CONFIG.orbitSpeed
-            local targetPos = rotationModes[currentRotationMode](toolData[tool], t, torso.Position)
-            bp.Position = targetPos
-            
-            -- Force ownership immediately
-            pcall(function()
-                handle:SetNetworkOwner(player)
-            end)
-        end
-    end
-end
-initializeTools()
-displayMode()
-
--- AGGRESSIVE ownership and parent protection (runs every frame)
-RunService.Heartbeat:Connect(function()
-    local now = os.clock()
-    
-    for tool, data in pairs(toolData) do
-        -- Force parent to workspace ALWAYS
-        if tool.Parent ~= Workspace then
-            tool.Parent = Workspace
-        end
-        
-        local handle = data.handle
-        if handle and handle.Parent then
-            -- Update network ownership more frequently when detecting issues
-            if now - lastOwnershipUpdate > CONFIG.ownershipUpdateRate then
-                pcall(function()
-                    handle:SetNetworkOwner(player)
-                end)
-            end
-            
-            -- If handle somehow got parented to character, force it back
-            if handle.Parent == character or tool.Parent == character then
-                tool.Parent = Workspace
-                pcall(function()
-                    handle:SetNetworkOwner(player)
-                end)
-            end
-        end
-    end
-    
-    if now - lastOwnershipUpdate > CONFIG.ownershipUpdateRate then
-        lastOwnershipUpdate = now
-    end
-end)
-
--- Optimized update loop with enhanced positioning
-local lastUpdate = 0
-RunService.Heartbeat:Connect(function()
-    local now = os.clock()
-    if now - lastUpdate < CONFIG.updateInterval then return end
-    lastUpdate = now
-    
-    local torsoPos = torso.Position
-    
-    for tool, data in pairs(toolData) do
-        if tool.Parent == Workspace and data.handle and data.handle.Parent and data.bodyPosition then
-            local success = pcall(function()
-                local t = now * CONFIG.orbitSpeed
-                local targetPos = rotationModes[currentRotationMode](data, t, torsoPos)
-                
-                -- Update position with stronger force
-                data.bodyPosition.Position = targetPos
-                
-                -- Enhanced 3-axis spinning
-                if spinEnabled then
-                    local spinX = sin(t * 0.8 + data.index * 0.5) * CONFIG.spinSpeed * 0.3
-                    local spinY = CONFIG.spinSpeed
-                    local spinZ = cos(t * 0.8 + data.index * 0.5) * CONFIG.spinSpeed * 0.3
-                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(spinX, spinY, spinZ)
-                else
-                    data.bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
                 end
             end)
-            
-            if not success then
-                -- If update fails, re-establish ownership
-                pcall(function()
-                    data.handle:SetNetworkOwner(player)
-                end)
-            end
-        else
-            -- Clean up invalid tools
-            if not tool.Parent or not tool:FindFirstChild("Handle") then
-                if data.bodyPosition then pcall(function() data.bodyPosition:Destroy() end) end
-                if data.bodyAngularVelocity then pcall(function() data.bodyAngularVelocity:Destroy() end) end
-                toolData[tool] = nil
-            end
         end
-    end
-end)
+    end)
 
--- Enhanced input handling
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed or focused then return end
-    
-    if input.KeyCode == Enum.KeyCode.Z then
-        spinEnabled = not spinEnabled
-        displayMode()
-        
-    elseif input.KeyCode == Enum.KeyCode.C then
-        currentRotationMode = currentRotationMode % #rotationModes + 1
-        displayMode()
-        
-        if currentRotationMode ~= 9 and currentRotationMode ~= 15 then
-            animated = true
-            flying = false
-            sprinting = false
-            humanoid.WalkSpeed = 16
-            workspace.Gravity = 196.2
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (
+            input == dragInput or
+            (dragInput.UserInputType == Enum.UserInputType.MouseButton1
+            and input.UserInputType == Enum.UserInputType.MouseMovement)
+        ) then
+            local delta = input.Position - dragStart
+            target.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
         end
-        
-    elseif input.KeyCode == Enum.KeyCode.V then
-        CONFIG.spinSpeed = min(CONFIG.spinSpeed + CONFIG.spinSpeedIncrement, CONFIG.maxSpinSpeed)
-        displayMode()
-        
-    elseif input.KeyCode == Enum.KeyCode.B then
-        CONFIG.spinSpeed = max(CONFIG.spinSpeed - CONFIG.spinSpeedIncrement, CONFIG.minSpinSpeed)
-        displayMode()
+    end)
+end
+
+makeDraggable(frame, title)
+makeDraggable(open, open)
+
+-- Script Toggle
+local enabled = false
+
+toggle.MouseButton1Click:Connect(function()
+    if enabled then
+        enabled = false
+        toggle.Text = "OFF"
+        toggle.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        return
     end
+
+    enabled = true
+    toggle.Text = "ON"
+    toggle.BackgroundColor3 = Color3.fromRGB(40, 170, 90)
+
+    task.spawn(function()
+        local success, err = pcall(function()
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/Nightmareloil/Scripts/refs/heads/main/2026"
+            ))()
+        end)
+
+        if not success then
+            warn("Script error:", err)
+            enabled = false
+            toggle.Text = "OFF"
+            toggle.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        end
+    end)
 end)
 
--- Handle respawn
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoid = character:WaitForChild("Humanoid")
-    torso = character:WaitForChild("HumanoidRootPart")
-    heightScale, depthScale, widthScale, hipHeight, swordLength, backDepth, shoulderHeight = updateHumanoidScales()
-    task.wait(1)
-    collectTools()
-    initializeTools()
-    displayMode()
+-- Minimize
+minimize.MouseButton1Click:Connect(function()
+    open.Position = frame.Position
+    frame.Visible = false
+    open.Visible = true
 end)
 
-print("=================================")
-print("Enhanced Sword Ball Script Loaded!")
-print("40 COMPLETELY UNIQUE Modes")
-print("Ultra-Robust Pickup Prevention")
-print("=================================")
-print("Controls:")
-print("Z - Toggle Spin")
-print("C - Next Mode (1-40)")
-print("V - Increase Speed")
-print("B - Decrease Speed")
-print("=================================")
+-- Reopen
+open.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    open.Visible = false
+end)
+
+-- Close GUI
+close.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
